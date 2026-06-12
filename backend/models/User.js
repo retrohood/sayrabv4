@@ -1,0 +1,54 @@
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import { USER_ROLES } from '../constants/index.js';
+
+const userSchema = new mongoose.Schema(
+  {
+    fullName: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    password: { type: String, required: true, minlength: 6 },
+    phone: { type: String, trim: true },
+    role: {
+      type: String,
+      enum: Object.values(USER_ROLES),
+      default: USER_ROLES.DONOR,
+    },
+    cnic: { type: String, trim: true },
+    address: { type: String, trim: true },
+    identityDocuments: [{ filename: String, url: String, uploadedAt: Date }],
+    isVerifiedFundraiser: { type: Boolean, default: false },
+    referralCode: { type: String, unique: true, sparse: true },
+    referralPrivacy: {
+      type: String,
+      enum: ['public', 'anonymous'],
+      default: 'public',
+    },
+  },
+  { timestamps: true }
+);
+
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  return bcrypt.compare(enteredPassword, this.password);
+};
+
+userSchema.methods.toPublicJSON = function () {
+  return {
+    _id: this._id,
+    fullName: this.fullName,
+    email: this.email,
+    phone: this.phone,
+    role: this.role,
+    isVerifiedFundraiser: this.isVerifiedFundraiser,
+    referralCode: this.referralCode,
+    referralPrivacy: this.referralPrivacy,
+    createdAt: this.createdAt,
+  };
+};
+
+export default mongoose.model('User', userSchema);
