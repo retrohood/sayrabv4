@@ -49,9 +49,9 @@ app.use((err, req, res, next) => {
 
 const start = async () => {
   try {
-    await connectDB();
+    // await connectDB();
     app.listen(PORT, () => {
-      console.log(`Sayrab server running on port ${PORT}`);
+      console.log(`Sayrab server running on port ${PORT} (Database disconnected for preview)`);
     });
   } catch (error) {
     console.error('Failed to start server:', error.message);

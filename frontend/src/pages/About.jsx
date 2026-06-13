@@ -31,7 +31,7 @@ export default function About() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <section className="text-center mb-12">
-        <img src="/sayrab.png" alt="Sayrab" className="h-20 mx-auto mb-4" />
+        <img src="/sayrab.png" alt="Sayrab" className="h-32 mx-auto mb-4" />
         <h1 className="text-4xl font-bold text-slate-800 mb-4">About Sayrab</h1>
         <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
           {content.mission}
