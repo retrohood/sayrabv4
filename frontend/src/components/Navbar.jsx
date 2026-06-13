@@ -26,7 +26,7 @@ export default function Navbar() {
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <img src="/sayrab.png" alt="Sayrab" className="h-10 w-auto" />
+            <img src="/sayrab.png" alt="Sayrab" className="h-14 w-auto" />
             <span className="font-bold text-xl text-primary-700 hidden sm:block">Sayrab</span>
           </Link>
 
