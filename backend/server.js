@@ -10,6 +10,9 @@ import productRoutes from './routes/productRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import platformRoutes from './routes/platformRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import storeRoutes from './routes/storeRoutes.js';
+import withdrawalRoutes from './routes/withdrawalRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 import { CAMPAIGN_CATEGORIES, PRODUCT_CATEGORIES, SORT_OPTIONS } from './constants/index.js';
 
 dotenv.config();
@@ -41,6 +44,9 @@ app.use('/api/products', productRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/stores', storeRoutes);
+app.use('/api/withdrawals', withdrawalRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

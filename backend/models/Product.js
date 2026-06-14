@@ -17,6 +17,7 @@ const productSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     branding: { type: String, enum: ['platform', 'campaign'], default: 'platform' },
     campaign: { type: mongoose.Schema.Types.ObjectId, ref: 'Campaign' },
+    creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     averageRating: { type: Number, default: 0, min: 0, max: 5 },
     reviewCount: { type: Number, default: 0 },
   },

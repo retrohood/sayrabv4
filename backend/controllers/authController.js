@@ -93,3 +93,49 @@ export const updateReferralPrivacy = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { fullName, phone, address, profilePicture } = req.body;
+    if (fullName) req.user.fullName = fullName;
+    if (phone) req.user.phone = phone;
+    if (address !== undefined) req.user.address = address;
+    if (profilePicture !== undefined) req.user.profilePicture = profilePicture;
+    await req.user.save();
+    res.json(req.user.toPublicJSON());
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!(await user.matchPassword(currentPassword))) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+    user.password = newPassword;
+    await user.save();
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateNotificationPreferences = async (req, res) => {
+  try {
+    const { donationUpdates, campaignUpdates, verificationNotifications, storeNotifications } = req.body;
+    req.user.notificationPreferences = {
+      donationUpdates: donationUpdates ?? req.user.notificationPreferences?.donationUpdates ?? true,
+      campaignUpdates: campaignUpdates ?? req.user.notificationPreferences?.campaignUpdates ?? true,
+      verificationNotifications: verificationNotifications ?? req.user.notificationPreferences?.verificationNotifications ?? true,
+      storeNotifications: storeNotifications ?? req.user.notificationPreferences?.storeNotifications ?? true,
+    };
+    await req.user.save();
+    res.json(req.user.toPublicJSON());
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
