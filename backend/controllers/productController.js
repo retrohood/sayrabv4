@@ -5,8 +5,13 @@ import { generateSlug } from '../utils/generateToken.js';
 
 export const getProducts = async (req, res) => {
   try {
-    const { search, category, page = 1, limit = 12 } = req.query;
-    const filter = { isActive: true };
+    const { search, category, page = 1, limit = 12, creator } = req.query;
+    const filter = {};
+    if (creator) {
+      filter.creator = creator;
+    } else {
+      filter.isActive = true;
+    }
 
     if (category && category !== 'All') {
       filter.category = category;
@@ -39,6 +44,7 @@ export const getProducts = async (req, res) => {
 
 export const getProductBySlug = async (req, res) => {
   try {
+<<<<<<< Updated upstream
     if (mongoose.Types.ObjectId.isValid(req.params.slug)) {
       const products = await Product.find({
         isActive: true,
@@ -49,6 +55,9 @@ export const getProductBySlug = async (req, res) => {
     }
 
     const product = await Product.findOne({ slug: req.params.slug, isActive: true });
+=======
+    const product = await Product.findOne({ slug: req.params.slug });
+>>>>>>> Stashed changes
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
@@ -58,6 +67,7 @@ export const getProductBySlug = async (req, res) => {
   }
 };
 
+<<<<<<< Updated upstream
 export const getProductsByCampaign = async (req, res) => {
   try {
     const products = await Product.find({
@@ -126,10 +136,19 @@ export const createProduct = async (req, res) => {
     const product = await Product.create({
       name,
       slug: generateSlug(name),
+=======
+export const createProduct = async (req, res) => {
+  try {
+    const { name, description, category, price, image, stock, branding, campaign } = req.body;
+    const product = await Product.create({
+      name,
+      slug: generateSlug(name) + '-' + Date.now(),
+>>>>>>> Stashed changes
       description,
       category,
       price,
       image,
+<<<<<<< Updated upstream
       images,
       sizes,
       colors,
@@ -143,6 +162,16 @@ export const createProduct = async (req, res) => {
     res.status(201).json(product);
   } catch (error) {
     res.status(error.status || 500).json({ message: error.message });
+=======
+      stock,
+      branding: branding || 'platform',
+      campaign: campaign || undefined,
+      creator: req.user._id,
+    });
+    res.status(201).json(product);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+>>>>>>> Stashed changes
   }
 };
 
@@ -152,6 +181,7 @@ export const updateProduct = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
+<<<<<<< Updated upstream
 
     if (product.campaignId) {
       await ensureCampaignOwnership(product.campaignId, req.user);
@@ -177,11 +207,34 @@ export const updateProduct = async (req, res) => {
         product[field] = req.body[field];
       }
     });
+=======
+    if (product.creator.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    const { name, description, category, price, image, stock, isActive, branding, campaign } = req.body;
+    if (name) {
+      product.name = name;
+      product.slug = generateSlug(name) + '-' + Date.now();
+    }
+    if (description !== undefined) product.description = description;
+    if (category !== undefined) product.category = category;
+    if (price !== undefined) product.price = price;
+    if (image !== undefined) product.image = image;
+    if (stock !== undefined) product.stock = stock;
+    if (isActive !== undefined) product.isActive = isActive;
+    if (branding !== undefined) product.branding = branding;
+    if (campaign !== undefined) product.campaign = campaign;
+>>>>>>> Stashed changes
 
     await product.save();
     res.json(product);
   } catch (error) {
+<<<<<<< Updated upstream
     res.status(error.status || 500).json({ message: error.message });
+=======
+    res.status(500).json({ message: error.message });
+>>>>>>> Stashed changes
   }
 };
 
@@ -191,6 +244,7 @@ export const deleteProduct = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
+<<<<<<< Updated upstream
 
     if (product.campaignId) {
       await ensureCampaignOwnership(product.campaignId, req.user);
@@ -203,5 +257,14 @@ export const deleteProduct = async (req, res) => {
     res.json({ message: 'Product archived' });
   } catch (error) {
     res.status(error.status || 500).json({ message: error.message });
+=======
+    if (product.creator.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    await product.deleteOne();
+    res.json({ message: 'Product deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+>>>>>>> Stashed changes
   }
 };

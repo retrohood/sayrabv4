@@ -9,6 +9,7 @@ import {
   updateProfile,
   changePassword,
   updateNotificationPreferences,
+  upgradeToFundraiser,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 
@@ -24,5 +25,6 @@ router.put('/referral-privacy', protect, updateReferralPrivacy);
 router.put('/profile', protect, updateProfile);
 router.put('/password', protect, changePassword);
 router.put('/notifications', protect, updateNotificationPreferences);
+router.put('/upgrade', protect, upgradeToFundraiser);
 
 export default router;
