@@ -209,3 +209,21 @@ export const updateNotificationPreferences = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+<<<<<<< Updated upstream
+=======
+
+export const upgradeToFundraiser = async (req, res) => {
+  try {
+    const { cnic, address, phone } = req.body;
+    req.user.role = USER_ROLES.FUNDRAISER;
+    if (cnic) req.user.cnic = cnic;
+    if (address) req.user.address = address;
+    if (phone) req.user.phone = phone;
+    await req.user.save();
+    res.json(req.user.toPublicJSON());
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+>>>>>>> Stashed changes
