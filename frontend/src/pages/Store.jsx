@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
-<<<<<<< Updated upstream
-import { Link } from 'react-router-dom';
-import { ShoppingBag, Search } from 'lucide-react';
-=======
+import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Search, Store as StoreIcon, ShieldAlert, CheckCircle, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
->>>>>>> Stashed changes
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/format';
@@ -75,9 +70,6 @@ export default function Store() {
     setCart(addCartItem(product));
   };
 
-<<<<<<< Updated upstream
-  const cartTotal = getCartTotal(cart);
-=======
   const handleOpenStoreClick = () => {
     if (!user) {
       setShowAuthModal(true);
@@ -110,8 +102,7 @@ export default function Store() {
     }
   };
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
->>>>>>> Stashed changes
+  const cartTotal = getCartTotal(cart);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -193,7 +184,6 @@ export default function Store() {
                 <p className="text-sm text-slate-500 line-clamp-2 mt-1">{product.description}</p>
                 <div className="flex items-center justify-between gap-2 mt-4">
                   <span className="font-bold text-primary-700">{formatCurrency(product.price)}</span>
-<<<<<<< Updated upstream
                   <div className="flex items-center gap-2">
                     <Link
                       to={`/product/${product._id}`}
@@ -203,19 +193,11 @@ export default function Store() {
                     </Link>
                     <button
                       onClick={() => addToCart(product)}
-                      className="px-3 py-1.5 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                      className="px-3 py-1.5 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 cursor-pointer"
                     >
                       Add
                     </button>
                   </div>
-=======
-                  <button
-                    onClick={() => addToCart(product)}
-                    className="px-3 py-1.5 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 cursor-pointer"
-                  >
-                    Add to Cart
-                  </button>
->>>>>>> Stashed changes
                 </div>
               </div>
             </div>
@@ -265,14 +247,10 @@ export default function Store() {
             <span>Total</span>
             <span>{formatCurrency(cartTotal)}</span>
           </div>
-<<<<<<< Updated upstream
           <Link
             to="/cart"
             className="block w-full mt-3 py-2 bg-primary-600 text-white text-sm font-semibold rounded-lg hover:bg-primary-700 text-center"
           >
-=======
-          <button className="w-full mt-3 py-2 bg-primary-600 text-white text-sm font-semibold rounded-lg hover:bg-primary-700 cursor-pointer">
->>>>>>> Stashed changes
             Proceed to Checkout
           </Link>
         </div>
@@ -391,7 +369,7 @@ export default function Store() {
                   rows={3}
                   value={storeForm.description}
                   onChange={(e) => setStoreForm({ ...storeForm, description: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none resize-none"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none resize-none text-sm"
                   placeholder="Describe your store and how the merchandise funds will support your charitable campaigns..."
                 ></textarea>
               </div>

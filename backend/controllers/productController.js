@@ -2,10 +2,24 @@ import mongoose from 'mongoose';
 import Product from '../models/Product.js';
 import Campaign from '../models/Campaign.js';
 import { generateSlug } from '../utils/generateToken.js';
+import { isDatabaseConnected } from '../utils/demoAuth.js';
+import { inMemoryDB } from '../utils/inMemoryDB.js';
 
 export const getProducts = async (req, res) => {
   try {
     const { search, category, page = 1, limit = 12, creator } = req.query;
+
+    if (!isDatabaseConnected(mongoose)) {
+      let products = inMemoryDB.products.find({ creator, category });
+      if (search) {
+        products = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase()));
+      }
+      return res.json({
+        products,
+        pagination: { page: 1, limit: 50, total: products.length, pages: 1 }
+      });
+    }
+
     const filter = {};
     if (creator) {
       filter.creator = creator;
@@ -44,7 +58,14 @@ export const getProducts = async (req, res) => {
 
 export const getProductBySlug = async (req, res) => {
   try {
-<<<<<<< Updated upstream
+    if (!isDatabaseConnected(mongoose)) {
+      const product = inMemoryDB.products.findOne({ slug: req.params.slug });
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      return res.json(product);
+    }
+
     if (mongoose.Types.ObjectId.isValid(req.params.slug)) {
       const products = await Product.find({
         isActive: true,
@@ -55,9 +76,6 @@ export const getProductBySlug = async (req, res) => {
     }
 
     const product = await Product.findOne({ slug: req.params.slug, isActive: true });
-=======
-    const product = await Product.findOne({ slug: req.params.slug });
->>>>>>> Stashed changes
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
@@ -67,9 +85,13 @@ export const getProductBySlug = async (req, res) => {
   }
 };
 
-<<<<<<< Updated upstream
 export const getProductsByCampaign = async (req, res) => {
   try {
+    if (!isDatabaseConnected(mongoose)) {
+      const products = inMemoryDB.products.find().filter(p => p.campaignId === req.params.campaignId || p.campaign === req.params.campaignId);
+      return res.json(products);
+    }
+
     const products = await Product.find({
       isActive: true,
       $or: [{ campaignId: req.params.campaignId }, { campaign: req.params.campaignId }],
@@ -83,6 +105,14 @@ export const getProductsByCampaign = async (req, res) => {
 
 export const getProductById = async (req, res) => {
   try {
+    if (!isDatabaseConnected(mongoose)) {
+      const product = inMemoryDB.products.findOne({ _id: req.params.id });
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      return res.json(product);
+    }
+
     const product = await Product.findOne({ _id: req.params.id, isActive: true });
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
@@ -129,62 +159,105 @@ export const createProduct = async (req, res) => {
       colors,
       stock,
       campaignId,
+      campaign,
+      branding,
     } = req.body;
 
-    await ensureCampaignOwnership(campaignId, req.user);
+    const actualCampaignId = campaignId || campaign;
 
-    const product = await Product.create({
-      name,
-      slug: generateSlug(name),
-=======
-export const createProduct = async (req, res) => {
-  try {
-    const { name, description, category, price, image, stock, branding, campaign } = req.body;
+    if (!isDatabaseConnected(mongoose)) {
+      const product = inMemoryDB.products.create({
+        name,
+        slug: generateSlug(name) + '-' + Date.now(),
+        description,
+        category,
+        price: Number(price),
+        image,
+        images: images || [image],
+        sizes: sizes || [],
+        colors: colors || [],
+        stock: Number(stock),
+        campaignId: actualCampaignId,
+        campaign: actualCampaignId,
+        creator: req.user._id,
+        branding: branding || (actualCampaignId ? 'campaign' : 'platform'),
+      });
+      return res.status(201).json(product);
+    }
+
+    await ensureCampaignOwnership(actualCampaignId, req.user);
+
     const product = await Product.create({
       name,
       slug: generateSlug(name) + '-' + Date.now(),
->>>>>>> Stashed changes
       description,
       category,
       price,
       image,
-<<<<<<< Updated upstream
       images,
       sizes,
       colors,
       stock,
-      campaignId,
-      campaign: campaignId,
+      campaignId: actualCampaignId,
+      campaign: actualCampaignId,
       creator: req.user._id,
-      branding: campaignId ? 'campaign' : 'platform',
+      branding: branding || (actualCampaignId ? 'campaign' : 'platform'),
     });
 
     res.status(201).json(product);
   } catch (error) {
     res.status(error.status || 500).json({ message: error.message });
-=======
-      stock,
-      branding: branding || 'platform',
-      campaign: campaign || undefined,
-      creator: req.user._id,
-    });
-    res.status(201).json(product);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
->>>>>>> Stashed changes
   }
 };
 
 export const updateProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const { id } = req.params;
+
+    if (!isDatabaseConnected(mongoose)) {
+      const product = inMemoryDB.products.findOne({ _id: id });
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+
+      const allowedFields = [
+        'name',
+        'description',
+        'category',
+        'price',
+        'image',
+        'images',
+        'sizes',
+        'colors',
+        'stock',
+        'isActive',
+        'branding',
+        'campaign',
+        'campaignId',
+      ];
+
+      allowedFields.forEach((field) => {
+        if (req.body[field] !== undefined) {
+          if (field === 'name') {
+            product.name = req.body.name;
+            product.slug = generateSlug(req.body.name) + '-' + Date.now();
+          } else {
+            product[field] = req.body[field];
+          }
+        }
+      });
+
+      return res.json(product);
+    }
+
+    const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
-<<<<<<< Updated upstream
 
-    if (product.campaignId) {
-      await ensureCampaignOwnership(product.campaignId, req.user);
+    const actualCampaignId = product.campaignId || product.campaign;
+    if (actualCampaignId) {
+      await ensureCampaignOwnership(actualCampaignId, req.user);
     } else if (product.creator?.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized' });
     }
@@ -200,71 +273,56 @@ export const updateProduct = async (req, res) => {
       'colors',
       'stock',
       'isActive',
+      'branding',
+      'campaign',
+      'campaignId',
     ];
 
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        product[field] = req.body[field];
+        if (field === 'name') {
+          product.name = req.body.name;
+          product.slug = generateSlug(req.body.name) + '-' + Date.now();
+        } else {
+          product[field] = req.body[field];
+        }
       }
     });
-=======
-    if (product.creator.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
-    
-    const { name, description, category, price, image, stock, isActive, branding, campaign } = req.body;
-    if (name) {
-      product.name = name;
-      product.slug = generateSlug(name) + '-' + Date.now();
-    }
-    if (description !== undefined) product.description = description;
-    if (category !== undefined) product.category = category;
-    if (price !== undefined) product.price = price;
-    if (image !== undefined) product.image = image;
-    if (stock !== undefined) product.stock = stock;
-    if (isActive !== undefined) product.isActive = isActive;
-    if (branding !== undefined) product.branding = branding;
-    if (campaign !== undefined) product.campaign = campaign;
->>>>>>> Stashed changes
 
     await product.save();
     res.json(product);
   } catch (error) {
-<<<<<<< Updated upstream
     res.status(error.status || 500).json({ message: error.message });
-=======
-    res.status(500).json({ message: error.message });
->>>>>>> Stashed changes
   }
 };
 
 export const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const { id } = req.params;
+
+    if (!isDatabaseConnected(mongoose)) {
+      const success = inMemoryDB.products.delete(id);
+      if (!success) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      return res.json({ message: 'Product deleted successfully' });
+    }
+
+    const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
-<<<<<<< Updated upstream
 
-    if (product.campaignId) {
-      await ensureCampaignOwnership(product.campaignId, req.user);
+    const actualCampaignId = product.campaignId || product.campaign;
+    if (actualCampaignId) {
+      await ensureCampaignOwnership(actualCampaignId, req.user);
     } else if (product.creator?.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    product.isActive = false;
-    await product.save();
-    res.json({ message: 'Product archived' });
-  } catch (error) {
-    res.status(error.status || 500).json({ message: error.message });
-=======
-    if (product.creator.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
     await product.deleteOne();
     res.json({ message: 'Product deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
->>>>>>> Stashed changes
+    res.status(error.status || 500).json({ message: error.message });
   }
 };

@@ -209,8 +209,6 @@ export const updateNotificationPreferences = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-<<<<<<< Updated upstream
-=======
 
 export const upgradeToFundraiser = async (req, res) => {
   try {
@@ -226,4 +224,3 @@ export const upgradeToFundraiser = async (req, res) => {
   }
 };
 
->>>>>>> Stashed changes

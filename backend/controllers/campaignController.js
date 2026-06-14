@@ -7,14 +7,20 @@ import {
   isPubliclyVisible,
   buildSortQuery,
 } from '../utils/campaignLifecycle.js';
+import { isDatabaseConnected } from '../utils/demoAuth.js';
+import { inMemoryDB } from '../utils/inMemoryDB.js';
 
-// Public campaigns: any campaign in an active lifecycle state
 const publicFilter = {
   lifecycleStatus: { $in: [LIFECYCLE_STATUS.ACTIVE, LIFECYCLE_STATUS.GOAL_ACHIEVED] },
 };
 
 export const getFeaturedCampaigns = async (req, res) => {
   try {
+    if (!isDatabaseConnected(mongoose)) {
+      const campaigns = inMemoryDB.campaigns.find({ isFeatured: true });
+      return res.json(campaigns);
+    }
+
     const campaigns = await Campaign.find({ ...publicFilter, isFeatured: true })
       .sort({ createdAt: -1 })
       .limit(10)
@@ -44,6 +50,15 @@ export const getCampaigns = async (req, res) => {
       limit = 15,
       emergency,
     } = req.query;
+
+    if (!isDatabaseConnected(mongoose)) {
+      const isEmergency = emergency === 'true';
+      const campaigns = inMemoryDB.campaigns.find({ category, isEmergency, search, sort });
+      return res.json({
+        campaigns,
+        pagination: { page: 1, limit: 50, total: campaigns.length, pages: 1 }
+      });
+    }
 
     const filter = { ...publicFilter };
 
@@ -110,6 +125,11 @@ export const getCampaigns = async (req, res) => {
 
 export const getEmergencyCampaigns = async (req, res) => {
   try {
+    if (!isDatabaseConnected(mongoose)) {
+      const campaigns = inMemoryDB.campaigns.find({ isEmergency: true });
+      return res.json(campaigns);
+    }
+
     const campaigns = await Campaign.find({
       ...publicFilter,
       isEmergency: true,
@@ -125,6 +145,14 @@ export const getEmergencyCampaigns = async (req, res) => {
 
 export const getCampaignBySlug = async (req, res) => {
   try {
+    if (!isDatabaseConnected(mongoose)) {
+      const campaign = inMemoryDB.campaigns.findOne({ slug: req.params.slug });
+      if (!campaign) {
+        return res.status(404).json({ message: 'Campaign not found' });
+      }
+      return res.json(campaign);
+    }
+
     const lookup = mongoose.Types.ObjectId.isValid(req.params.slug)
       ? { $or: [{ slug: req.params.slug }, { _id: req.params.slug }] }
       : { slug: req.params.slug };
@@ -158,7 +186,45 @@ export const getCampaignBySlug = async (req, res) => {
 
 export const updateCampaign = async (req, res) => {
   try {
-    const campaign = await Campaign.findById(req.params.id);
+    const { id } = req.params;
+
+    if (!isDatabaseConnected(mongoose)) {
+      const campaign = inMemoryDB.campaigns.findOne({ _id: id });
+      if (!campaign) {
+        return res.status(404).json({ message: 'Campaign not found' });
+      }
+
+      const allowedFields = [
+        'title',
+        'description',
+        'category',
+        'thumbnail',
+        'banner',
+        'location',
+        'shortDescription',
+        'story',
+        'fundingGoal',
+        'goalAmount',
+        'purposeOfFunds',
+        'startDate',
+        'endDate',
+        'deadline',
+        'keywords',
+        'supportingDocuments',
+        'status',
+        'storeUrl',
+      ];
+
+      allowedFields.forEach((field) => {
+        if (req.body[field] !== undefined) {
+          campaign[field] = req.body[field];
+        }
+      });
+
+      return res.json(campaign);
+    }
+
+    const campaign = await Campaign.findById(id);
     if (!campaign) {
       return res.status(404).json({ message: 'Campaign not found' });
     }
@@ -214,7 +280,18 @@ export const updateCampaign = async (req, res) => {
 
 export const deleteCampaign = async (req, res) => {
   try {
-    const campaign = await Campaign.findById(req.params.id);
+    const { id } = req.params;
+
+    if (!isDatabaseConnected(mongoose)) {
+      const index = mockCampaigns.findIndex(c => c._id === id);
+      if (index === -1) {
+        return res.status(404).json({ message: 'Campaign not found' });
+      }
+      mockCampaigns.splice(index, 1);
+      return res.json({ message: 'Campaign deleted' });
+    }
+
+    const campaign = await Campaign.findById(id);
     if (!campaign) {
       return res.status(404).json({ message: 'Campaign not found' });
     }
@@ -261,6 +338,32 @@ export const createCampaign = async (req, res) => {
       });
     }
 
+    if (!isDatabaseConnected(mongoose)) {
+      const campaign = inMemoryDB.campaigns.create({
+        title,
+        category,
+        thumbnail: thumbnail || `https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=600`,
+        location,
+        shortDescription,
+        story: story || {},
+        fundingGoal: Number(fundingGoal),
+        purposeOfFunds,
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
+        keywords: keywords || [],
+        supportingDocuments: supportingDocuments || [],
+        organizer: req.user._id,
+        managerId: req.user._id,
+        description: shortDescription,
+        goalAmount: Number(fundingGoal),
+        deadline: end.toISOString(),
+        banner: thumbnail || `https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=1200`,
+        verificationStatus: VERIFICATION_STATUS.PENDING,
+        lifecycleStatus: LIFECYCLE_STATUS.ACTIVE,
+      });
+      return res.status(201).json(campaign);
+    }
+
     const campaign = await Campaign.create({
       title,
       slug: generateSlug(title),
@@ -293,6 +396,13 @@ export const createCampaign = async (req, res) => {
 
 export const getMyCampaigns = async (req, res) => {
   try {
+    if (!isDatabaseConnected(mongoose)) {
+      const campaigns = inMemoryDB.campaigns.find({
+        $or: [{ organizer: req.user._id }, { managerId: req.user._id }],
+      });
+      return res.json(campaigns);
+    }
+
     const campaigns = await Campaign.find({
       $or: [{ organizer: req.user._id }, { managerId: req.user._id }],
     }).sort({ createdAt: -1 });
@@ -304,6 +414,15 @@ export const getMyCampaigns = async (req, res) => {
 
 export const incrementShareCount = async (req, res) => {
   try {
+    if (!isDatabaseConnected(mongoose)) {
+      const campaign = inMemoryDB.campaigns.findOne({ _id: req.params.id });
+      if (!campaign) {
+        return res.status(404).json({ message: 'Campaign not found' });
+      }
+      campaign.shareCount += 1;
+      return res.json({ shareCount: campaign.shareCount });
+    }
+
     const campaign = await Campaign.findById(req.params.id);
     if (!campaign) {
       return res.status(404).json({ message: 'Campaign not found' });

@@ -4,6 +4,8 @@ import api from '../api/client';
 import { cartTotal, readCart, writeCart } from '../utils/cart';
 import { formatCurrency } from '../utils/format';
 
+const OPTIONAL_FIELDS = ['state', 'postalCode'];
+
 export default function Checkout() {
   const navigate = useNavigate();
   const [cart] = useState(() => readCart());
@@ -65,6 +67,16 @@ export default function Checkout() {
     return <div className="py-20 text-center text-slate-500">Your cart is empty.</div>;
   }
 
+  const fieldConfig = [
+    ['fullName', 'Full name'],
+    ['phone', 'Phone'],
+    ['line1', 'Address'],
+    ['city', 'City'],
+    ['state', 'State (optional)'],
+    ['postalCode', 'Postal code (optional)'],
+    ['country', 'Country'],
+  ];
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="text-3xl font-bold text-slate-900">Checkout</h1>
@@ -72,19 +84,11 @@ export default function Checkout() {
         <section className="rounded-lg border border-slate-200 bg-white p-6">
           <h2 className="font-semibold text-slate-900">Shipping Details</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            {[
-              ['fullName', 'Full name'],
-              ['phone', 'Phone'],
-              ['line1', 'Address'],
-              ['city', 'City'],
-              ['state', 'State'],
-              ['postalCode', 'Postal code'],
-              ['country', 'Country'],
-            ].map(([key, label]) => (
+            {fieldConfig.map(([key, label]) => (
               <label key={key} className={key === 'line1' ? 'sm:col-span-2' : ''}>
                 <span className="text-sm font-medium text-slate-700">{label}</span>
                 <input
-                  required
+                  required={!OPTIONAL_FIELDS.includes(key)}
                   value={form[key]}
                   onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
                   className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-primary-500"
@@ -106,6 +110,7 @@ export default function Checkout() {
                   {campaign.title}
                 </option>
               ))}
+              <option value="any">Any...</option>
             </select>
           </label>
         </section>

@@ -67,7 +67,17 @@ export default function CampaignDetail() {
   };
 
   const handleCopyLink = async () => {
-    await navigator.clipboard.writeText(referralLink);
+    const link = referralLink || window.location.href;
+    try {
+      await navigator.clipboard.writeText(link);
+    } catch {
+      const textArea = document.createElement('textarea');
+      textArea.value = link;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

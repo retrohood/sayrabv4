@@ -6,10 +6,10 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <img src="/sayrab.png" alt="Sayrab" className="h-20 w-auto brightness-0 invert" />
+            <Link to="/" className="flex items-center gap-2 mb-4 hover:opacity-90">
+              <img src="/sayrab.png" alt="Sayrab" className="h-20 w-auto" />
               <span className="font-bold text-white text-lg">Sayrab</span>
-            </div>
+            </Link>
             <p className="text-sm leading-relaxed">
               Connecting compassionate donors with verified fundraisers to create lasting social
               impact.
