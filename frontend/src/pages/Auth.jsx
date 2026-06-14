@@ -49,10 +49,14 @@ export default function Auth() {
           address: form.address,
         });
       }
-      const redirect = searchParams.get('redirect') || '/';
+      const redirect = searchParams.get('redirect') || '/dashboard';
       navigate(redirect);
     } catch (err) {
-      setError(err.response?.data?.message || 'Authentication failed');
+      const serverMessage = err.response?.data?.message;
+      const networkMessage = err.response
+        ? 'Authentication failed'
+        : 'Unable to reach the server. Please make sure the backend and MongoDB are running.';
+      setError(serverMessage || networkMessage);
     } finally {
       setLoading(false);
     }

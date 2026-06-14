@@ -15,10 +15,13 @@ const withdrawalRequestSchema = new mongoose.Schema(
     jazzcashNumber: { type: String, trim: true },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
+      enum: ['pending', 'approved', 'rejected', 'paid'],
       default: 'pending',
     },
     amount: { type: Number, required: true },
+    reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    reviewedAt: { type: Date },
+    adminNote: { type: String, trim: true },
   },
   { timestamps: true }
 );

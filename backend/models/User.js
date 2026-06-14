@@ -4,6 +4,7 @@ import { USER_ROLES } from '../constants/index.js';
 
 const userSchema = new mongoose.Schema(
   {
+    name: { type: String, trim: true },
     fullName: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, minlength: 6 },
@@ -11,7 +12,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: Object.values(USER_ROLES),
-      default: USER_ROLES.DONOR,
+      default: USER_ROLES.CUSTOMER,
     },
     cnic: { type: String, trim: true },
     address: { type: String, trim: true },
@@ -34,6 +35,16 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+userSchema.pre('validate', function (next) {
+  if (!this.fullName && this.name) {
+    this.fullName = this.name;
+  }
+  if (!this.name && this.fullName) {
+    this.name = this.fullName;
+  }
+  next();
+});
+
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 10);
@@ -47,6 +58,7 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 userSchema.methods.toPublicJSON = function () {
   return {
     _id: this._id,
+    name: this.name || this.fullName,
     fullName: this.fullName,
     email: this.email,
     phone: this.phone,

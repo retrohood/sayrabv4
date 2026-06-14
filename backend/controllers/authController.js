@@ -1,10 +1,47 @@
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import { USER_ROLES } from '../constants/index.js';
-import { generateAuthToken, generateReferralCode } from '../utils/generateToken.js';
+import { generateAuthToken, generateDemoAuthToken, generateReferralCode } from '../utils/generateToken.js';
+import { createDemoUser, isDatabaseConnected, isDemoLogin } from '../utils/demoAuth.js';
+
+const handleAuthError = (res, error) => {
+  const databaseUnavailable =
+    error.name === 'MongooseServerSelectionError' ||
+    error.message.includes('buffering timed out') ||
+    error.message.includes('before initial connection is complete') ||
+    error.message.includes('ECONNREFUSED');
+
+  if (databaseUnavailable) {
+    return res.status(503).json({
+      message: 'Database is not connected. Please start MongoDB and try again.',
+    });
+  }
+
+  return res.status(500).json({ message: error.message });
+};
+
+export const register = async (req, res) => {
+  const requestedRole = req.body.role;
+
+  if (requestedRole === USER_ROLES.MANAGER || requestedRole === USER_ROLES.FUNDRAISER) {
+    return registerFundraiser(req, res);
+  }
+
+  return registerDonor(req, res);
+};
 
 export const registerDonor = async (req, res) => {
   try {
     const { fullName, email, password, phone } = req.body;
+
+    if (!isDatabaseConnected(mongoose)) {
+      const user = createDemoUser({ fullName, email, phone, role: USER_ROLES.CUSTOMER });
+      return res.status(201).json({
+        token: generateDemoAuthToken(user),
+        user: user.toPublicJSON(),
+        demoMode: true,
+      });
+    }
 
     const exists = await User.findOne({ email });
     if (exists) {
@@ -16,7 +53,8 @@ export const registerDonor = async (req, res) => {
       email,
       password,
       phone,
-      role: USER_ROLES.DONOR,
+      name: fullName,
+      role: USER_ROLES.CUSTOMER,
       referralCode: generateReferralCode(email),
     });
 
@@ -25,13 +63,29 @@ export const registerDonor = async (req, res) => {
       user: user.toPublicJSON(),
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    handleAuthError(res, error);
   }
 };
 
 export const registerFundraiser = async (req, res) => {
   try {
     const { fullName, email, password, phone, cnic, address } = req.body;
+
+    if (!isDatabaseConnected(mongoose)) {
+      const user = createDemoUser({
+        fullName,
+        email,
+        phone,
+        cnic,
+        address,
+        role: USER_ROLES.MANAGER,
+      });
+      return res.status(201).json({
+        token: generateDemoAuthToken(user),
+        user: user.toPublicJSON(),
+        demoMode: true,
+      });
+    }
 
     const exists = await User.findOne({ email });
     if (exists) {
@@ -45,7 +99,8 @@ export const registerFundraiser = async (req, res) => {
       phone,
       cnic,
       address,
-      role: USER_ROLES.FUNDRAISER,
+      name: fullName,
+      role: USER_ROLES.MANAGER,
       referralCode: generateReferralCode(email),
     });
 
@@ -54,13 +109,29 @@ export const registerFundraiser = async (req, res) => {
       user: user.toPublicJSON(),
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    handleAuthError(res, error);
   }
 };
 
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    if (!isDatabaseConnected(mongoose)) {
+      if (!isDemoLogin(email, password)) {
+        return res.status(401).json({
+          message: 'Use demo@sayrab.local / password123 until MongoDB is connected.',
+        });
+      }
+
+      const user = createDemoUser();
+      return res.json({
+        token: generateDemoAuthToken(user),
+        user: user.toPublicJSON(),
+        demoMode: true,
+      });
+    }
+
     const user = await User.findOne({ email });
 
     if (!user || !(await user.matchPassword(password))) {
@@ -72,7 +143,7 @@ export const login = async (req, res) => {
       user: user.toPublicJSON(),
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    handleAuthError(res, error);
   }
 };
 
@@ -138,4 +209,3 @@ export const updateNotificationPreferences = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-

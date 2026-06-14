@@ -1,6 +1,6 @@
 import Store from '../models/Store.js';
 import User from '../models/User.js';
-import { USER_ROLES } from '../constants/index.js';
+import { USER_ROLES, isCustomerRole } from '../constants/index.js';
 import { generateAuthToken, generateReferralCode } from '../utils/generateToken.js';
 
 export const openStore = async (req, res) => {
@@ -12,9 +12,9 @@ export const openStore = async (req, res) => {
       return res.status(400).json({ message: 'You already have a store' });
     }
 
-    // If user is a donor, upgrade to fundraiser
-    if (req.user.role === USER_ROLES.DONOR) {
-      req.user.role = USER_ROLES.FUNDRAISER;
+    // If user is a customer, upgrade to campaign manager.
+    if (isCustomerRole(req.user.role)) {
+      req.user.role = USER_ROLES.MANAGER;
       await req.user.save();
     }
 

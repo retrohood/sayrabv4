@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import { USER_ROLES } from '../constants/index.js';
+import { USER_ROLES, isManagerRole } from '../constants/index.js';
+import { createDemoUser } from '../utils/demoAuth.js';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -14,6 +15,11 @@ export const protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
+    if (decoded.demo) {
+      req.user = createDemoUser(decoded.user);
+      return next();
+    }
+
     req.user = await User.findById(decoded.id).select('-password');
     if (!req.user) {
       return res.status(401).json({ message: 'User not found' });
@@ -33,6 +39,11 @@ export const optionalAuth = async (req, res, next) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
+      if (decoded.demo) {
+        req.user = createDemoUser(decoded.user);
+        return next();
+      }
+
       req.user = await User.findById(decoded.id).select('-password');
     } catch {
       req.user = null;
@@ -49,8 +60,8 @@ export const authorize = (...roles) => (req, res, next) => {
 };
 
 export const requireFundraiser = (req, res, next) => {
-  if (!req.user || (req.user.role !== USER_ROLES.FUNDRAISER && req.user.role !== USER_ROLES.ADMIN)) {
-    return res.status(403).json({ message: 'Fundraiser account required' });
+  if (!req.user || (!isManagerRole(req.user.role) && req.user.role !== USER_ROLES.ADMIN)) {
+    return res.status(403).json({ message: 'Campaign manager account required' });
   }
   next();
 };
