@@ -1,0 +1,30 @@
+# Implementation Tasks
+
+- [x] Backend Models and Routing
+  - [x] Extend User model with profilePicture and notificationPreferences
+  - [x] Create Store model schema
+  - [x] Create WithdrawalRequest model schema
+  - [x] Create Upload model schema
+  - [x] Create controllers and routes for Store, Withdrawal, and Upload
+  - [x] Implement account upgrade endpoint in auth routes
+  - [x] Register new routes in server.js
+- [/] Global UI Improvements
+  - [/] Update Navbar background color to `#89ca2e`, adjust height, and style contrast
+  - [ ] Increase Logo size to `h-20` in Navbar, Footer, and Auth pages
+- [ ] Registration Form Enhancements
+  - [ ] Add confirm password field with match validation
+  - [ ] Add show/hide password toggle buttons with eye icons
+  - [ ] Implement real-time digits-only phone number validation
+  - [ ] Implement auto-formatting and validation for CNIC (`XXXXX-XXXXXXX-X`)
+  - [ ] Convert registration form to multi-step layout (Step 1: Personal Info, Step 2: Address Info)
+- [ ] Merchandise Store "Open Store" Button
+  - [ ] Scroll down section inside Store.jsx with "Open Store" CTA
+  - [ ] Integrate authentication checks and account upgrade modals
+- [ ] Dedicated Fundraiser Dashboard Layout
+  - [ ] Sidebar layout implementation (desktop/mobile responsive)
+  - [ ] Overview section (statistics, activity feed, running campaigns widget)
+  - [ ] My Campaigns section (tabbed states, actions, completed withdrawal flow)
+  - [ ] My Uploads section (asset management grid with browse/preview/delete)
+  - [ ] Fundraising section (campaign form, AI generation simulation, Save as Draft/Submit actions)
+  - [ ] Online Store section (add product, mockup visual customizer, list management)
+  - [ ] Account Settings section (profile info, password security, notification preferences)
