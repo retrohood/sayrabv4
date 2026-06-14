@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { ShoppingBag, Search } from 'lucide-react';
 import api from '../api/client';
 import { formatCurrency } from '../utils/format';
+import { addCartItem, cartTotal as getCartTotal, readCart } from '../utils/cart';
 
 export default function Store() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => readCart());
   const [allocation, setAllocation] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,18 +32,10 @@ export default function Store() {
   }, [search, category]);
 
   const addToCart = (product) => {
-    setCart((prev) => {
-      const existing = prev.find((p) => p._id === product._id);
-      if (existing) {
-        return prev.map((p) =>
-          p._id === product._id ? { ...p, qty: p.qty + 1 } : p
-        );
-      }
-      return [...prev, { ...product, qty: 1 }];
-    });
+    setCart(addCartItem(product));
   };
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const cartTotal = getCartTotal(cart);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -121,14 +115,22 @@ export default function Store() {
                 <span className="text-xs text-primary-600 font-medium">{product.category}</span>
                 <h3 className="font-semibold text-slate-800 mt-1">{product.name}</h3>
                 <p className="text-sm text-slate-500 line-clamp-2 mt-1">{product.description}</p>
-                <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center justify-between gap-2 mt-4">
                   <span className="font-bold text-primary-700">{formatCurrency(product.price)}</span>
-                  <button
-                    onClick={() => addToCart(product)}
-                    className="px-3 py-1.5 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-                  >
-                    Add to Cart
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to={`/product/${product._id}`}
+                      className="px-3 py-1.5 text-sm font-medium border border-slate-300 rounded-lg hover:bg-slate-50"
+                    >
+                      View
+                    </Link>
+                    <button
+                      onClick={() => addToCart(product)}
+                      className="px-3 py-1.5 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                    >
+                      Add
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -149,12 +151,12 @@ export default function Store() {
             <span>Total</span>
             <span>{formatCurrency(cartTotal)}</span>
           </div>
-          <button className="w-full mt-3 py-2 bg-primary-600 text-white text-sm font-semibold rounded-lg hover:bg-primary-700">
+          <Link
+            to="/cart"
+            className="block w-full mt-3 py-2 bg-primary-600 text-white text-sm font-semibold rounded-lg hover:bg-primary-700 text-center"
+          >
             Proceed to Checkout
-          </button>
-          <p className="text-xs text-slate-500 mt-2 text-center">
-            Full checkout & order tracking — coming in next module
-          </p>
+          </Link>
         </div>
       )}
     </div>

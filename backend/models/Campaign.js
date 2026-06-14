@@ -4,6 +4,7 @@ import { CAMPAIGN_CATEGORIES, VERIFICATION_STATUS, LIFECYCLE_STATUS } from '../c
 const campaignSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
+    description: { type: String, trim: true },
     slug: { type: String, unique: true },
     keywords: [{ type: String, trim: true }],
     category: {
@@ -12,6 +13,7 @@ const campaignSchema = new mongoose.Schema(
       required: true,
     },
     thumbnail: { type: String, default: '' },
+    banner: { type: String, default: '' },
     location: { type: String, required: true, trim: true },
     shortDescription: { type: String, required: true, maxlength: 300 },
     story: {
@@ -22,11 +24,14 @@ const campaignSchema = new mongoose.Schema(
       supportingEvidence: { type: String, default: '' },
     },
     fundingGoal: { type: Number, required: true, min: 1 },
+    goalAmount: { type: Number, min: 1 },
     amountRaised: { type: Number, default: 0, min: 0 },
+    raisedAmount: { type: Number, default: 0, min: 0 },
     purposeOfFunds: { type: String, required: true },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
     organizer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    managerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     verificationStatus: {
       type: String,
       enum: Object.values(VERIFICATION_STATUS),
@@ -37,6 +42,13 @@ const campaignSchema = new mongoose.Schema(
       enum: Object.values(LIFECYCLE_STATUS),
       default: LIFECYCLE_STATUS.ACTIVE,
     },
+    status: {
+      type: String,
+      enum: ['draft', 'active', 'paused', 'completed'],
+      default: 'active',
+    },
+    deadline: { type: Date },
+    storeUrl: { type: String, trim: true },
     isEmergency: { type: Boolean, default: false },
     isFeatured: { type: Boolean, default: false },
     donorCount: { type: Number, default: 0 },
@@ -55,6 +67,16 @@ const campaignSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+campaignSchema.pre('validate', function (next) {
+  this.managerId = this.managerId || this.organizer;
+  this.description = this.description || this.shortDescription;
+  this.goalAmount = this.goalAmount ?? this.fundingGoal;
+  this.raisedAmount = this.raisedAmount ?? this.amountRaised;
+  this.deadline = this.deadline || this.endDate;
+  this.banner = this.banner || this.thumbnail;
+  next();
+});
 
 campaignSchema.index({ title: 'text', keywords: 'text', shortDescription: 'text' });
 campaignSchema.index({ category: 1, lifecycleStatus: 1, verificationStatus: 1 });

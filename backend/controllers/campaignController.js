@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Campaign from '../models/Campaign.js';
 import { VERIFICATION_STATUS, LIFECYCLE_STATUS } from '../constants/index.js';
 import { generateSlug } from '../utils/generateToken.js';
@@ -7,10 +8,8 @@ import {
   buildSortQuery,
 } from '../utils/campaignLifecycle.js';
 
+// Public campaigns: any campaign in an active lifecycle state
 const publicFilter = {
-  verificationStatus: {
-    $in: [VERIFICATION_STATUS.VERIFIED, VERIFICATION_STATUS.EMERGENCY_VERIFIED],
-  },
   lifecycleStatus: { $in: [LIFECYCLE_STATUS.ACTIVE, LIFECYCLE_STATUS.GOAL_ACHIEVED] },
 };
 
@@ -126,7 +125,11 @@ export const getEmergencyCampaigns = async (req, res) => {
 
 export const getCampaignBySlug = async (req, res) => {
   try {
-    const campaign = await Campaign.findOne({ slug: req.params.slug }).populate(
+    const lookup = mongoose.Types.ObjectId.isValid(req.params.slug)
+      ? { $or: [{ slug: req.params.slug }, { _id: req.params.slug }] }
+      : { slug: req.params.slug };
+
+    const campaign = await Campaign.findOne(lookup).populate(
       'organizer',
       'fullName email phone isVerifiedFundraiser'
     );
@@ -148,6 +151,84 @@ export const getCampaignBySlug = async (req, res) => {
     await campaign.save();
 
     res.json(campaign);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateCampaign = async (req, res) => {
+  try {
+    const campaign = await Campaign.findById(req.params.id);
+    if (!campaign) {
+      return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    const isOwner =
+      campaign.organizer?.toString() === req.user._id.toString() ||
+      campaign.managerId?.toString() === req.user._id.toString();
+
+    if (!isOwner && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const allowedFields = [
+      'title',
+      'description',
+      'category',
+      'thumbnail',
+      'banner',
+      'location',
+      'shortDescription',
+      'story',
+      'fundingGoal',
+      'goalAmount',
+      'purposeOfFunds',
+      'startDate',
+      'endDate',
+      'deadline',
+      'keywords',
+      'supportingDocuments',
+      'status',
+      'storeUrl',
+    ];
+
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        campaign[field] = req.body[field];
+      }
+    });
+
+    if (req.body.fundingGoal !== undefined) {
+      campaign.goalAmount = req.body.fundingGoal;
+    }
+    if (req.body.endDate !== undefined) {
+      campaign.deadline = req.body.endDate;
+    }
+
+    await campaign.save();
+    res.json(campaign);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteCampaign = async (req, res) => {
+  try {
+    const campaign = await Campaign.findById(req.params.id);
+    if (!campaign) {
+      return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    const isOwner =
+      campaign.organizer?.toString() === req.user._id.toString() ||
+      campaign.managerId?.toString() === req.user._id.toString();
+
+    if (!isOwner && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    await campaign.deleteOne();
+    res.json({ message: 'Campaign deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -195,6 +276,11 @@ export const createCampaign = async (req, res) => {
       keywords: keywords || [],
       supportingDocuments: supportingDocuments || [],
       organizer: req.user._id,
+      managerId: req.user._id,
+      description: shortDescription,
+      goalAmount: fundingGoal,
+      deadline: end,
+      banner: thumbnail || `https://picsum.photos/seed/${Date.now()}/600/400`,
       verificationStatus: VERIFICATION_STATUS.PENDING,
       lifecycleStatus: LIFECYCLE_STATUS.ACTIVE,
     });
@@ -207,7 +293,9 @@ export const createCampaign = async (req, res) => {
 
 export const getMyCampaigns = async (req, res) => {
   try {
-    const campaigns = await Campaign.find({ organizer: req.user._id }).sort({ createdAt: -1 });
+    const campaigns = await Campaign.find({
+      $or: [{ organizer: req.user._id }, { managerId: req.user._id }],
+    }).sort({ createdAt: -1 });
     res.json(campaigns);
   } catch (error) {
     res.status(500).json({ message: error.message });
