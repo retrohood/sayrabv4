@@ -2,6 +2,7 @@ import PlatformStats from '../models/PlatformStats.js';
 import Campaign from '../models/Campaign.js';
 import Donation from '../models/Donation.js';
 import User from '../models/User.js';
+import { CUSTOMER_ROLES } from '../constants/index.js';
 
 export const getPlatformStats = async (req, res) => {
   try {
@@ -11,7 +12,7 @@ export const getPlatformStats = async (req, res) => {
       const [totalRaised, campaignCount, donorCount, emergencyCount] = await Promise.all([
         Donation.aggregate([{ $match: { status: 'completed' } }, { $group: { _id: null, total: { $sum: '$amount' } } }]),
         Campaign.countDocuments(),
-        User.countDocuments({ role: 'donor' }),
+        User.countDocuments({ role: { $in: CUSTOMER_ROLES } }),
         Campaign.countDocuments({ isEmergency: true }),
       ]);
 

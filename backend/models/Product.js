@@ -13,14 +13,31 @@ const productSchema = new mongoose.Schema(
     },
     price: { type: Number, required: true, min: 0 },
     image: { type: String, default: '' },
+    images: [{ type: String }],
+    sizes: [{ type: String, trim: true }],
+    colors: [{ type: String, trim: true }],
     stock: { type: Number, default: 0, min: 0 },
     isActive: { type: Boolean, default: true },
     branding: { type: String, enum: ['platform', 'campaign'], default: 'platform' },
     campaign: { type: mongoose.Schema.Types.ObjectId, ref: 'Campaign' },
+    campaignId: { type: mongoose.Schema.Types.ObjectId, ref: 'Campaign' },
+    creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     averageRating: { type: Number, default: 0, min: 0, max: 5 },
     reviewCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
+
+productSchema.pre('validate', function (next) {
+  this.campaignId = this.campaignId || this.campaign;
+  this.campaign = this.campaign || this.campaignId;
+  if ((!this.images || this.images.length === 0) && this.image) {
+    this.images = [this.image];
+  }
+  if (!this.image && this.images?.length) {
+    this.image = this.images[0];
+  }
+  next();
+});
 
 export default mongoose.model('Product', productSchema);

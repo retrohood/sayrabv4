@@ -7,6 +7,20 @@ export const generateAuthToken = (userId) => {
   });
 };
 
+export const generateDemoAuthToken = (user) => {
+  return jwt.sign(
+    {
+      id: user._id,
+      demo: true,
+      user: user.toPublicJSON(),
+    },
+    process.env.JWT_SECRET || 'dev_secret',
+    {
+      expiresIn: '30d',
+    }
+  );
+};
+
 export const generateSlug = (title) => {
   const base = title
     .toLowerCase()

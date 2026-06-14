@@ -5,6 +5,8 @@ import {
   getEmergencyCampaigns,
   getCampaignBySlug,
   createCampaign,
+  updateCampaign,
+  deleteCampaign,
   getMyCampaigns,
   incrementShareCount,
 } from '../controllers/campaignController.js';
@@ -18,6 +20,8 @@ router.get('/', getCampaigns);
 router.get('/my', protect, requireFundraiser, getMyCampaigns);
 router.get('/:slug', optionalAuth, getCampaignBySlug);
 router.post('/', protect, requireFundraiser, createCampaign);
+router.put('/:id', protect, requireFundraiser, updateCampaign);
+router.delete('/:id', protect, requireFundraiser, deleteCampaign);
 router.post('/:id/share', incrementShareCount);
 
 export default router;

@@ -16,7 +16,16 @@ export default function ProtectedRoute({ children, roles }) {
     return <Navigate to="/auth" replace />;
   }
 
-  if (roles && !roles.includes(user.role) && user.role !== 'admin') {
+  const roleAliases = {
+    customer: ['customer', 'donor'],
+    donor: ['customer', 'donor'],
+    manager: ['manager', 'fundraiser'],
+    fundraiser: ['manager', 'fundraiser'],
+    admin: ['admin'],
+  };
+  const allowedRoles = roles?.flatMap((role) => roleAliases[role] || [role]);
+
+  if (allowedRoles && !allowedRoles.includes(user.role) && user.role !== 'admin') {
     return <Navigate to="/" replace />;
   }
 

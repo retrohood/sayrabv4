@@ -1,23 +1,28 @@
 import express from 'express';
 import { protect, authorize } from '../middleware/auth.js';
 import { USER_ROLES } from '../constants/index.js';
+import {
+  getAdminOverview,
+  listManagers,
+  updateManagerApproval,
+  listCampaignsForReview,
+  reviewCampaign,
+  listPayoutReviews,
+  reviewPayout,
+  listOrderIssues,
+} from '../controllers/adminController.js';
 
 const router = express.Router();
 
 router.use(protect, authorize(USER_ROLES.ADMIN));
 
-router.get('/placeholder', (req, res) => {
-  res.json({
-    message: 'Admin module placeholder — implement campaign verification, emergency management, and moderation here.',
-    plannedFeatures: [
-      'Campaign verification workflow (pending → under review → verified/rejected)',
-      'Emergency campaign management',
-      'Review moderation',
-      'User management',
-      'Platform statistics dashboard',
-      'Revenue allocation configuration',
-    ],
-  });
-});
+router.get('/overview', getAdminOverview);
+router.get('/managers', listManagers);
+router.put('/managers/:id/approval', updateManagerApproval);
+router.get('/campaigns', listCampaignsForReview);
+router.put('/campaigns/:id/review', reviewCampaign);
+router.get('/payouts', listPayoutReviews);
+router.put('/payouts/:id/review', reviewPayout);
+router.get('/orders/issues', listOrderIssues);
 
 export default router;

@@ -32,16 +32,9 @@ export const updateCampaignLifecycle = async (campaign) => {
 };
 
 export const isPubliclyVisible = (campaign) => {
-  const verifiedStatuses = [VERIFICATION_STATUS.VERIFIED, VERIFICATION_STATUS.EMERGENCY_VERIFIED];
-  const activeStatuses = [
-    LIFECYCLE_STATUS.ACTIVE,
-    LIFECYCLE_STATUS.GOAL_ACHIEVED,
-  ];
-
-  return (
-    verifiedStatuses.includes(campaign.verificationStatus) &&
-    activeStatuses.includes(campaign.lifecycleStatus)
-  );
+  // Make campaigns publicly visible as long as they are in an active lifecycle state.
+  const activeStatuses = [LIFECYCLE_STATUS.ACTIVE, LIFECYCLE_STATUS.GOAL_ACHIEVED];
+  return activeStatuses.includes(campaign.lifecycleStatus);
 };
 
 export const buildSortQuery = (sort) => {
