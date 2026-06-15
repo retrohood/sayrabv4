@@ -150,9 +150,9 @@ export default function CreateCampaign() {
         </div>
 
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">Step 2: Add Merchandise (Optional)</h1>
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">Step 2: Add Merchandise (Required)</h1>
           <p className="text-slate-600">
-            Boost your fundraising by selling t-shirts, hoodies, caps, or mugs. <strong>50% of all product sales</strong> will go directly to this campaign's target!
+            Each campaign on SAYRAB must have at least one merchandise product linked to it. Donators can choose to buy it to support your campaign or donate separately. <strong>50% of all product sales</strong> will go directly to this campaign's target!
           </p>
         </div>
 
@@ -265,6 +265,12 @@ export default function CreateCampaign() {
             </div>
           )}
 
+          {addedProducts.length === 0 && (
+            <p className="text-sm text-amber-600 font-medium text-center bg-amber-50 border border-amber-200 p-3 rounded-lg">
+              ⚠️ Please add at least one merchandise product to finish creating your campaign.
+            </p>
+          )}
+
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100">
             <button
               type="submit"
@@ -275,10 +281,11 @@ export default function CreateCampaign() {
             </button>
             <button
               type="button"
+              disabled={addedProducts.length === 0}
               onClick={() => navigate(`/campaigns/${createdCampaign.slug}`)}
-              className="flex-1 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
-              {addedProducts.length > 0 ? 'Finish & View Campaign' : 'Skip & View Campaign'} <ArrowRight size={18} />
+              Finish & View Campaign <ArrowRight size={18} />
             </button>
           </div>
         </form>

@@ -110,6 +110,7 @@ export default function Dashboard() {
     stock: '',
     description: '',
     image: '',
+    campaignId: '',
   });
   const [customizerBase, setCustomizerBase] = useState('tshirt');
   const [customizerColor, setCustomizerColor] = useState('#ffffff');
@@ -469,8 +470,8 @@ export default function Dashboard() {
     setProductError('');
     setProductSuccess('');
 
-    if (!productForm.name || !productForm.price || !productForm.stock) {
-      setProductError('Please fill in all product details');
+    if (!productForm.name || !productForm.price || !productForm.stock || !productForm.campaignId) {
+      setProductError('Please fill in all product details and select a campaign to link');
       return;
     }
 
@@ -486,11 +487,13 @@ export default function Dashboard() {
         description: productForm.description || `Custom branded ${customizerBase} with custom color and emblem.`,
         image: mockImage,
         branding: 'campaign',
+        campaignId: productForm.campaignId,
+        campaign: productForm.campaignId,
       });
 
       setStoreProducts([res.data, ...storeProducts]);
       setProductSuccess('Product customized and listed successfully!');
-      setProductForm({ name: '', category: 'Apparel', price: '', stock: '', description: '', image: '' });
+      setProductForm({ name: '', category: 'Apparel', price: '', stock: '', description: '', image: '', campaignId: '' });
     } catch (err) {
       setProductError(err.response?.data?.message || 'Failed to add product');
     }
@@ -669,10 +672,8 @@ export default function Dashboard() {
                   <UploadCloud size={18} /> My Uploads
                 </button>
                 <button
-                  onClick={() => { setActiveTab('fundraising'); setIsSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                    activeTab === 'fundraising' ? 'bg-primary-600 text-white' : 'hover:bg-slate-800 hover:text-white'
-                  }`}
+                  onClick={() => { navigate('/create-campaign'); setIsSidebarOpen(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer hover:bg-slate-800 hover:text-white"
                 >
                   <Plus size={18} /> Start Fundraising
                 </button>
@@ -754,7 +755,7 @@ export default function Dashboard() {
           </div>
           {isFundraiser && (
             <button
-              onClick={() => setActiveTab('fundraising')}
+              onClick={() => navigate('/create-campaign')}
               className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-semibold text-sm rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-2 cursor-pointer"
             >
               <Plus size={16} /> New Campaign
@@ -1499,6 +1500,23 @@ export default function Dashboard() {
                           <option value="">None (Text Only)</option>
                           {uploads.map(u => (
                             <option key={u._id} value={u.url}>{u.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-1 gap-4 pt-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Link to Campaign *</label>
+                        <select
+                          required
+                          value={productForm.campaignId}
+                          onChange={(e) => setProductForm({ ...productForm, campaignId: e.target.value })}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none"
+                        >
+                          <option value="">-- Select Campaign --</option>
+                          {campaigns.map(c => (
+                            <option key={c._id} value={c._id}>{c.title}</option>
                           ))}
                         </select>
                       </div>
