@@ -14,10 +14,19 @@ export const writeCart = (cart) => {
 
 export const addCartItem = (product, quantity = 1) => {
   const cart = readCart();
-  const existing = cart.find((item) => item._id === product._id);
+  const existing = cart.find(
+    (item) =>
+      item._id === product._id &&
+      item.selectedSize === product.selectedSize &&
+      item.selectedColor === product.selectedColor
+  );
   const next = existing
     ? cart.map((item) =>
-        item._id === product._id ? { ...item, qty: item.qty + quantity } : item
+        item._id === product._id &&
+        item.selectedSize === product.selectedSize &&
+        item.selectedColor === product.selectedColor
+          ? { ...item, qty: item.qty + quantity }
+          : item
       )
     : [
         ...cart,
@@ -28,6 +37,8 @@ export const addCartItem = (product, quantity = 1) => {
           image: product.image || product.images?.[0],
           campaignId: product.campaignId || product.campaign,
           qty: quantity,
+          selectedSize: product.selectedSize,
+          selectedColor: product.selectedColor,
         },
       ];
 

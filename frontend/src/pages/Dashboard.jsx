@@ -23,7 +23,8 @@ import {
   Shield,
   Clock,
   ArrowRight,
-  Info
+  Info,
+  ShoppingBag
 } from 'lucide-react';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -116,6 +117,10 @@ export default function Dashboard() {
   const [productError, setProductError] = useState('');
   const [productSuccess, setProductSuccess] = useState('');
 
+  // Campaign Orders States
+  const [campaignOrders, setCampaignOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+
   // Settings States
   const [profileForm, setProfileForm] = useState({
     fullName: user?.fullName || '',
@@ -150,7 +155,7 @@ export default function Dashboard() {
 
     if (isFundraiser) {
       // Fetch Campaigns
-      api.get('/campaigns/my').then((res) => {
+      api.get('/campaigns/my').then(async (res) => {
         const campaignsData = Array.isArray(res.data) ? res.data : [];
         setCampaigns(campaignsData);
         // Calculate stats
@@ -177,6 +182,32 @@ export default function Dashboard() {
           }
         });
         setActivities(acts.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5));
+
+        // Fetch Orders for campaigns
+        if (campaignsData.length > 0) {
+          setOrdersLoading(true);
+          try {
+            const orderPromises = campaignsData.map(c => 
+              api.get(`/orders/campaign/${c._id}`).catch(err => {
+                console.error(`Failed to fetch orders for campaign ${c._id}:`, err);
+                return { data: [] };
+              })
+            );
+            const orderResponses = await Promise.all(orderPromises);
+            const allOrders = [];
+            orderResponses.forEach(orderRes => {
+              if (Array.isArray(orderRes.data)) {
+                allOrders.push(...orderRes.data);
+              }
+            });
+            setCampaignOrders(allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+          } catch (err) {
+            console.error('Failed to fetch campaign orders:', err);
+            setCampaignOrders([]);
+          } finally {
+            setOrdersLoading(false);
+          }
+        }
       }).catch((err) => {
         console.error('Failed to fetch my campaigns:', err);
         setCampaigns([]);
@@ -475,6 +506,18 @@ export default function Dashboard() {
     }
   };
 
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    try {
+      const res = await api.put(`/manufacturing/orders/${orderId}/status`, { productionStatus: newStatus });
+      setCampaignOrders(prev =>
+        prev.map(o => (o._id === orderId ? { ...o, productionStatus: res.data.productionStatus, orderStatus: res.data.orderStatus } : o))
+      );
+    } catch (err) {
+      console.error('Failed to update status:', err);
+      alert(err.response?.data?.message || 'Failed to update order status');
+    }
+  };
+
   // -------------------------
   // Settings Update
   // -------------------------
@@ -561,6 +604,13 @@ export default function Dashboard() {
     return true;
   });
 
+  // Calculate analytics
+  const totalRaisedValue = campaigns.reduce((sum, c) => sum + (c.amountRaised || 0), 0);
+  const merchRevenueValue = campaignOrders.reduce((sum, o) => sum + (o.total || 0), 0) * 0.5;
+  const directDonationsValue = Math.max(0, totalRaisedValue - merchRevenueValue);
+  const productsSoldValue = campaignOrders.reduce((sum, o) => sum + (o.products ? o.products.reduce((itemSum, item) => itemSum + (item.quantity || 0), 0) : 0), 0);
+  const activeCampaignsValue = campaigns.filter(c => c.lifecycleStatus === 'active').length;
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
       {/* Mobile Header */}
@@ -627,12 +677,20 @@ export default function Dashboard() {
                   <Plus size={18} /> Start Fundraising
                 </button>
                 <button
-                  onClick={() => { setActiveTab('store'); setIsSidebarOpen(false); }}
+                  onClick={() => { setActiveTab('products'); setIsSidebarOpen(false); }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                    activeTab === 'store' ? 'bg-primary-600 text-white' : 'hover:bg-slate-800 hover:text-white'
+                    activeTab === 'products' ? 'bg-primary-600 text-white' : 'hover:bg-slate-800 hover:text-white'
                   }`}
                 >
-                  <StoreIcon size={18} /> Online Store
+                  <StoreIcon size={18} /> My Products
+                </button>
+                <button
+                  onClick={() => { setActiveTab('orders'); setIsSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                    activeTab === 'orders' ? 'bg-primary-600 text-white' : 'hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  <ShoppingBag size={18} /> My Orders
                 </button>
               </>
             ) : (
@@ -710,44 +768,54 @@ export default function Dashboard() {
         {activeTab === 'overview' && isFundraiser && (
           <div className="space-y-8 animate-fade-in">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                  <TrendingUp size={24} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                  <TrendingUp size={20} />
                 </div>
                 <div>
-                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Raised</p>
-                  <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(stats.totalRaised)}</p>
+                  <p className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">Total Raised</p>
+                  <p className="text-lg font-bold text-slate-900 mt-0.5">{formatCurrency(totalRaisedValue)}</p>
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-                <div className="p-3 bg-primary-50 text-primary-600 rounded-xl">
-                  <Megaphone size={24} />
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                <div className="p-2.5 bg-teal-50 text-teal-600 rounded-xl">
+                  <Coins size={20} />
                 </div>
                 <div>
-                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Active Campaigns</p>
-                  <p className="text-2xl font-bold text-slate-900 mt-1">{stats.activeCampaigns}</p>
+                  <p className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">Direct Donations</p>
+                  <p className="text-lg font-bold text-slate-900 mt-0.5">{formatCurrency(directDonationsValue)}</p>
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-                <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                  <StoreIcon size={24} />
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                  <ShoppingBag size={20} />
                 </div>
                 <div>
-                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Products Sold</p>
-                  <p className="text-2xl font-bold text-slate-900 mt-1">{stats.productsSold} units</p>
+                  <p className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">Merch Share (50%)</p>
+                  <p className="text-lg font-bold text-slate-900 mt-0.5">{formatCurrency(merchRevenueValue)}</p>
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-                <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
-                  <UploadCloud size={24} />
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
+                  <StoreIcon size={20} />
                 </div>
                 <div>
-                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Uploads</p>
-                  <p className="text-2xl font-bold text-slate-900 mt-1">{stats.uploadsCount} files</p>
+                  <p className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">Products Sold</p>
+                  <p className="text-lg font-bold text-slate-900 mt-0.5">{productsSoldValue} units</p>
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                <div className="p-2.5 bg-primary-50 text-primary-600 rounded-xl">
+                  <Megaphone size={20} />
+                </div>
+                <div>
+                  <p className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">Active Campaigns</p>
+                  <p className="text-lg font-bold text-slate-900 mt-0.5">{activeCampaignsValue}</p>
                 </div>
               </div>
             </div>
@@ -1347,9 +1415,9 @@ export default function Dashboard() {
         )}
 
         {/* ------------------------- */}
-        {/* ONLINE STORE TAB          */}
+        {/* MY PRODUCTS TAB           */}
         {/* ------------------------- */}
-        {activeTab === 'store' && (
+        {activeTab === 'products' && (
           <div className="space-y-8 animate-fade-in">
             {!store ? (
               <div className="bg-white border rounded-2xl p-12 text-center max-w-xl mx-auto">
@@ -1531,6 +1599,110 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ------------------------- */}
+        {/* MY ORDERS TAB             */}
+        {/* ------------------------- */}
+        {activeTab === 'orders' && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800">Merchandise Orders</h3>
+                  <p className="text-slate-500 text-xs mt-1">
+                    Manage fulfillment and track manufacturing status for merchandise sold.
+                  </p>
+                </div>
+              </div>
+
+              {ordersLoading ? (
+                <div className="py-12 flex justify-center items-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                </div>
+              ) : campaignOrders.length === 0 ? (
+                <div className="py-12 text-center">
+                  <ShoppingBag size={48} className="text-slate-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-bold text-slate-700">No orders found</h3>
+                  <p className="text-slate-500 text-sm mt-1">Once donators purchase products, their orders will appear here.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto animate-fade-in">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        <th className="py-3 px-4">Order ID & Date</th>
+                        <th className="py-3 px-4">Buyer</th>
+                        <th className="py-3 px-4">Campaign</th>
+                        <th className="py-3 px-4">Products</th>
+                        <th className="py-3 px-4">Revenue Split</th>
+                        <th className="py-3 px-4 text-right">Production Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-sm">
+                      {campaignOrders.map((order) => {
+                        const orgShare = (order.total || 0) * 0.5;
+                        return (
+                          <tr key={order._id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="py-4 px-4 font-medium">
+                              <span className="font-mono text-xs text-slate-700 font-bold block">{order._id.substring(0, 10)}...</span>
+                              <span className="text-xs text-slate-400 mt-0.5 block">{formatDate(order.createdAt)}</span>
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="font-semibold text-slate-800">{order.shippingAddress?.fullName || 'Anonymous Buyer'}</div>
+                              <div className="text-xs text-slate-500">{order.customerId?.email || 'N/A'}</div>
+                            </td>
+                            <td className="py-4 px-4 font-medium text-slate-700">
+                              {order.campaignId?.title || 'Unknown Campaign'}
+                            </td>
+                            <td className="py-4 px-4 space-y-1">
+                              {order.products?.map((item, idx) => (
+                                <div key={idx} className="text-xs text-slate-600">
+                                  <span className="font-semibold text-slate-800">{item.name}</span>{' '}
+                                  {item.size && <span className="bg-slate-100 text-slate-600 px-1 rounded mx-0.5 text-[10px]">{item.size}</span>}
+                                  {item.color && (
+                                    <span
+                                      className="inline-block w-2.5 h-2.5 rounded-full border border-slate-300 align-middle mx-0.5"
+                                      style={{ backgroundColor: item.color }}
+                                      title={item.color}
+                                    />
+                                  )}
+                                  <span className="text-slate-400"> x{item.quantity}</span>
+                                </div>
+                              ))}
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="font-bold text-slate-800">{formatCurrency(order.total)}</div>
+                              <div className="text-xs text-emerald-600 font-bold">Split: {formatCurrency(orgShare)}</div>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              <select
+                                value={order.productionStatus || 'queued'}
+                                onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value)}
+                                className={`text-xs font-bold rounded-lg px-2.5 py-1.5 border outline-none cursor-pointer ${
+                                  order.productionStatus === 'delivered' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                                  order.productionStatus === 'shipped' ? 'bg-purple-50 border-purple-200 text-purple-700' :
+                                  order.productionStatus === 'quality_check' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                                  order.productionStatus === 'in_production' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                                  'bg-slate-50 border-slate-200 text-slate-700'
+                                }`}
+                              >
+                                <option value="queued">Queued</option>
+                                <option value="in_production">In Production</option>
+                                <option value="quality_check">Quality Check</option>
+                                <option value="shipped">Shipped</option>
+                                <option value="delivered">Delivered</option>
+                              </select>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

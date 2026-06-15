@@ -1,7 +1,9 @@
+import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Campaign from '../models/Campaign.js';
 import { calculateRevenueSplit } from '../utils/revenueSplit.js';
+import { isDatabaseConnected } from '../utils/demoAuth.js';
 
 export const createOrder = async (req, res) => {
   try {
@@ -54,7 +56,7 @@ export const createOrder = async (req, res) => {
     });
 
     if (paymentStatus === 'paid') {
-      campaign.amountRaised += total;
+      campaign.amountRaised += (total * 0.5);
       campaign.raisedAmount = campaign.amountRaised;
       await campaign.save();
     }
@@ -123,13 +125,41 @@ export const updateOrderPayment = async (req, res) => {
     if (!wasPaid && order.paymentStatus === 'paid') {
       const campaign = await Campaign.findById(order.campaignId);
       if (campaign) {
-        campaign.amountRaised += order.total;
+        const splitAmount = order.revenueSplit?.organization || (order.total * 0.5);
+        campaign.amountRaised += splitAmount;
         campaign.raisedAmount = campaign.amountRaised;
         await campaign.save();
       }
     }
 
     res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getOrdersByCampaign = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+
+    if (!isDatabaseConnected(mongoose)) {
+      return res.json([]);
+    }
+
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) {
+      return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    if (req.user.role !== 'admin' && campaign.organizer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to view this campaign\'s orders' });
+    }
+
+    const orders = await Order.find({ campaignId })
+      .populate('customerId', 'fullName email')
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

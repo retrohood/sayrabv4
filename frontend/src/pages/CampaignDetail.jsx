@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Users,
   Share2,
@@ -7,10 +7,12 @@ import {
   Copy,
   Heart,
   Trophy,
+  ShoppingBag,
 } from 'lucide-react';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import DonationModal from '../components/DonationModal';
+import { addCartItem } from '../utils/cart';
 import {
   formatCurrency,
   formatDate,
@@ -22,12 +24,18 @@ export default function CampaignDetail() {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [campaign, setCampaign] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [showDonate, setShowDonate] = useState(false);
   const [referralLink, setReferralLink] = useState('');
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [buyForm, setBuyForm] = useState({ size: '', color: '', qty: 1 });
+  const [buyError, setBuyError] = useState('');
 
   const refCode = searchParams.get('ref');
 
@@ -46,6 +54,14 @@ export default function CampaignDetail() {
         setLeaderboard(lb.data);
         const linkRes = await api.get(`/referrals/link/${res.data._id}`);
         setReferralLink(linkRes.data.link);
+
+        try {
+          const productsRes = await api.get(`/products/campaign/${res.data._id}`);
+          setProducts(productsRes.data || []);
+        } catch (err) {
+          console.error("Failed to load campaign merchandise:", err);
+          setProducts([]);
+        }
       } catch {
         setCampaign(null);
       } finally {
@@ -54,6 +70,41 @@ export default function CampaignDetail() {
     };
     load();
   }, [slug]);
+
+  const handleBuyClick = (product) => {
+    setSelectedProduct(product);
+    setBuyForm({
+      size: product.sizes?.[0] || '',
+      color: product.colors?.[0] || '',
+      qty: 1,
+    });
+    setBuyError('');
+  };
+
+  const handleCheckoutSubmit = (e) => {
+    e.preventDefault();
+    if (selectedProduct.sizes?.length > 0 && !buyForm.size) {
+      setBuyError('Please select a size');
+      return;
+    }
+    if (selectedProduct.colors?.length > 0 && !buyForm.color) {
+      setBuyError('Please select a color');
+      return;
+    }
+    if (buyForm.qty < 1 || buyForm.qty > selectedProduct.stock) {
+      setBuyError(`Quantity must be between 1 and ${selectedProduct.stock}`);
+      return;
+    }
+
+    addCartItem({
+      ...selectedProduct,
+      selectedSize: buyForm.size || undefined,
+      selectedColor: buyForm.color || undefined,
+    }, buyForm.qty);
+
+    setSelectedProduct(null);
+    navigate('/checkout');
+  };
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -236,6 +287,50 @@ export default function CampaignDetail() {
             </div>
           </section>
 
+          {products.length > 0 && (
+            <section className="mb-10 border-t border-slate-100 pt-8">
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">Campaign Merchandise</h2>
+              <p className="text-sm text-slate-600 mb-6">
+                Support this campaign by purchasing official merchandise. 50% of the proceeds will go directly to the campaign goal!
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {products.map((product) => {
+                  const contribution = product.price * 0.5;
+                  return (
+                    <div key={product._id} className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+                      <img
+                        src={product.image || product.images?.[0] || 'https://picsum.photos/seed/placeholder/300/300'}
+                        alt={product.name}
+                        className="w-full h-48 object-cover"
+                      />
+                      <div className="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                          <span className="text-xs font-semibold text-primary-600 uppercase tracking-wider">{product.category}</span>
+                          <h3 className="font-bold text-slate-800 mt-1 line-clamp-1">{product.name}</h3>
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-2">{product.description}</p>
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-slate-100">
+                          <div className="flex items-baseline justify-between mb-3">
+                            <span className="text-xl font-extrabold text-slate-900">{formatCurrency(product.price)}</span>
+                            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
+                              {formatCurrency(contribution)} raised
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleBuyClick(product)}
+                            className="w-full py-2.5 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors text-sm cursor-pointer"
+                          >
+                            Buy Now
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
           {leaderboard.length > 0 && (
             <section>
               <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -277,6 +372,100 @@ export default function CampaignDetail() {
             api.get(`/campaigns/${slug}`).then((res) => setCampaign(res.data));
           }}
         />
+      )}
+
+      {selectedProduct && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 relative">
+            <button
+              onClick={() => setSelectedProduct(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg cursor-pointer"
+            >
+              ✕
+            </button>
+            <h3 className="text-lg font-bold text-slate-900 mb-1">{selectedProduct.name}</h3>
+            <p className="text-sm text-slate-500 mb-4">{formatCurrency(selectedProduct.price)} · 50% split contribution</p>
+
+            <form onSubmit={handleCheckoutSubmit} className="space-y-4">
+              {selectedProduct.sizes?.length > 0 && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase mb-1.5">Select Size *</label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProduct.sizes.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setBuyForm({ ...buyForm, size: s })}
+                        className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-all cursor-pointer ${
+                          buyForm.size === s
+                            ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
+                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedProduct.colors?.length > 0 && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase mb-1.5">Select Color *</label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProduct.colors.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setBuyForm({ ...buyForm, color: c })}
+                        className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-all cursor-pointer ${
+                          buyForm.color === c
+                            ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
+                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1.5">Quantity *</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    disabled={buyForm.qty <= 1}
+                    onClick={() => setBuyForm({ ...buyForm, qty: buyForm.qty - 1 })}
+                    className="w-10 h-10 border border-slate-200 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-50 cursor-pointer animate-scale-in"
+                  >
+                    -
+                  </button>
+                  <span className="w-12 text-center font-bold text-slate-800">{buyForm.qty}</span>
+                  <button
+                    type="button"
+                    disabled={buyForm.qty >= selectedProduct.stock}
+                    onClick={() => setBuyForm({ ...buyForm, qty: buyForm.qty + 1 })}
+                    className="w-10 h-10 border border-slate-200 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-50 cursor-pointer animate-scale-in"
+                  >
+                    +
+                  </button>
+                  <span className="text-xs text-slate-500 font-medium">({selectedProduct.stock} available)</span>
+                </div>
+              </div>
+
+              {buyError && <p className="text-xs text-red-600 font-semibold">{buyError}</p>}
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl text-sm transition-colors cursor-pointer shadow-md flex items-center justify-center gap-2"
+              >
+                <ShoppingBag size={18} /> Buy & Checkout
+              </button>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

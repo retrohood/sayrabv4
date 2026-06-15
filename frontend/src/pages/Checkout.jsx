@@ -45,6 +45,8 @@ export default function Checkout() {
         products: cart.map((item) => ({
           productId: item._id,
           quantity: item.qty,
+          size: item.selectedSize || undefined,
+          color: item.selectedColor || undefined,
         })),
         shippingAddress: form,
         paymentStatus: 'paid',
