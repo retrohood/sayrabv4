@@ -13,4 +13,25 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => {
+    const contentType = response.headers['content-type'] || '';
+    if (
+      contentType.includes('text/html') &&
+      typeof response.data === 'string' &&
+      response.data.trim().startsWith('<!')
+    ) {
+      return Promise.reject(
+        new Error(
+          'API returned HTML instead of JSON. This typically happens when VITE_API_URL is not configured correctly on Vercel, causing requests to be rewritten to index.html.'
+        )
+      );
+    }
+    return response;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 export default api;

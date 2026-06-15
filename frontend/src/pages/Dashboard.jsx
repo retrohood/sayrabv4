@@ -143,21 +143,24 @@ export default function Dashboard() {
     if (!user) return;
 
     if (user.role === 'donor' || user.role === 'admin') {
-      api.get('/donations/my').then((res) => setDonations(res.data)).catch(() => {});
+      api.get('/donations/my')
+        .then((res) => setDonations(Array.isArray(res.data) ? res.data : []))
+        .catch(() => setDonations([]));
     }
 
     if (isFundraiser) {
       // Fetch Campaigns
       api.get('/campaigns/my').then((res) => {
-        setCampaigns(res.data);
+        const campaignsData = Array.isArray(res.data) ? res.data : [];
+        setCampaigns(campaignsData);
         // Calculate stats
-        const total = res.data.reduce((sum, c) => sum + c.amountRaised, 0);
-        const active = res.data.filter(c => c.lifecycleStatus === 'active').length;
+        const total = campaignsData.reduce((sum, c) => sum + (c.amountRaised || 0), 0);
+        const active = campaignsData.filter(c => c.lifecycleStatus === 'active').length;
         setStats(prev => ({ ...prev, totalRaised: total, activeCampaigns: active }));
         
         // Generate activity feed
         const acts = [];
-        res.data.forEach(c => {
+        campaignsData.forEach(c => {
           acts.push({
             id: c._id + '_created',
             title: `Campaign created: "${c.title}"`,
@@ -174,27 +177,41 @@ export default function Dashboard() {
           }
         });
         setActivities(acts.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5));
-      }).catch(() => {});
+      }).catch((err) => {
+        console.error('Failed to fetch my campaigns:', err);
+        setCampaigns([]);
+        setActivities([]);
+      });
 
       // Fetch Withdrawals
-      api.get('/withdrawals/my').then((res) => setWithdrawals(res.data)).catch(() => {});
+      api.get('/withdrawals/my')
+        .then((res) => setWithdrawals(Array.isArray(res.data) ? res.data : []))
+        .catch(() => setWithdrawals([]));
 
       // Fetch Uploads
       api.get('/uploads').then((res) => {
-        setUploads(res.data);
-        setStats(prev => ({ ...prev, uploadsCount: res.data.length }));
-      }).catch(() => {});
+        const uploadsData = Array.isArray(res.data) ? res.data : [];
+        setUploads(uploadsData);
+        setStats(prev => ({ ...prev, uploadsCount: uploadsData.length }));
+      }).catch((err) => {
+        console.error('Failed to fetch uploads:', err);
+        setUploads([]);
+      });
 
       // Fetch Store
       api.get('/stores/my').then((res) => {
-        setStore(res.data);
-        if (res.data) {
+        setStore(res.data || null);
+        if (res.data && res.data._id) {
           // Fetch products for this creator
           api.get(`/products?creator=${user._id}`).then((prodRes) => {
-            setStoreProducts(prodRes.data.products);
-          }).catch(() => {});
+            setStoreProducts(prodRes.data?.products || []);
+          }).catch(() => setStoreProducts([]));
         }
-      }).catch(() => {});
+      }).catch((err) => {
+        console.error('Failed to fetch store:', err);
+        setStore(null);
+        setStoreProducts([]);
+      });
     }
   }, [user]);
 

@@ -33,7 +33,12 @@ export default function CreateCampaign() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get('/constants').then((res) => setCategories(res.data.campaignCategories));
+    api.get('/constants')
+      .then((res) => setCategories(res.data?.campaignCategories || []))
+      .catch((err) => {
+        console.error('Failed to fetch categories:', err);
+        setCategories([]);
+      });
   }, []);
 
   const handleChange = (e) => {

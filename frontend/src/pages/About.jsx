@@ -11,11 +11,28 @@ import { formatCurrency } from '../utils/format';
 
 const valueIcons = [Shield, Heart, Users, CheckCircle, TrendingUp];
 
+const DEFAULT_ABOUT_CONTENT = {
+  mission: "Sayrab is dedicated to connecting donors with verified campaigns and providing a trusted fundraising platform.",
+  impactStatistics: {
+    totalFundsRaised: 0,
+    totalCampaignsSupported: 0,
+    totalDonors: 0,
+    emergencyCampaignsFunded: 0,
+  },
+  howItWorks: [],
+  coreValues: ["Transparency", "Integrity", "Impact", "Community", "Accountability"],
+};
+
 export default function About() {
   const [content, setContent] = useState(null);
 
   useEffect(() => {
-    api.get('/platform/about').then((res) => setContent(res.data));
+    api.get('/platform/about')
+      .then((res) => setContent(res.data && typeof res.data === 'object' ? res.data : DEFAULT_ABOUT_CONTENT))
+      .catch((err) => {
+        console.error('Failed to fetch platform about details:', err);
+        setContent(DEFAULT_ABOUT_CONTENT);
+      });
   }, []);
 
   if (!content) {
@@ -26,7 +43,9 @@ export default function About() {
     );
   }
 
-  const stats = content.impactStatistics;
+  const stats = content.impactStatistics || DEFAULT_ABOUT_CONTENT.impactStatistics;
+  const howItWorks = Array.isArray(content.howItWorks) ? content.howItWorks : [];
+  const coreValues = Array.isArray(content.coreValues) ? content.coreValues : [];
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -61,7 +80,7 @@ export default function About() {
       <section className="mb-12">
         <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">How It Works</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {content.howItWorks.map((step) => (
+          {howItWorks.map((step) => (
             <div
               key={step.step}
               className="bg-white rounded-xl border border-slate-200 p-5 text-center"
@@ -79,7 +98,7 @@ export default function About() {
       <section>
         <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">Core Values</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {content.coreValues.map((value, i) => {
+          {coreValues.map((value, i) => {
             const Icon = valueIcons[i] || Heart;
             return (
               <div

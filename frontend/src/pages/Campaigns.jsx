@@ -12,7 +12,12 @@ export default function Campaigns() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/constants').then((res) => setCategories(res.data.campaignCategories));
+    api.get('/constants')
+      .then((res) => setCategories(res.data?.campaignCategories || []))
+      .catch((err) => {
+        console.error('Failed to fetch categories:', err);
+        setCategories([]);
+      });
   }, []);
 
   useEffect(() => {
@@ -26,7 +31,11 @@ export default function Campaigns() {
           limit: 24,
         },
       })
-      .then((res) => setCampaigns(res.data.campaigns || []))
+      .then((res) => setCampaigns(res.data?.campaigns || []))
+      .catch((err) => {
+        console.error('Failed to fetch campaigns:', err);
+        setCampaigns([]);
+      })
       .finally(() => setLoading(false));
   }, [search, category, sort]);
 

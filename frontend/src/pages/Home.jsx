@@ -22,19 +22,38 @@ export default function Home() {
     try {
       const params = { search, category: category === 'All' ? undefined : category, sort, page, limit: 15 };
       const res = await api.get('/campaigns', { params });
-      setCampaigns(res.data.campaigns);
-      setPagination(res.data.pagination);
+      setCampaigns(res.data?.campaigns || []);
+      setPagination(res.data?.pagination || {});
     } catch (err) {
-      console.error(err);
+      console.error('Failed to fetch campaigns:', err);
+      setCampaigns([]);
+      setPagination({});
     } finally {
       setLoading(false);
     }
   }, [search, category, sort, page]);
 
   useEffect(() => {
-    api.get('/campaigns/featured').then((res) => setFeatured(res.data));
-    api.get('/campaigns/emergency').then((res) => setEmergency(res.data));
-    api.get('/constants').then((res) => setCategories(res.data.campaignCategories));
+    api.get('/campaigns/featured')
+      .then((res) => setFeatured(Array.isArray(res.data) ? res.data : []))
+      .catch((err) => {
+        console.error('Failed to fetch featured campaigns:', err);
+        setFeatured([]);
+      });
+
+    api.get('/campaigns/emergency')
+      .then((res) => setEmergency(Array.isArray(res.data) ? res.data : []))
+      .catch((err) => {
+        console.error('Failed to fetch emergency campaigns:', err);
+        setEmergency([]);
+      });
+
+    api.get('/constants')
+      .then((res) => setCategories(res.data?.campaignCategories || []))
+      .catch((err) => {
+        console.error('Failed to fetch categories:', err);
+        setCategories([]);
+      });
   }, []);
 
   useEffect(() => {
