@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
@@ -22,8 +22,34 @@ export default function Auth() {
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, registerDonor, registerFundraiser } = useAuth();
+  const { login, registerDonor, registerFundraiser, completeOAuthLogin } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = searchParams.get('token');
+    const oauthError = searchParams.get('error');
+    const redirect = searchParams.get('redirect') || '/dashboard';
+
+    if (oauthError) {
+      setError(oauthError);
+      return;
+    }
+
+    if (!token) return;
+
+    setLoading(true);
+    completeOAuthLogin(token)
+      .then(() => navigate(redirect, { replace: true }))
+      .catch(() => setError('Google login succeeded, but we could not load your profile. Please try again.'))
+      .finally(() => setLoading(false));
+  }, [completeOAuthLogin, navigate, searchParams]);
+
+  const handleGoogleLogin = () => {
+    const redirect = searchParams.get('redirect') || '/dashboard';
+    const role = mode === 'register' && tab === 'fundraiser' ? 'fundraiser' : 'customer';
+    const params = new URLSearchParams({ redirect, role });
+    window.location.href = `/api/auth/google?${params.toString()}`;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,7 +60,7 @@ export default function Auth() {
     }
     if (name === 'cnic') {
       const digits = value.replace(/\D/g, '').slice(0, 13);
-      let formatted = '';
+      let formatted;
       if (digits.length <= 5) {
         formatted = digits;
       } else if (digits.length <= 12) {
@@ -329,6 +355,24 @@ export default function Auth() {
             </button>
           </div>
         </form>
+
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-400">or</span>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={loading}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
+        >
+          <span className="grid h-5 w-5 place-items-center rounded-full border border-slate-300 text-xs font-bold text-primary-700">
+            G
+          </span>
+          Continue with Google
+        </button>
 
         <p className="text-center text-sm text-slate-600 mt-6">
           {mode === 'login' ? (

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useCallback, useContext, useState, useEffect } from 'react';
 import api from '../api/client';
 
 const AuthContext = createContext(null);
@@ -43,6 +43,13 @@ export const AuthProvider = ({ children }) => {
     return res.data;
   };
 
+  const completeOAuthLogin = useCallback(async (token) => {
+    localStorage.setItem('sayrab_token', token);
+    const res = await api.get('/auth/me');
+    setUser(res.data);
+    return res.data;
+  }, []);
+
   const logout = () => {
     localStorage.removeItem('sayrab_token');
     setUser(null);
@@ -50,7 +57,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, registerDonor, registerFundraiser, logout, setUser }}
+      value={{ user, loading, login, registerDonor, registerFundraiser, completeOAuthLogin, logout, setUser }}
     >
       {children}
     </AuthContext.Provider>

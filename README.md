@@ -51,6 +51,8 @@ npm run install:all
 # Copy environment file
 cp backend/.env.example backend/.env
 
+# Add your MongoDB Atlas URI, JWT secret, and Google OAuth credentials in backend/.env
+
 # Seed demo data when MongoDB is connected
 npm run seed
 
@@ -60,6 +62,26 @@ npm run dev
 
 - Frontend: http://localhost:5173
 - API: http://localhost:5000
+
+## MongoDB and Google Auth
+
+The backend reads MongoDB and Google OAuth settings from `backend/.env`.
+
+```env
+MONGODB_URI=mongodb+srv://USER:PASSWORD@CLUSTER.mongodb.net/sayrab
+JWT_SECRET=replace_with_a_long_random_secret
+CLIENT_URL=http://localhost:5173
+API_URL=http://localhost:5000
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
+```
+
+In Google Cloud Console, add this authorized redirect URI:
+
+```text
+http://localhost:5000/api/auth/google/callback
+```
 
 ## Demo Accounts After Seed
 

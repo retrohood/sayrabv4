@@ -76,6 +76,10 @@ const start = async () => {
     databaseConnected = true;
   } catch (error) {
     console.warn('MongoDB unavailable:', error.message);
+    if (process.env.NODE_ENV === 'production') {
+      console.error('Fatal: Database is required in production mode. Exiting...');
+      throw error;
+    }
     console.warn('Starting in demo mode. Auth data will not be saved until MongoDB is connected.');
   }
 

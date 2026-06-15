@@ -10,6 +10,8 @@ import {
   changePassword,
   updateNotificationPreferences,
   upgradeToFundraiser,
+  startGoogleAuth,
+  handleGoogleCallback,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 
@@ -19,6 +21,8 @@ router.post('/register/donor', registerDonor);
 router.post('/register/fundraiser', registerFundraiser);
 router.post('/register', register);
 router.post('/login', login);
+router.get('/google', startGoogleAuth);
+router.get('/google/callback', handleGoogleCallback);
 router.get('/me', protect, getProfile);
 router.get('/profile', protect, getProfile);
 router.put('/referral-privacy', protect, updateReferralPrivacy);

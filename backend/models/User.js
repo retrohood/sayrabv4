@@ -7,7 +7,19 @@ const userSchema = new mongoose.Schema(
     name: { type: String, trim: true },
     fullName: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, minlength: 6 },
+    password: {
+      type: String,
+      required() {
+        return !this.googleId;
+      },
+      minlength: 6,
+    },
+    googleId: { type: String, unique: true, sparse: true },
+    authProvider: {
+      type: String,
+      enum: ['local', 'google'],
+      default: 'local',
+    },
     phone: { type: String, trim: true },
     role: {
       type: String,
@@ -52,6 +64,7 @@ userSchema.pre('save', async function (next) {
 });
 
 userSchema.methods.matchPassword = async function (enteredPassword) {
+  if (!this.password) return false;
   return bcrypt.compare(enteredPassword, this.password);
 };
 
@@ -75,6 +88,7 @@ userSchema.methods.toPublicJSON = function () {
     isVerifiedFundraiser: this.isVerifiedFundraiser,
     referralCode: this.referralCode,
     referralPrivacy: this.referralPrivacy,
+    authProvider: this.authProvider,
     createdAt: this.createdAt,
   };
 };
