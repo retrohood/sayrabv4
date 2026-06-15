@@ -48,7 +48,8 @@ export default function Auth() {
     const redirect = searchParams.get('redirect') || '/dashboard';
     const role = mode === 'register' && tab === 'fundraiser' ? 'fundraiser' : 'customer';
     const params = new URLSearchParams({ redirect, role });
-    window.location.href = `/api/auth/google?${params.toString()}`;
+    const apiBase = import.meta.env.VITE_API_URL || '/api';
+    window.location.href = `${apiBase}/auth/google?${params.toString()}`;
   };
 
   const handleChange = (e) => {
