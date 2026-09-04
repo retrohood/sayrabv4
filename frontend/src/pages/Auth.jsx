@@ -42,55 +42,14 @@ export default function Auth() {
     setLoading(true);
     completeOAuthLogin(token)
       .then(async (userData) => {
-        // Check if there was pending info in sessionStorage
-        const savedDataRaw = sessionStorage.getItem('sayrab_oauth_pending_profile');
-        let pending = null;
-        if (savedDataRaw) {
-          try {
-            pending = JSON.parse(savedDataRaw);
-          } catch {
-            pending = null;
-          }
-        }
-
         const targetRole =
-          pending?.role ||
-          (userData.role === 'manager' || userData.role === 'fundraiser' ? 'fundraiser' : 'donor');
-        const isFundraiser = targetRole === 'fundraiser';
-        const hasRequiredFundraiserInfo =
-          pending?.phone && pending?.cnic && pending.cnic.length === 15 && pending?.address && pending?.fundraiserType;
-        const hasRequiredDonorInfo = Boolean(pending?.phone || userData.phone);
-
-        // If user already typed all required details into the form before clicking Google, auto-complete
-        if (
-          pending &&
-          ((isFundraiser && hasRequiredFundraiserInfo) || (!isFundraiser && hasRequiredDonorInfo))
-        ) {
-          try {
-            await completeProfile({
-              role: isFundraiser ? 'fundraiser' : 'donor',
-              fullName: pending.fullName || userData.fullName || userData.name,
-              phone: pending.phone || userData.phone || '',
-              cnic: isFundraiser ? pending.cnic : undefined,
-              address: isFundraiser ? pending.address : undefined,
-              fundraiserType: isFundraiser ? pending.fundraiserType : undefined,
-            });
-            sessionStorage.removeItem('sayrab_oauth_pending_profile');
-            navigate(redirect, { replace: true });
-            return;
-          } catch {
-            // Fall through to UI if auto-complete encounters validation error
-          }
-        }
-
-        // Determine if profile has all required details
+          (userData.role === 'manager' || userData.role === 'fundraiser' ? 'fundraiser' : 'donor');        // Determine if profile has all required details
         const isUserFundraiser = userData.role === 'manager' || userData.role === 'fundraiser';
         const isComplete =
           userData.isProfileComplete &&
           (!isUserFundraiser || (userData.phone && userData.cnic && userData.address));
 
         if (isComplete) {
-          sessionStorage.removeItem('sayrab_oauth_pending_profile');
           navigate(redirect, { replace: true });
         } else {
           // Switch to complete profile mode
@@ -99,12 +58,12 @@ export default function Auth() {
           setTab(targetRole);
           setForm((prev) => ({
             ...prev,
-            fullName: pending?.fullName || userData.fullName || userData.name || '',
+            fullName: '',
             email: userData.email || '',
-            phone: pending?.phone || userData.phone || '',
-            cnic: pending?.cnic || userData.cnic || '',
-            address: pending?.address || userData.address || '',
-            fundraiserType: pending?.fundraiserType || userData.fundraiserType || '',
+            phone: '',
+            cnic: '',
+            address: '',
+            fundraiserType: '',
           }));
         }
       })
@@ -115,17 +74,6 @@ export default function Auth() {
   const handleGoogleLogin = () => {
     const redirect = searchParams.get('redirect') || '/dashboard';
     const role = tab === 'fundraiser' ? 'fundraiser' : 'customer';
-
-    // Store pre-filled details to sessionStorage so they are preserved
-    const pendingOAuthData = {
-      role: tab === 'fundraiser' ? 'fundraiser' : 'donor',
-      fullName: form.fullName || '',
-      phone: form.phone || '',
-      cnic: form.cnic || '',
-      address: form.address || '',
-      fundraiserType: form.fundraiserType || '',
-    };
-    sessionStorage.setItem('sayrab_oauth_pending_profile', JSON.stringify(pendingOAuthData));
 
     const params = new URLSearchParams({ redirect, role });
     const apiBase = import.meta.env.VITE_API_URL || '/api';
@@ -169,6 +117,7 @@ export default function Auth() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
 
     // Flow 1: Google OAuth Profile Completion
@@ -207,7 +156,6 @@ export default function Auth() {
           address: tab === 'fundraiser' ? form.address.trim() : undefined,
           fundraiserType: tab === 'fundraiser' ? form.fundraiserType : undefined,
         });
-        sessionStorage.removeItem('sayrab_oauth_pending_profile');
         const redirect = searchParams.get('redirect') || '/dashboard';
         navigate(redirect, { replace: true });
       } catch (err) {
@@ -283,7 +231,6 @@ export default function Auth() {
 
   const handleCancelOAuth = () => {
     logout();
-    sessionStorage.removeItem('sayrab_oauth_pending_profile');
     setOauthUser(null);
     setMode('login');
     navigate('/auth', { replace: true });
@@ -441,14 +388,16 @@ export default function Auth() {
                 </>
               )}
 
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              <div className="min-h-[24px]">
+                {error && <p className="text-sm text-red-600">{error}</p>}
+              </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer transition-colors shadow-sm"
+                className="w-full py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
               >
-                {loading ? 'Saving details...' : 'Complete Setup & Continue →'}
+                Complete Setup & Continue →
               </button>
 
               <button
@@ -654,14 +603,16 @@ export default function Auth() {
                 </>
               )}
 
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              <div className="min-h-[24px]">
+                {error && <p className="text-sm text-red-600">{error}</p>}
+              </div>
 
               <div className="flex gap-3">
                 {mode === 'register' && tab === 'fundraiser' && step === 2 && (
                   <button
                     type="button"
                     onClick={() => setStep(1)}
-                    className="w-1/3 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 cursor-pointer"
+                    className="w-1/3 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 cursor-pointer transition-all duration-200"
                   >
                     Back
                   </button>
@@ -669,13 +620,11 @@ export default function Auth() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer ${
+                  className={`py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-all duration-200 ${
                     mode === 'register' && tab === 'fundraiser' && step === 2 ? 'w-2/3' : 'w-full'
                   }`}
                 >
-                  {loading
-                    ? 'Please wait...'
-                    : mode === 'login'
+                  {mode === 'login'
                     ? 'Login'
                     : tab === 'fundraiser' && step === 1
                     ? 'Next Step'

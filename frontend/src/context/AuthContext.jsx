@@ -22,26 +22,26 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
     localStorage.setItem('sayrab_token', res.data.token);
     setUser(res.data.user);
     return res.data;
-  };
+  }, []);
 
-  const registerDonor = async (data) => {
+  const registerDonor = useCallback(async (data) => {
     const res = await api.post('/auth/register/donor', data);
     localStorage.setItem('sayrab_token', res.data.token);
     setUser(res.data.user);
     return res.data;
-  };
+  }, []);
 
-  const registerFundraiser = async (data) => {
+  const registerFundraiser = useCallback(async (data) => {
     const res = await api.post('/auth/register/fundraiser', data);
     localStorage.setItem('sayrab_token', res.data.token);
     setUser(res.data.user);
     return res.data;
-  };
+  }, []);
 
   const completeOAuthLogin = useCallback(async (token) => {
     localStorage.setItem('sayrab_token', token);
@@ -50,16 +50,16 @@ export const AuthProvider = ({ children }) => {
     return res.data;
   }, []);
 
-  const completeProfile = async (profileData) => {
+  const completeProfile = useCallback(async (profileData) => {
     const res = await api.put('/auth/complete-profile', profileData);
     setUser(res.data);
     return res.data;
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('sayrab_token');
     setUser(null);
-  };
+  }, []);
 
   return (
     <AuthContext.Provider
