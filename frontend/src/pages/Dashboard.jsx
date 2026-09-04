@@ -24,7 +24,9 @@ import {
   Clock,
   ArrowRight,
   Info,
-  ShoppingBag
+  ShoppingBag,
+  Star,
+  CheckCircle2
 } from 'lucide-react';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -143,6 +145,38 @@ export default function Dashboard() {
   const [referralPrivacy, setReferralPrivacy] = useState(user?.referralPrivacy || 'public');
   const [settingsSuccess, setSettingsSuccess] = useState('');
   const [settingsError, setSettingsError] = useState('');
+
+  // Merchant Product Reviews States
+  const [merchantReviewProductId, setMerchantReviewProductId] = useState('all');
+  const [merchantReviewsList, setMerchantReviewsList] = useState([]);
+  const [merchantProductsList, setMerchantProductsList] = useState([]);
+  const [merchantReviewsLoading, setMerchantReviewsLoading] = useState(false);
+  const [reviewRatingFilter, setReviewRatingFilter] = useState('all');
+
+  const fetchMerchantReviews = (prodId = 'all') => {
+    setMerchantReviewsLoading(true);
+    const params = prodId !== 'all' ? { productId: prodId } : {};
+    api.get('/reviews/creator/products', { params })
+      .then((res) => {
+        setMerchantReviewsList(res.data.reviews || []);
+        if (res.data.products) {
+          setMerchantProductsList(res.data.products);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load merchant product reviews:', err);
+        setMerchantReviewsList([]);
+      })
+      .finally(() => {
+        setMerchantReviewsLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    if (isFundraiser && (activeTab === 'product_reviews' || activeTab === 'overview')) {
+      fetchMerchantReviews(merchantReviewProductId);
+    }
+  }, [activeTab, merchantReviewProductId, isFundraiser]);
 
   // Load Initial Data
   useEffect(() => {
@@ -692,6 +726,14 @@ export default function Dashboard() {
                   }`}
                 >
                   <ShoppingBag size={18} /> My Orders
+                </button>
+                <button
+                  onClick={() => { setActiveTab('product_reviews'); setIsSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                    activeTab === 'product_reviews' ? 'bg-primary-600 text-white' : 'hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  <Star size={18} /> Product Reviews
                 </button>
               </>
             ) : (
@@ -1720,6 +1762,226 @@ export default function Dashboard() {
                   </table>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ------------------------- */}
+        {/* PRODUCT REVIEWS TAB       */}
+        {/* ------------------------- */}
+        {activeTab === 'product_reviews' && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800">Product Reviews & Feedback</h3>
+                  <p className="text-slate-500 text-xs mt-1">
+                    Select a product to view its customer reviews, average rating, and feedback.
+                  </p>
+                </div>
+
+                {/* Product Selector Dropdown */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <label className="text-xs font-bold text-slate-600 uppercase">
+                    Select Product:
+                  </label>
+                  <select
+                    value={merchantReviewProductId}
+                    onChange={(e) => {
+                      setMerchantReviewProductId(e.target.value);
+                      setReviewRatingFilter('all');
+                    }}
+                    className="px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer min-w-[240px]"
+                  >
+                    <option value="all">📦 All Store Products ({merchantReviewsList.length} reviews)</option>
+                    {merchantProductsList.map((p) => (
+                      <option key={p._id} value={p._id}>
+                        {p.name} ({p.reviewCount || 0} reviews)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Stats Summary Card for selected product(s) */}
+              {(() => {
+                const filteredReviews = merchantReviewsList.filter(
+                  (r) => reviewRatingFilter === 'all' || Math.round(r.rating) === Number(reviewRatingFilter)
+                );
+                const totalCount = merchantReviewsList.length;
+                const avgScore =
+                  totalCount > 0
+                    ? merchantReviewsList.reduce((acc, r) => acc + (r.rating || 0), 0) / totalCount
+                    : 0;
+
+                const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+                merchantReviewsList.forEach((r) => {
+                  const rounded = Math.round(r.rating);
+                  if (distribution[rounded] !== undefined) distribution[rounded]++;
+                });
+
+                const selectedProductObj = merchantProductsList.find((p) => p._id === merchantReviewProductId);
+
+                return (
+                  <div className="space-y-6 mt-6">
+                    {/* Header Product Card if specific product selected */}
+                    {selectedProductObj && (
+                      <div className="p-4 bg-primary-50/50 border border-primary-100 rounded-xl flex items-center gap-4">
+                        <img
+                          src={selectedProductObj.image || 'https://picsum.photos/seed/item/200/200'}
+                          alt={selectedProductObj.name}
+                          className="w-14 h-14 rounded-lg object-cover bg-white border border-primary-200"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-slate-900 text-sm truncate">{selectedProductObj.name}</h4>
+                          <p className="text-xs text-primary-700 font-semibold">{formatCurrency(selectedProductObj.price)}</p>
+                        </div>
+                        <Link
+                          to={`/product/${selectedProductObj._id}`}
+                          className="text-xs font-bold text-primary-600 hover:text-primary-700 underline"
+                        >
+                          View in Store →
+                        </Link>
+                      </div>
+                    )}
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-slate-50/70 border border-slate-200/70 rounded-2xl">
+                      <div className="flex flex-col items-center justify-center text-center p-4 bg-white rounded-xl border border-slate-100 shadow-xs">
+                        <span className="text-4xl font-extrabold text-slate-900">
+                          {avgScore > 0 ? avgScore.toFixed(1) : '—'}
+                        </span>
+                        <div className="flex items-center gap-1 mt-2 text-amber-400">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              size={18}
+                              className={s <= Math.round(avgScore) ? 'fill-amber-400 text-amber-400' : 'text-slate-200 fill-slate-100'}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-slate-500 font-medium mt-1">
+                          {totalCount} total {totalCount === 1 ? 'review' : 'reviews'}
+                        </span>
+                      </div>
+
+                      <div className="md:col-span-2 flex flex-col justify-center space-y-2">
+                        {[5, 4, 3, 2, 1].map((star) => {
+                          const count = distribution[star] || 0;
+                          const percent = totalCount > 0 ? (count / totalCount) * 100 : 0;
+                          return (
+                            <div key={star} className="flex items-center gap-3 text-xs font-semibold text-slate-600">
+                              <span className="w-12 text-slate-700">{star} Stars</span>
+                              <div className="flex-1 h-3 bg-slate-200/70 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-amber-400 rounded-full transition-all duration-300"
+                                  style={{ width: `${percent}%` }}
+                                />
+                              </div>
+                              <span className="w-8 text-right text-slate-400">{count}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Star Filter Pills */}
+                    <div className="flex flex-wrap items-center gap-2 pt-2">
+                      <span className="text-xs font-bold text-slate-500 uppercase mr-1">Filter:</span>
+                      {['all', '5', '4', '3', '2', '1'].map((f) => (
+                        <button
+                          key={f}
+                          type="button"
+                          onClick={() => setReviewRatingFilter(f)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                            reviewRatingFilter === f
+                              ? 'bg-slate-900 text-white'
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
+                        >
+                          {f === 'all' ? 'All Ratings' : `${f} Stars ★`}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Reviews List */}
+                    <div className="space-y-4 pt-2">
+                      {merchantReviewsLoading ? (
+                        <div className="py-12 text-center text-slate-400 text-sm">
+                          Loading product reviews...
+                        </div>
+                      ) : filteredReviews.length === 0 ? (
+                        <div className="py-12 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                          <Star size={36} className="text-slate-300 mx-auto mb-2" />
+                          <p className="text-sm font-bold text-slate-700">No reviews found</p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            {merchantReviewProductId === 'all'
+                              ? 'Reviews from buyers who purchase your merchandise will appear here.'
+                              : 'This product has not received any reviews yet.'}
+                          </p>
+                        </div>
+                      ) : (
+                        filteredReviews.map((rev) => (
+                          <div
+                            key={rev._id}
+                            className="p-5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-all shadow-xs"
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                              <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-full bg-primary-100 text-primary-700 font-bold text-xs flex items-center justify-center">
+                                  {rev.author?.fullName ? rev.author.fullName.charAt(0).toUpperCase() : 'C'}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <h5 className="text-sm font-bold text-slate-900">
+                                      {rev.author?.fullName || 'Customer'}
+                                    </h5>
+                                    {rev.verifiedBuyer && (
+                                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                                        <CheckCircle2 size={12} /> Verified Buyer
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-slate-400 mt-0.5">
+                                    Reviewed on {formatDate(rev.createdAt)}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Product Name Tag if showing All */}
+                              {rev.product && (
+                                <Link
+                                  to={`/product/${rev.product._id || rev.product}`}
+                                  className="self-start sm:self-auto text-xs font-semibold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-md hover:bg-primary-100 transition-colors"
+                                >
+                                  🏷️ {rev.product?.name || rev.productName || 'Product'}
+                                </Link>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1 mb-2 text-amber-400">
+                              {[1, 2, 3, 4, 5].map((s) => (
+                                <Star
+                                  key={s}
+                                  size={14}
+                                  className={s <= Math.round(rev.rating) ? 'fill-amber-400 text-amber-400' : 'text-slate-200 fill-slate-100'}
+                                />
+                              ))}
+                              <span className="text-xs font-bold text-slate-700 ml-1.5">
+                                {rev.rating} / 5
+                              </span>
+                            </div>
+
+                            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                              {rev.feedback}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}

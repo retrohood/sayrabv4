@@ -215,7 +215,26 @@ const seed = async () => {
     feedback: 'Sayrab made it incredibly easy to raise funds for our village. The verification process gave donors confidence, and we exceeded our target!',
     isModerated: true,
     isPublished: true,
+    type: 'campaign',
   });
+
+  const firstProduct = await Product.findOne();
+  if (firstProduct) {
+    await Review.create({
+      author: donor._id,
+      product: firstProduct._id,
+      productName: firstProduct.name,
+      rating: 5,
+      feedback: 'Excellent fabric quality and fits perfectly! Very proud that part of the purchase supports local charity causes.',
+      verifiedBuyer: true,
+      isModerated: true,
+      isPublished: true,
+      type: 'product',
+    });
+    firstProduct.averageRating = 5;
+    firstProduct.reviewCount = 1;
+    await firstProduct.save();
+  }
 
   await PlatformStats.create({
     totalFundsRaised: 6113000,
