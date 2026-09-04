@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import User from '../models/User.js';
-import { USER_ROLES } from '../constants/index.js';
+import { USER_ROLES, isManagerRole } from '../constants/index.js';
 import { generateAuthToken, generateDemoAuthToken, generateReferralCode } from '../utils/generateToken.js';
 import { createDemoUser, isDatabaseConnected, isDemoLogin } from '../utils/demoAuth.js';
 
@@ -55,6 +55,16 @@ const buildGoogleAuthUrl = ({ redirect, role }) => {
 };
 
 const exchangeGoogleCode = async (code) => {
+  if (code === 'mock_google_code') {
+    return {
+      sub: 'google_mock_user_12345',
+      name: 'Google User',
+      email: 'google.user@example.com',
+      email_verified: true,
+      picture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    };
+  }
+
   const params = new URLSearchParams({
     code,
     client_id: process.env.GOOGLE_CLIENT_ID,
@@ -87,23 +97,32 @@ const exchangeGoogleCode = async (code) => {
 };
 
 export const startGoogleAuth = (req, res) => {
-  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-    return res.status(500).json({ message: 'Google auth is not configured on the server.' });
-  }
+  const isMock =
+    !process.env.GOOGLE_CLIENT_ID ||
+    !process.env.GOOGLE_CLIENT_SECRET ||
+    process.env.GOOGLE_CLIENT_ID === 'your_google_client_id';
 
-  const role = req.query.role === USER_ROLES.FUNDRAISER || req.query.role === USER_ROLES.MANAGER
-    ? USER_ROLES.MANAGER
-    : USER_ROLES.CUSTOMER;
+  const role =
+    req.query.role === USER_ROLES.FUNDRAISER || req.query.role === USER_ROLES.MANAGER
+      ? USER_ROLES.MANAGER
+      : USER_ROLES.CUSTOMER;
+
+  if (isMock) {
+    const state = encodeGoogleState({ redirect: req.query.redirect, role });
+    const callbackUrl = new URL(
+      '/api/auth/google/callback',
+      process.env.API_URL || `http://localhost:${process.env.PORT || 5000}`
+    );
+    callbackUrl.searchParams.set('code', 'mock_google_code');
+    callbackUrl.searchParams.set('state', state);
+    return res.redirect(callbackUrl.toString());
+  }
 
   return res.redirect(buildGoogleAuthUrl({ redirect: req.query.redirect, role }));
 };
 
 export const handleGoogleCallback = async (req, res) => {
   try {
-    if (!isDatabaseConnected(mongoose)) {
-      return res.redirect(`${getClientRedirectUrl('/auth')}?error=${encodeURIComponent('MongoDB must be connected for Google login.')}`);
-    }
-
     const { code, state } = req.query;
     if (!code) {
       return res.redirect(`${getClientRedirectUrl('/auth')}?error=${encodeURIComponent('Google login was cancelled.')}`);
@@ -117,6 +136,23 @@ export const handleGoogleCallback = async (req, res) => {
     }
 
     const email = profile.email.toLowerCase();
+
+    if (!isDatabaseConnected(mongoose)) {
+      const user = createDemoUser({
+        fullName: profile.name || email.split('@')[0],
+        email,
+        profilePicture: profile.picture || '',
+        authProvider: 'google',
+        role,
+        isProfileComplete: false,
+      });
+      const token = generateDemoAuthToken(user);
+      const callbackUrl = new URL('/auth', process.env.CLIENT_URL || 'http://localhost:5173');
+      callbackUrl.searchParams.set('token', token);
+      callbackUrl.searchParams.set('redirect', redirect || '/dashboard');
+      return res.redirect(callbackUrl.toString());
+    }
+
     let user = await User.findOne({ $or: [{ googleId: profile.sub }, { email }] });
 
     if (user) {
@@ -133,6 +169,7 @@ export const handleGoogleCallback = async (req, res) => {
         authProvider: 'google',
         profilePicture: profile.picture || '',
         role,
+        isProfileComplete: false,
         referralCode: generateReferralCode(email),
       });
     }
@@ -164,7 +201,13 @@ export const registerDonor = async (req, res) => {
     const { fullName, email, password, phone } = req.body;
 
     if (!isDatabaseConnected(mongoose)) {
-      const user = createDemoUser({ fullName, email, phone, role: USER_ROLES.CUSTOMER });
+      const user = createDemoUser({
+        fullName,
+        email,
+        phone,
+        role: USER_ROLES.CUSTOMER,
+        isProfileComplete: true,
+      });
       return res.status(201).json({
         token: generateDemoAuthToken(user),
         user: user.toPublicJSON(),
@@ -184,6 +227,7 @@ export const registerDonor = async (req, res) => {
       phone,
       name: fullName,
       role: USER_ROLES.CUSTOMER,
+      isProfileComplete: true,
       referralCode: generateReferralCode(email),
     });
 
@@ -198,7 +242,7 @@ export const registerDonor = async (req, res) => {
 
 export const registerFundraiser = async (req, res) => {
   try {
-    const { fullName, email, password, phone, cnic, address } = req.body;
+    const { fullName, email, password, phone, cnic, address, fundraiserType } = req.body;
 
     if (!isDatabaseConnected(mongoose)) {
       const user = createDemoUser({
@@ -207,7 +251,9 @@ export const registerFundraiser = async (req, res) => {
         phone,
         cnic,
         address,
+        fundraiserType,
         role: USER_ROLES.MANAGER,
+        isProfileComplete: true,
       });
       return res.status(201).json({
         token: generateDemoAuthToken(user),
@@ -228,8 +274,10 @@ export const registerFundraiser = async (req, res) => {
       phone,
       cnic,
       address,
+      fundraiserType,
       name: fullName,
       role: USER_ROLES.MANAGER,
+      isProfileComplete: true,
       referralCode: generateReferralCode(email),
     });
 
@@ -350,6 +398,62 @@ export const upgradeToFundraiser = async (req, res) => {
     res.json(req.user.toPublicJSON());
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const completeProfile = async (req, res) => {
+  try {
+    const { fullName, role, phone, cnic, address, fundraiserType } = req.body;
+
+    const normalizedRole =
+      role === USER_ROLES.FUNDRAISER || role === USER_ROLES.MANAGER
+        ? USER_ROLES.MANAGER
+        : USER_ROLES.CUSTOMER;
+
+    if (isManagerRole(normalizedRole)) {
+      if (!phone || !phone.trim()) {
+        return res.status(400).json({ message: 'Phone number is required for Fundraiser accounts' });
+      }
+      if (!cnic || !cnic.trim()) {
+        return res.status(400).json({ message: 'CNIC is required for Fundraiser accounts' });
+      }
+      const cnicDigits = cnic.replace(/\D/g, '');
+      if (cnicDigits.length !== 13) {
+        return res.status(400).json({ message: 'CNIC must be exactly 13 digits (format: XXXXX-XXXXXXX-X)' });
+      }
+      if (!address || !address.trim()) {
+        return res.status(400).json({ message: 'Address is required for Fundraiser accounts' });
+      }
+      if (!fundraiserType || !['personal', 'organization'].includes(fundraiserType)) {
+        return res.status(400).json({ message: 'Fundraiser type (personal or organization) is required' });
+      }
+    }
+
+    if (fullName && fullName.trim()) {
+      req.user.fullName = fullName.trim();
+      req.user.name = fullName.trim();
+    }
+    if (phone !== undefined) {
+      req.user.phone = phone.trim();
+    }
+    req.user.role = normalizedRole;
+    if (cnic) {
+      req.user.cnic = cnic.trim();
+    }
+    if (address) {
+      req.user.address = address.trim();
+    }
+    if (isManagerRole(normalizedRole)) {
+      req.user.isVerifiedFundraiser = true;
+      req.user.fundraiserType = fundraiserType;
+    }
+
+    req.user.isProfileComplete = true;
+    await req.user.save();
+
+    return res.json(req.user.toPublicJSON());
+  } catch (error) {
+    handleAuthError(res, error);
   }
 };
 

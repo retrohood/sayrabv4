@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema(
     },
     cnic: { type: String, trim: true },
     address: { type: String, trim: true },
+    fundraiserType: { type: String, enum: ['personal', 'organization'] },
     profilePicture: { type: String, default: '' },
     notificationPreferences: {
       donationUpdates: { type: Boolean, default: true },
@@ -37,6 +38,7 @@ const userSchema = new mongoose.Schema(
     },
     identityDocuments: [{ filename: String, url: String, uploadedAt: Date }],
     isVerifiedFundraiser: { type: Boolean, default: false },
+    isProfileComplete: { type: Boolean, default: false },
     referralCode: { type: String, unique: true, sparse: true },
     referralPrivacy: {
       type: String,
@@ -78,6 +80,7 @@ userSchema.methods.toPublicJSON = function () {
     role: this.role,
     cnic: this.cnic,
     address: this.address,
+    fundraiserType: this.fundraiserType,
     profilePicture: this.profilePicture,
     notificationPreferences: this.notificationPreferences || {
       donationUpdates: true,
@@ -86,6 +89,7 @@ userSchema.methods.toPublicJSON = function () {
       storeNotifications: true,
     },
     isVerifiedFundraiser: this.isVerifiedFundraiser,
+    isProfileComplete: Boolean(this.isProfileComplete),
     referralCode: this.referralCode,
     referralPrivacy: this.referralPrivacy,
     authProvider: this.authProvider,

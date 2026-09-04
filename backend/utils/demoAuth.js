@@ -6,6 +6,10 @@ export const DEMO_PASSWORD = 'password123';
 
 export const isDatabaseConnected = (mongoose) => mongoose.connection.readyState === 1;
 
+let currentDemoUser = null;
+
+export const getDemoUser = () => currentDemoUser;
+
 export const createDemoUser = ({
   fullName = 'Demo User',
   email = DEMO_EMAIL,
@@ -13,6 +17,10 @@ export const createDemoUser = ({
   role = USER_ROLES.CUSTOMER,
   cnic = '',
   address = '',
+  profilePicture = '',
+  authProvider = 'local',
+  isProfileComplete = true,
+  fundraiserType = 'personal',
 } = {}) => {
   const user = {
     _id: DEMO_USER_ID,
@@ -23,7 +31,10 @@ export const createDemoUser = ({
     role,
     cnic,
     address,
-    profilePicture: '',
+    fundraiserType,
+    profilePicture,
+    authProvider,
+    isProfileComplete,
     notificationPreferences: {
       donationUpdates: true,
       campaignUpdates: true,
@@ -45,7 +56,10 @@ export const createDemoUser = ({
     role: user.role,
     cnic: user.cnic,
     address: user.address,
+    fundraiserType: user.fundraiserType,
     profilePicture: user.profilePicture,
+    authProvider: user.authProvider,
+    isProfileComplete: Boolean(user.isProfileComplete),
     notificationPreferences: user.notificationPreferences,
     isVerifiedFundraiser: user.isVerifiedFundraiser,
     referralCode: user.referralCode,
@@ -53,8 +67,12 @@ export const createDemoUser = ({
     createdAt: user.createdAt,
   });
 
-  user.save = async () => user;
+  user.save = async () => {
+    currentDemoUser = user;
+    return user;
+  };
 
+  currentDemoUser = user;
   return user;
 };
 

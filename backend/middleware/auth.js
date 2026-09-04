@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { USER_ROLES, isManagerRole } from '../constants/index.js';
-import { createDemoUser } from '../utils/demoAuth.js';
+import { createDemoUser, getDemoUser } from '../utils/demoAuth.js';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -16,7 +16,8 @@ export const protect = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
     if (decoded.demo) {
-      req.user = createDemoUser(decoded.user);
+      const activeDemo = getDemoUser();
+      req.user = activeDemo || createDemoUser(decoded.user);
       return next();
     }
 
@@ -40,7 +41,8 @@ export const optionalAuth = async (req, res, next) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
       if (decoded.demo) {
-        req.user = createDemoUser(decoded.user);
+        const activeDemo = getDemoUser();
+        req.user = activeDemo || createDemoUser(decoded.user);
         return next();
       }
 

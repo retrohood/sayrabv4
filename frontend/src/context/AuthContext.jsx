@@ -50,6 +50,12 @@ export const AuthProvider = ({ children }) => {
     return res.data;
   }, []);
 
+  const completeProfile = async (profileData) => {
+    const res = await api.put('/auth/complete-profile', profileData);
+    setUser(res.data);
+    return res.data;
+  };
+
   const logout = () => {
     localStorage.removeItem('sayrab_token');
     setUser(null);
@@ -57,7 +63,17 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, registerDonor, registerFundraiser, completeOAuthLogin, logout, setUser }}
+      value={{
+        user,
+        loading,
+        login,
+        registerDonor,
+        registerFundraiser,
+        completeOAuthLogin,
+        completeProfile,
+        logout,
+        setUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -12,6 +12,7 @@ import {
   upgradeToFundraiser,
   startGoogleAuth,
   handleGoogleCallback,
+  completeProfile,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 
@@ -30,5 +31,6 @@ router.put('/profile', protect, updateProfile);
 router.put('/password', protect, changePassword);
 router.put('/notifications', protect, updateNotificationPreferences);
 router.put('/upgrade', protect, upgradeToFundraiser);
+router.put('/complete-profile', protect, completeProfile);
 
 export default router;
