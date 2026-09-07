@@ -4,7 +4,6 @@ import {
   getProductReviews,
   submitProductReview,
   getCreatorProductReviews,
-  submitCampaignReview,
 } from '../controllers/reviewController.js';
 import { protect, requireFundraiser } from '../middleware/auth.js';
 
@@ -14,6 +13,5 @@ router.get('/', getPublishedReviews);
 router.get('/product/:productId', getProductReviews);
 router.post('/product', protect, submitProductReview);
 router.get('/creator/products', protect, requireFundraiser, getCreatorProductReviews);
-router.post('/campaign', protect, requireFundraiser, submitCampaignReview);
 
 export default router;

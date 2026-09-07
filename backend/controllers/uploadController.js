@@ -3,13 +3,52 @@ import Upload from '../models/Upload.js';
 import { isDatabaseConnected } from '../utils/demoAuth.js';
 import { inMemoryDB } from '../utils/inMemoryDB.js';
 
+export const uploadFile = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const { category = 'campaign_asset' } = req.body;
+    const fileUrl = `/uploads/${req.file.filename}`;
+    const fileName = req.file.originalname;
+    const fileType = req.file.mimetype;
+    const fileSize = req.file.size;
+
+    if (!isDatabaseConnected(mongoose)) {
+      const upload = inMemoryDB.uploads.create({
+        owner: req.user?._id || 'user_demo',
+        name: fileName,
+        url: fileUrl,
+        type: fileType,
+        size: fileSize,
+        category,
+      });
+      return res.status(201).json(upload);
+    }
+
+    const upload = await Upload.create({
+      owner: req.user._id,
+      name: fileName,
+      url: fileUrl,
+      type: fileType,
+      size: fileSize,
+      category,
+    });
+
+    res.status(201).json(upload);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const createUpload = async (req, res) => {
   try {
     const { name, url, type, size, category } = req.body;
 
     if (!isDatabaseConnected(mongoose)) {
       const upload = inMemoryDB.uploads.create({
-        owner: req.user._id,
+        owner: req.user?._id || 'user_demo',
         name,
         url,
         type,

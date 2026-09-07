@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, ShoppingBag, Plus, ArrowRight } from 'lucide-react';
 import api from '../api/client';
+import ImageUploadPicker from '../components/ImageUploadPicker';
 
 const DOC_TYPES = {
   'Medical Assistance': ['Medical reports', 'Hospital estimates'],
@@ -12,12 +13,14 @@ const DOC_TYPES = {
 
 export default function CreateCampaign() {
   const [categories, setCategories] = useState([]);
+  const [uploads, setUploads] = useState([]);
   const [createdCampaign, setCreatedCampaign] = useState(null);
   const [form, setForm] = useState({
     title: '',
     category: '',
     location: '',
     shortDescription: '',
+    thumbnail: '',
     fundingGoal: '',
     purposeOfFunds: '',
     startDate: '',
@@ -56,6 +59,10 @@ export default function CreateCampaign() {
         console.error('Failed to fetch categories:', err);
         setCategories([]);
       });
+
+    api.get('/uploads')
+      .then((res) => setUploads(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setUploads([]));
   }, []);
 
   const handleChange = (e) => {
@@ -237,13 +244,13 @@ export default function CreateCampaign() {
           </fieldset>
 
           <fieldset className="space-y-4">
-            <legend className="text-lg font-semibold text-slate-800">Product Image URL</legend>
-            <input
-              type="url"
-              placeholder="Mock Image URL (optional, e.g. https://picsum.photos/400/400)"
+            <legend className="text-lg font-semibold text-slate-800">Product Image</legend>
+            <ImageUploadPicker
               value={productForm.image}
-              onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+              onChange={(url) => setProductForm({ ...productForm, image: url })}
+              uploads={uploads}
+              label="Merchandise Product Picture"
+              helperText="Upload a product photo from your computer or paste an image link."
             />
           </fieldset>
 
@@ -341,6 +348,17 @@ export default function CreateCampaign() {
             maxLength={300}
             rows={3}
             className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+          />
+        </fieldset>
+
+        <fieldset className="space-y-4">
+          <legend className="text-lg font-semibold text-slate-800">Campaign Picture</legend>
+          <ImageUploadPicker
+            value={form.thumbnail}
+            onChange={(url) => setForm({ ...form, thumbnail: url })}
+            uploads={uploads}
+            label="Campaign Cover Picture"
+            helperText="Upload a picture from your computer (saved on PC), select from your uploads, or paste an image link."
           />
         </fieldset>
 

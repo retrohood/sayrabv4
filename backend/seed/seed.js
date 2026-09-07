@@ -207,17 +207,6 @@ const seed = async () => {
     });
   }
 
-  await Review.create({
-    author: fundraiser._id,
-    campaign: (await Campaign.findOne({ title: 'Community Water Well Project' }))._id,
-    campaignName: 'Community Water Well Project',
-    rating: 5,
-    feedback: 'Sayrab made it incredibly easy to raise funds for our village. The verification process gave donors confidence, and we exceeded our target!',
-    isModerated: true,
-    isPublished: true,
-    type: 'campaign',
-  });
-
   const firstProduct = await Product.findOne();
   if (firstProduct) {
     await Review.create({

@@ -23,16 +23,16 @@ export default function Reviews() {
   useEffect(() => {
     api
       .get('/reviews')
-      .then((res) => setReviews(res.data))
+      .then((res) => setReviews(res.data || []))
+      .catch(() => setReviews([]))
       .finally(() => setLoading(false));
   }, []);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-slate-800 mb-2">Campaign Reviews</h1>
+      <h1 className="text-3xl font-bold text-slate-800 mb-2">Customer & Product Reviews</h1>
       <p className="text-slate-600 mb-8">
-        Verified campaign creators share their experience after campaigns conclude. Reviews are
-        moderated before publication.
+        Read genuine feedback and reviews from customers supporting causes through our charity merchandise store.
       </p>
 
       {loading ? (
@@ -43,7 +43,7 @@ export default function Reviews() {
         </div>
       ) : reviews.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
-          <p className="text-slate-500">No published reviews yet.</p>
+          <p className="text-slate-500">No published merchandise reviews yet.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -54,9 +54,9 @@ export default function Reviews() {
             >
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div>
-                  <h3 className="font-semibold text-slate-800">{review.campaignName}</h3>
+                  <h3 className="font-semibold text-slate-800">{review.productName || review.product?.name || 'Charity Merchandise'}</h3>
                   <p className="text-sm text-slate-500">
-                    by {review.author?.fullName || 'Verified Creator'}
+                    by {review.author?.fullName || 'Verified Buyer'} {review.verifiedBuyer && <span className="text-emerald-600 text-xs font-semibold ml-1">✓ Verified Purchase</span>}
                   </p>
                 </div>
                 <StarRating rating={review.rating} />

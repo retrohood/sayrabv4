@@ -31,6 +31,7 @@ import {
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency, formatDate } from '../utils/format';
+import ImageUploadPicker from '../components/ImageUploadPicker';
 
 export default function Dashboard() {
   const { user, setUser, logout } = useAuth();
@@ -1427,16 +1428,13 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Cover Image URL</label>
-                <input
-                  type="url"
-                  value={campaignForm.thumbnail}
-                  onChange={(e) => setCampaignForm({ ...campaignForm, thumbnail: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-sm"
-                  placeholder="E.g., https://picsum.photos/600/400"
-                />
-              </div>
+              <ImageUploadPicker
+                value={campaignForm.thumbnail}
+                onChange={(url) => setCampaignForm({ ...campaignForm, thumbnail: url })}
+                uploads={uploads}
+                label="Campaign Cover Picture"
+                helperText="Upload a picture directly from your computer, choose from your saved uploads, or enter an image link."
+              />
 
               <div className="flex gap-4 pt-4 border-t">
                 <button
