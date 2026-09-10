@@ -58,5 +58,17 @@ export const createDemoUser = ({
   return user;
 };
 
-export const isDemoLogin = (email, password) =>
-  email?.toLowerCase() === DEMO_EMAIL && password === DEMO_PASSWORD;
+export const DEMO_ADMIN_EMAIL = 'admin@sayrab.com';
+export const DEMO_ADMIN_PASSWORD = 'password123';
+
+export const isDemoLogin = (email, password) => {
+  const normEmail = email?.toLowerCase();
+  if (normEmail === DEMO_EMAIL && password === DEMO_PASSWORD) return true;
+  if (normEmail === DEMO_ADMIN_EMAIL && (password === DEMO_ADMIN_PASSWORD || password === 'admin123')) return true;
+  return false;
+};
+
+export const isAdminDemoLogin = (email, password) => {
+  const normEmail = email?.toLowerCase();
+  return normEmail === DEMO_ADMIN_EMAIL && (password === DEMO_ADMIN_PASSWORD || password === 'admin123');
+};

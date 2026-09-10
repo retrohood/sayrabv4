@@ -4,13 +4,13 @@ import Footer from './Footer';
 
 export default function Layout({ children }) {
   const location = useLocation();
-  const isDashboard = location.pathname.startsWith('/dashboard');
+  const isDashboardOrAdmin = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin');
 
   return (
     <div className="min-h-screen flex flex-col">
-      {!isDashboard && <Navbar />}
+      {!isDashboardOrAdmin && <Navbar />}
       <main className="flex-1">{children}</main>
-      {!isDashboard && <Footer />}
+      {!isDashboardOrAdmin && <Footer />}
     </div>
   );
 }

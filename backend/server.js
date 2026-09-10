@@ -20,6 +20,7 @@ import withdrawalRoutes from './routes/withdrawalRoutes.js';
 import payoutRoutes from './routes/payoutRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import manufacturingRoutes from './routes/manufacturingRoutes.js';
+import manufacturerRoutes from './routes/manufacturerRoutes.js';
 import webhookRoutes from './routes/webhookRoutes.js';
 import { CAMPAIGN_CATEGORIES, PRODUCT_CATEGORIES, SORT_OPTIONS } from './constants/index.js';
 
@@ -56,6 +57,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/manufacturer', manufacturerRoutes);
 app.use('/api/stores', storeRoutes);
 app.use('/api/withdrawals', withdrawalRoutes);
 app.use('/api/payouts', payoutRoutes);

@@ -52,6 +52,14 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center gap-3">
             {user ? (
               <>
+                {user.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-slate-900/80 hover:bg-slate-900 border border-white/20 transition-colors shadow-xs"
+                  >
+                    Admin Portal
+                  </Link>
+                )}
                 <Link
                   to="/dashboard"
                   className="text-sm font-medium text-white/90 hover:text-white"
@@ -103,6 +111,15 @@ export default function Navbar() {
             <div className="mt-2 pt-2 border-t border-white/20">
               {user ? (
                 <>
+                  {user.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setOpen(false)}
+                      className="block px-3 py-2 text-sm font-bold text-amber-200"
+                    >
+                      ★ Admin Portal
+                    </Link>
+                  )}
                   <Link
                     to="/dashboard"
                     onClick={() => setOpen(false)}

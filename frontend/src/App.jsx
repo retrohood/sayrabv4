@@ -16,6 +16,8 @@ import OrderTracking from './pages/OrderTracking';
 import Reviews from './pages/Reviews';
 import About from './pages/About';
 import Dashboard from './pages/Dashboard';
+import AdminPortal from './pages/admin/AdminPortal';
+import ManufacturerPortal from './pages/manufacturer/ManufacturerPortal';
 
 export default function App() {
   return (
@@ -52,6 +54,8 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/admin/*" element={<AdminPortal />} />
+            <Route path="/manufacturer/*" element={<ManufacturerPortal />} />
           </Routes>
         </Layout>
       </BrowserRouter>

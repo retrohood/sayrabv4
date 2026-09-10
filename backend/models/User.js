@@ -26,6 +26,12 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(USER_ROLES),
       default: USER_ROLES.CUSTOMER,
     },
+    status: {
+      type: String,
+      enum: ['active', 'suspended', 'pending_approval'],
+      default: 'active',
+    },
+    organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
     cnic: { type: String, trim: true },
     address: { type: String, trim: true },
     profilePicture: { type: String, default: '' },
@@ -43,6 +49,14 @@ const userSchema = new mongoose.Schema(
       enum: ['public', 'anonymous'],
       default: 'public',
     },
+    activityLog: [
+      {
+        action: { type: String, required: true },
+        details: { type: String, default: '' },
+        ip: { type: String, default: '' },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -76,6 +90,8 @@ userSchema.methods.toPublicJSON = function () {
     email: this.email,
     phone: this.phone,
     role: this.role,
+    status: this.status || 'active',
+    organizationId: this.organizationId,
     cnic: this.cnic,
     address: this.address,
     profilePicture: this.profilePicture,
@@ -88,6 +104,7 @@ userSchema.methods.toPublicJSON = function () {
     isVerifiedFundraiser: this.isVerifiedFundraiser,
     referralCode: this.referralCode,
     referralPrivacy: this.referralPrivacy,
+    activityLog: this.activityLog || [],
     authProvider: this.authProvider,
     createdAt: this.createdAt,
   };
