@@ -1529,37 +1529,6 @@ export default function Dashboard() {
           </nav>
         </div>
 
-        {/* Quick Portal Switcher (Customer / Fundraiser / Manufacturer) */}
-        <div className="px-4 py-3 border-t border-slate-800">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Portal View</p>
-          <div className="grid grid-cols-3 gap-1 bg-slate-800/90 p-1 rounded-xl">
-            <button
-              onClick={() => handleSwitchPortalRole('customer')}
-              className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
-                !isFundraiser && !isManufacturer ? 'bg-primary-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Customer
-            </button>
-            <button
-              onClick={() => handleSwitchPortalRole('fundraiser')}
-              className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
-                isFundraiser ? 'bg-primary-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Fundraiser
-            </button>
-            <button
-              onClick={() => handleSwitchPortalRole('manufacturer')}
-              className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
-                isManufacturer ? 'bg-primary-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Manufacturer
-            </button>
-          </div>
-        </div>
-
         {/* Sidebar Footer */}
         <div className="p-4 border-t border-slate-800">
           <div className="flex items-center gap-3 mb-4">
