@@ -2070,14 +2070,6 @@ export default function Dashboard() {
                         }`}>
                           {tp.status === 'accepted_by_manufacturer' ? 'Accepted' : 'Pending Review'}
                         </span>
-                        {tp.status !== 'accepted_by_manufacturer' && (
-                          <button
-                            onClick={() => handleAcceptTechpack(tp.id)}
-                            className="px-3 py-1 bg-slate-900 hover:bg-primary-900 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
-                          >
-                            Accept
-                          </button>
-                        )}
                       </div>
                     </div>
                   ))}
