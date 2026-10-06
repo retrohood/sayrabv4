@@ -707,9 +707,50 @@ export default function Dashboard() {
         return [newBulk, ...prev];
       });
 
-      alert(`✅ Techpack Accepted!\n\nOrder Quantity: ${tp.quantity} units (> 5 units).\nThis order has been automatically transferred to "Bulk Order Requests" with the progress stepper initialized at Step 1 (Spec & BOM Review).`);
+      alert(`✅ Techpack Accepted!\n\nOrder Quantity: ${tp.quantity} units (> 5 units).\nThis order has been moved to "Bulk Order Requests" with the progress stepper initialized at Step 1 (Spec & BOM Review).`);
     } else {
-      alert(`✅ Techpack Accepted!\n\nOrder Quantity: ${tp.quantity} units (Standard batch <= 5 units).`);
+      // Small Techpack (<= 5 units): Directly move to Delivery & Tracking!
+      const trackingCode = `TCS-${tp.requesterType === 'organization' ? 'SMP' : 'PRD'}-${Math.floor(100000 + Math.random() * 900000)}`;
+      if (tp.requesterType === 'organization') {
+        setMfgSampleTracking(prev => {
+          const exists = prev.some(t => t.sampleId === tp.code);
+          if (exists) return prev;
+          const newTrk = {
+            id: `trk-smp-${Date.now()}`,
+            sampleId: tp.code,
+            requesterType: 'organization',
+            recipient: `${tp.organization} (${tp.contactPerson || 'Lead'})`,
+            item: `${tp.title} (${tp.quantity} ${tp.quantity === 1 ? 'pc' : 'pcs'})`,
+            carrier: 'TCS Express',
+            trackingNumber: trackingCode,
+            dispatchDate: new Date().toISOString().split('T')[0],
+            status: 'in_transit',
+            eta: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          };
+          return [newTrk, ...prev];
+        });
+      } else {
+        setMfgProductTracking(prev => {
+          const exists = prev.some(t => t.orderId === `ORD-${tp.code}`);
+          if (exists) return prev;
+          const newPrd = {
+            id: `trk-prd-${Date.now()}`,
+            orderId: `ORD-${tp.code}`,
+            customerName: tp.organization,
+            customerPhone: tp.phone || '0300-1234567',
+            address: 'Customer Address (Pakistan)',
+            items: `${tp.quantity}x ${tp.title}`,
+            carrier: 'TCS Express',
+            trackingNumber: trackingCode,
+            dispatchDate: new Date().toISOString().split('T')[0],
+            status: 'in_transit',
+            totalAmount: tp.quantity * 2500,
+          };
+          return [newPrd, ...prev];
+        });
+      }
+
+      alert(`✅ Small Techpack Accepted!\n\nOrder Quantity: ${tp.quantity} units (≤ 5 units).\nThis order has been directly moved to "Delivery & Tracking" under tracking code ${trackingCode}.`);
     }
   };
 
@@ -725,15 +766,46 @@ export default function Dashboard() {
   };
 
   const handleAdvanceBulkStage = (bulkId) => {
+    const targetBulk = mfgBulkOrders.find(b => b.id === bulkId);
+    if (!targetBulk) return;
+
+    const nextStatus = targetBulk.status === 'queued' ? 'fabric_sourcing'
+      : targetBulk.status === 'fabric_sourcing' ? 'in_production'
+      : targetBulk.status === 'in_production' ? 'qc_passed'
+      : targetBulk.status === 'qc_passed' ? 'pallet_dispatched'
+      : 'pallet_dispatched';
+
+    const cargoCode = targetBulk.trackingNumber && !targetBulk.trackingNumber.includes('Pending')
+      ? targetBulk.trackingNumber
+      : `TCS-CARGO-${Math.floor(100000 + Math.random() * 900000)}`;
+
     setMfgBulkOrders(prev => prev.map(blk => {
       if (blk.id !== bulkId) return blk;
-      const nextStatus = blk.status === 'queued' ? 'fabric_sourcing'
-        : blk.status === 'fabric_sourcing' ? 'in_production'
-        : blk.status === 'in_production' ? 'qc_passed'
-        : blk.status === 'qc_passed' ? 'pallet_dispatched'
-        : 'pallet_dispatched';
-      return { ...blk, status: nextStatus };
+      return { ...blk, status: nextStatus, trackingNumber: nextStatus === 'pallet_dispatched' ? cargoCode : blk.trackingNumber };
     }));
+
+    // If advancing to Step 5 (pallet_dispatched): All steps completed, move to Delivery & Tracking!
+    if (nextStatus === 'pallet_dispatched') {
+      setMfgSampleTracking(prev => {
+        const exists = prev.some(t => t.sampleId === targetBulk.orderCode);
+        if (exists) return prev;
+        const bulkDispatchTrk = {
+          id: `trk-blk-${Date.now()}`,
+          sampleId: targetBulk.orderCode,
+          requesterType: 'organization',
+          recipient: `${targetBulk.clientName} (Bulk Consignee)`,
+          item: `📦 Bulk Pallet: ${targetBulk.totalUnits}x ${targetBulk.item}`,
+          carrier: 'TCS Cargo Freight',
+          trackingNumber: cargoCode,
+          dispatchDate: new Date().toISOString().split('T')[0],
+          status: 'in_transit',
+          eta: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        };
+        return [bulkDispatchTrk, ...prev];
+      });
+
+      alert(`🎉 All 5 Production Steps Completed for ${targetBulk.orderCode} (${targetBulk.totalUnits} Units)!\n\nThis bulk cargo has been successfully moved to "Delivery & Tracking" with tracking code ${cargoCode}.`);
+    }
   };
 
   const handleResetBulkStage = (bulkId) => {
@@ -2425,7 +2497,7 @@ export default function Dashboard() {
                             </>
                           ) : (
                             <>
-                              <CheckCircle size={14} /> Accept Techpack ({tp.quantity} pcs)
+                              <Truck size={14} /> Accept & Move to Delivery & Tracking ({tp.quantity} pcs)
                             </>
                           )}
                         </button>
@@ -2437,9 +2509,15 @@ export default function Dashboard() {
                           <CheckCheck size={16} /> In Bulk Orders Pipeline (Step 1) →
                         </button>
                       ) : (
-                        <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
-                          <CheckCheck size={16} /> Accepted for Production
-                        </span>
+                        <button
+                          onClick={() => {
+                            setActiveTab('delivery_tracking');
+                            setMfgTrackingSubTab(tp.requesterType === 'organization' ? 'sample_tracking' : 'product_tracking');
+                          }}
+                          className="px-3.5 py-1.5 bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-300 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Truck size={15} /> View in Delivery & Tracking →
+                        </button>
                       )}
                     </div>
                   </div>
@@ -3035,12 +3113,22 @@ export default function Dashboard() {
                         >
                           Reset to Step 1
                         </button>
-                        {blk.status !== 'pallet_dispatched' && (
+                        {blk.status !== 'pallet_dispatched' ? (
                           <button
                             onClick={() => handleAdvanceBulkStage(blk.id)}
                             className="px-4 py-2 bg-slate-900 hover:bg-primary-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                           >
                             <RefreshCw size={14} /> Advance to Next Stage →
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setActiveTab('delivery_tracking');
+                              setMfgTrackingSubTab('sample_tracking');
+                            }}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Truck size={14} /> View in Delivery & Tracking →
                           </button>
                         )}
                       </div>
