@@ -867,32 +867,44 @@ export default function Dashboard() {
       ? targetBulk.trackingNumber
       : `TCS-CARGO-${Math.floor(100000 + Math.random() * 900000)}`;
 
-    setMfgBulkOrders(prev => prev.map(blk => {
-      if (blk.id !== bulkId) return blk;
-      return { ...blk, status: nextStatus, trackingNumber: nextStatus === 'pallet_dispatched' ? cargoCode : blk.trackingNumber };
-    }));
-
-    // If advancing to Step 5 (pallet_dispatched): All steps completed, move to Delivery & Tracking!
+    // If advancing to Step 5 (pallet_dispatched): All 5 steps completed!
+    // 1. Move to Delivery & Tracking
+    // 2. Remove from Bulk Order Requests queue
+    // 3. Navigate to Delivery & Tracking tab
     if (nextStatus === 'pallet_dispatched') {
+      const bulkDispatchTrk = {
+        id: `trk-blk-${Date.now()}`,
+        sampleId: targetBulk.orderCode,
+        requesterType: 'organization',
+        recipient: `${targetBulk.clientName} (Bulk Consignee)`,
+        item: `📦 Bulk Pallet: ${targetBulk.totalUnits}x ${targetBulk.item}`,
+        carrier: 'TCS Cargo Freight',
+        trackingNumber: cargoCode,
+        dispatchDate: new Date().toISOString().split('T')[0],
+        status: 'in_transit',
+        eta: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      };
+
+      // Add to Delivery & Tracking
       setMfgSampleTracking(prev => {
         const exists = prev.some(t => t.sampleId === targetBulk.orderCode);
         if (exists) return prev;
-        const bulkDispatchTrk = {
-          id: `trk-blk-${Date.now()}`,
-          sampleId: targetBulk.orderCode,
-          requesterType: 'organization',
-          recipient: `${targetBulk.clientName} (Bulk Consignee)`,
-          item: `📦 Bulk Pallet: ${targetBulk.totalUnits}x ${targetBulk.item}`,
-          carrier: 'TCS Cargo Freight',
-          trackingNumber: cargoCode,
-          dispatchDate: new Date().toISOString().split('T')[0],
-          status: 'in_transit',
-          eta: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        };
         return [bulkDispatchTrk, ...prev];
       });
 
-      alert(`🎉 All 5 Production Steps Completed for ${targetBulk.orderCode} (${targetBulk.totalUnits} Units)!\n\nThis bulk cargo has been successfully moved to "Delivery & Tracking" with tracking code ${cargoCode}.`);
+      // Remove from Bulk Order Requests queue
+      setMfgBulkOrders(prev => prev.filter(b => b.id !== bulkId));
+
+      // Switch to Delivery & Tracking view
+      setActiveTab('delivery_tracking');
+      setMfgTrackingSubTab('sample_tracking');
+
+      alert(`🎉 All 5 Production Steps Completed for ${targetBulk.orderCode} (${targetBulk.totalUnits} Units)!\n\nThis bulk order has been removed from "Bulk Order Requests" and moved to "Delivery & Tracking" (Tracking: ${cargoCode}).`);
+    } else {
+      setMfgBulkOrders(prev => prev.map(blk => {
+        if (blk.id !== bulkId) return blk;
+        return { ...blk, status: nextStatus, trackingNumber: blk.trackingNumber };
+      }));
     }
   };
 
@@ -3078,11 +3090,11 @@ export default function Dashboard() {
                 <Filter size={12} /> Filter:
               </span>
               {[
-                { id: 'all', label: 'All Bulk Orders (>5)' },
-                { id: 'fabric_sourcing', label: 'Fabric Sourcing' },
-                { id: 'in_production', label: 'In High-Speed Production' },
-                { id: 'qc_passed', label: 'QC Passed & Polybagged' },
-                { id: 'pallet_dispatched', label: 'Pallet Dispatched' },
+                { id: 'all', label: `All Bulk Orders (${mfgBulkOrders.length})` },
+                { id: 'queued', label: 'Step 1: Spec Review' },
+                { id: 'fabric_sourcing', label: 'Step 2: Fabric Sourcing' },
+                { id: 'in_production', label: 'Step 3: In Production' },
+                { id: 'qc_passed', label: 'Step 4: QC Passed' },
               ].map(f => (
                 <button
                   key={f.id}
@@ -3096,183 +3108,208 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* Bulk Orders List */}
-            <div className="space-y-6">
-              {mfgBulkOrders
-                .filter(blk => mfgBulkFilter === 'all' || blk.status === mfgBulkFilter)
-                .map((blk, idx) => (
-                  <div key={blk.id ? `${blk.id}-${idx}` : idx} className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-all space-y-6">
-                    {/* Header */}
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-extrabold text-white bg-slate-900 px-3 py-1 rounded-md shadow-xs">
-                            {blk.orderCode}
+            {/* Bulk Orders List or Empty State */}
+            {mfgBulkOrders.filter(blk => mfgBulkFilter === 'all' || blk.status === mfgBulkFilter).length === 0 ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm space-y-4">
+                <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                  <CheckCircle2 size={32} />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">All Bulk Orders Completed & Dispatched!</h3>
+                <p className="text-sm text-slate-500 max-w-md mx-auto">
+                  All high-volume production jobs have completed all 5 steps and have been removed from the bulk queue and moved to <strong>Delivery & Tracking</strong> for freight logistics.
+                </p>
+                <div className="flex flex-wrap justify-center gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      setActiveTab('delivery_tracking');
+                      setMfgTrackingSubTab('sample_tracking');
+                    }}
+                    className="px-5 py-2.5 bg-slate-900 hover:bg-primary-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    <Truck size={15} /> View in Delivery & Tracking →
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('receive_techpack')}
+                    className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    <FileCode size={15} /> Accept More Techpacks
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {mfgBulkOrders
+                  .filter(blk => mfgBulkFilter === 'all' || blk.status === mfgBulkFilter)
+                  .map((blk, idx) => (
+                    <div key={blk.id ? `${blk.id}-${idx}` : idx} className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-all space-y-6">
+                      {/* Header */}
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-extrabold text-white bg-slate-900 px-3 py-1 rounded-md shadow-xs">
+                              {blk.orderCode}
+                            </span>
+                            <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
+                              Bulk Order ({blk.totalUnits} Units)
+                            </span>
+                          </div>
+                          <h3 className="font-extrabold text-slate-900 text-lg mt-2">{blk.item}</h3>
+                          <p className="text-xs text-slate-600">Client: <strong>{blk.clientName}</strong> · Campaign: {blk.campaign}</p>
+                        </div>
+
+                        <div className="flex sm:flex-col items-end gap-1">
+                          <span className={`text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider ${
+                            blk.status === 'pallet_dispatched' ? 'bg-purple-100 text-purple-800' :
+                            blk.status === 'qc_passed' ? 'bg-emerald-100 text-emerald-800' :
+                            blk.status === 'in_production' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {blk.status.replace(/_/g, ' ')}
                           </span>
-                          <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
-                            Bulk Order ({blk.totalUnits} Units)
+                          <span className="text-[11px] text-slate-400 font-semibold">Target: {blk.targetCompletion}</span>
+                        </div>
+                      </div>
+
+                      {/* Breakdown & Financials */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Total Batch Units</span>
+                          <span className="font-extrabold text-slate-900 text-lg">{blk.totalUnits} pcs</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Size Breakdown</span>
+                          <span className="font-bold text-slate-700 text-xs">
+                            {Object.entries(blk.breakdown).map(([sz, qty]) => `${sz}:${qty}`).join(' · ')}
                           </span>
                         </div>
-                        <h3 className="font-extrabold text-slate-900 text-lg mt-2">{blk.item}</h3>
-                        <p className="text-xs text-slate-600">Client: <strong>{blk.clientName}</strong> · Campaign: {blk.campaign}</p>
-                      </div>
-
-                      <div className="flex sm:flex-col items-end gap-1">
-                        <span className={`text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider ${
-                          blk.status === 'pallet_dispatched' ? 'bg-purple-100 text-purple-800' :
-                          blk.status === 'qc_passed' ? 'bg-emerald-100 text-emerald-800' :
-                          blk.status === 'in_production' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {blk.status.replace(/_/g, ' ')}
-                        </span>
-                        <span className="text-[11px] text-slate-400 font-semibold">Target: {blk.targetCompletion}</span>
-                      </div>
-                    </div>
-
-                    {/* Breakdown & Financials */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Total Batch Units</span>
-                        <span className="font-extrabold text-slate-900 text-lg">{blk.totalUnits} pcs</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Size Breakdown</span>
-                        <span className="font-bold text-slate-700 text-xs">
-                          {Object.entries(blk.breakdown).map(([sz, qty]) => `${sz}:${qty}`).join(' · ')}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Batch Retail Value</span>
-                        <span className="font-extrabold text-slate-900 text-sm">{formatCurrency(blk.totalValue)}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-emerald-600 font-bold uppercase block">Mfg Payout Share (45%)</span>
-                        <span className="font-black text-emerald-700 text-base">{formatCurrency(blk.mfgPayout)}</span>
-                      </div>
-                    </div>
-
-                    {/* Production Progress Stepper (Always Starts from Step 1) */}
-                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-black uppercase tracking-wider text-slate-800">
-                            Production Progress Stepper:
-                          </span>
-                          <span className="text-xs font-extrabold text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded-full border border-primary-200 capitalize">
-                            {blk.status === 'queued' ? 'Step 1 of 5: Spec Review & BOM Sync (Initial Stage)' :
-                             blk.status === 'fabric_sourcing' ? 'Step 2 of 5: Fabric Sourcing & Cutting' :
-                             blk.status === 'in_production' ? 'Step 3 of 5: In High-Speed Production' :
-                             blk.status === 'qc_passed' ? 'Step 4 of 5: Quality Control & Packaging' :
-                             'Step 5 of 5: Pallet Dispatched & Freight Cargo'}
-                          </span>
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Batch Retail Value</span>
+                          <span className="font-extrabold text-slate-900 text-sm">{formatCurrency(blk.totalValue)}</span>
                         </div>
-                        <span className="text-xs font-bold text-slate-500">
-                          Progress: {
-                            blk.status === 'queued' ? '10%' :
-                            blk.status === 'fabric_sourcing' ? '35%' :
-                            blk.status === 'in_production' ? '65%' :
-                            blk.status === 'qc_passed' ? '85%' : '100%'
-                          }
-                        </span>
+                        <div>
+                          <span className="text-[10px] text-emerald-600 font-bold uppercase block">Mfg Payout Share (45%)</span>
+                          <span className="font-black text-emerald-700 text-base">{formatCurrency(blk.mfgPayout)}</span>
+                        </div>
                       </div>
 
-                      {/* 5-Step Visual Stepper Circles */}
-                      <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
-                        {[
-                          { step: 1, key: 'queued', label: '1. Spec & BOM', desc: 'BOM Sync' },
-                          { step: 2, key: 'fabric_sourcing', label: '2. Sourcing', desc: 'Cutting' },
-                          { step: 3, key: 'in_production', label: '3. Production', desc: 'Screen Print' },
-                          { step: 4, key: 'qc_passed', label: '4. QC Passed', desc: 'Packaging' },
-                          { step: 5, key: 'pallet_dispatched', label: '5. Dispatched', desc: 'Freight Cargo' },
-                        ].map((st, sIdx) => {
-                          const stepOrder = ['queued', 'fabric_sourcing', 'in_production', 'qc_passed', 'pallet_dispatched'];
-                          const currentIdx = stepOrder.indexOf(blk.status);
-                          const isCompleted = sIdx < currentIdx;
-                          const isCurrent = sIdx === currentIdx;
-
-                          return (
-                            <div key={st.key} className="flex flex-col items-center text-center">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition-all shadow-xs ${
-                                isCurrent
-                                  ? 'bg-slate-900 text-white ring-4 ring-slate-300'
-                                  : isCompleted
-                                  ? 'bg-emerald-600 text-white'
-                                  : 'bg-slate-200 text-slate-500'
-                              }`}>
-                                {isCompleted ? '✓' : st.step}
-                              </div>
-                              <p className={`text-[10px] sm:text-[11px] font-bold mt-1.5 leading-tight ${
-                                isCurrent ? 'text-slate-900' : isCompleted ? 'text-emerald-700' : 'text-slate-400'
-                              }`}>
-                                {st.label}
-                              </p>
-                              <span className="text-[9px] text-slate-400 hidden md:block">{st.desc}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Progress Bar */}
-                      <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-                        <div
-                          className="bg-slate-900 h-2.5 rounded-full transition-all duration-500"
-                          style={{
-                            width:
-                              blk.status === 'queued' ? '15%' :
-                              blk.status === 'fabric_sourcing' ? '40%' :
+                      {/* Production Progress Stepper (Always Starts from Step 1) */}
+                      <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black uppercase tracking-wider text-slate-800">
+                              Production Progress Stepper:
+                            </span>
+                            <span className="text-xs font-extrabold text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded-full border border-primary-200 capitalize">
+                              {blk.status === 'queued' ? 'Step 1 of 5: Spec Review & BOM Sync (Initial Stage)' :
+                               blk.status === 'fabric_sourcing' ? 'Step 2 of 5: Fabric Sourcing & Cutting' :
+                               blk.status === 'in_production' ? 'Step 3 of 5: In High-Speed Production' :
+                               blk.status === 'qc_passed' ? 'Step 4 of 5: Quality Control & Packaging' :
+                               'Step 5 of 5: Pallet Dispatched & Freight Cargo'}
+                            </span>
+                          </div>
+                          <span className="text-xs font-bold text-slate-500">
+                            Progress: {
+                              blk.status === 'queued' ? '10%' :
+                              blk.status === 'fabric_sourcing' ? '35%' :
                               blk.status === 'in_production' ? '65%' :
-                              blk.status === 'qc_passed' ? '85%' : '100%',
-                          }}
-                        ></div>
-                      </div>
-                    </div>
+                              blk.status === 'qc_passed' ? '85%' : '100%'
+                            }
+                          </span>
+                        </div>
 
-                    {/* Tracking & Actions */}
-                    <div className="pt-2 flex flex-wrap items-center justify-between gap-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-500 font-semibold">Freight Cargo Code:</span>
-                        <span className="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded border border-slate-200">
-                          {blk.trackingNumber}
-                        </span>
+                        {/* 5-Step Visual Stepper Circles */}
+                        <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+                          {[
+                            { step: 1, key: 'queued', label: '1. Spec & BOM', desc: 'BOM Sync' },
+                            { step: 2, key: 'fabric_sourcing', label: '2. Sourcing', desc: 'Cutting' },
+                            { step: 3, key: 'in_production', label: '3. Production', desc: 'Screen Print' },
+                            { step: 4, key: 'qc_passed', label: '4. QC Passed', desc: 'Packaging' },
+                            { step: 5, key: 'pallet_dispatched', label: '5. Dispatched', desc: 'Freight Cargo' },
+                          ].map((st, sIdx) => {
+                            const stepOrder = ['queued', 'fabric_sourcing', 'in_production', 'qc_passed', 'pallet_dispatched'];
+                            const currentIdx = stepOrder.indexOf(blk.status);
+                            const isCompleted = sIdx < currentIdx;
+                            const isCurrent = sIdx === currentIdx;
+
+                            return (
+                              <div key={st.key} className="flex flex-col items-center text-center">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition-all shadow-xs ${
+                                  isCurrent
+                                    ? 'bg-slate-900 text-white ring-4 ring-slate-300'
+                                    : isCompleted
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-slate-200 text-slate-500'
+                                }`}>
+                                  {isCompleted ? '✓' : st.step}
+                                </div>
+                                <p className={`text-[10px] sm:text-[11px] font-bold mt-1.5 leading-tight ${
+                                  isCurrent ? 'text-slate-900' : isCompleted ? 'text-emerald-700' : 'text-slate-400'
+                                }`}>
+                                  {st.label}
+                                </p>
+                                <span className="text-[9px] text-slate-400 hidden md:block">{st.desc}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                          <div
+                            className="bg-slate-900 h-2.5 rounded-full transition-all duration-500"
+                            style={{
+                              width:
+                                blk.status === 'queued' ? '15%' :
+                                blk.status === 'fabric_sourcing' ? '40%' :
+                                blk.status === 'in_production' ? '65%' :
+                                blk.status === 'qc_passed' ? '85%' : '100%',
+                            }}
+                          ></div>
+                        </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button
-                          onClick={() => alert(`Generated Bulk Cargo Packing Slip & Invoice for ${blk.orderCode}`)}
-                          className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
-                        >
-                          Download Packing Slip
-                        </button>
-                        <button
-                          onClick={() => handleResetBulkStage(blk.id)}
-                          className="px-3 py-2 bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
-                          title="Reset progress back to Step 1"
-                        >
-                          Reset to Step 1
-                        </button>
-                        {blk.status !== 'pallet_dispatched' ? (
+                      {/* Tracking & Actions */}
+                      <div className="pt-2 flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-500 font-semibold">Freight Cargo Code:</span>
+                          <span className="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded border border-slate-200">
+                            {blk.trackingNumber}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={() => alert(`Generated Bulk Cargo Packing Slip & Invoice for ${blk.orderCode}`)}
+                            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                          >
+                            Download Packing Slip
+                          </button>
+                          <button
+                            onClick={() => handleResetBulkStage(blk.id)}
+                            className="px-3 py-2 bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                            title="Reset progress back to Step 1"
+                          >
+                            Reset to Step 1
+                          </button>
                           <button
                             onClick={() => handleAdvanceBulkStage(blk.id)}
                             className="px-4 py-2 bg-slate-900 hover:bg-primary-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                           >
-                            <RefreshCw size={14} /> Advance to Next Stage →
+                            {blk.status === 'qc_passed' ? (
+                              <>
+                                <Truck size={14} /> Complete Step 5 & Move to Delivery & Tracking →
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw size={14} /> Advance to Next Stage →
+                              </>
+                            )}
                           </button>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setActiveTab('delivery_tracking');
-                              setMfgTrackingSubTab('sample_tracking');
-                            }}
-                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-                          >
-                            <Truck size={14} /> View in Delivery & Tracking →
-                          </button>
-                        )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-            </div>
+                  ))}
+              </div>
+            )}
           </div>
         )}
 
