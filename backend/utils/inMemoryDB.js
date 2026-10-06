@@ -258,8 +258,8 @@ export const inMemoryDB = {
   campaigns: {
     find: (filter = {}) => {
       let result = [...mockCampaigns];
-      if (filter.isFeatured) result = result.filter(c => c.isFeatured);
-      if (filter.isEmergency) result = result.filter(c => c.isEmergency);
+      if (filter.isFeatured !== undefined) result = result.filter(c => Boolean(c.isFeatured) === Boolean(filter.isFeatured));
+      if (filter.isEmergency !== undefined) result = result.filter(c => Boolean(c.isEmergency) === Boolean(filter.isEmergency));
       if (filter.category && filter.category !== 'All') result = result.filter(c => c.category === filter.category);
       if (filter.$or && filter.$or[0]?.organizer) {
         const userId = filter.$or[0].organizer;

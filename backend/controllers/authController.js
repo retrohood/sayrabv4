@@ -93,6 +93,8 @@ export const startGoogleAuth = (req, res) => {
 
   const role = req.query.role === USER_ROLES.FUNDRAISER || req.query.role === USER_ROLES.MANAGER
     ? USER_ROLES.MANAGER
+    : req.query.role === USER_ROLES.MANUFACTURER
+    ? USER_ROLES.MANUFACTURER
     : USER_ROLES.CUSTOMER;
 
   return res.redirect(buildGoogleAuthUrl({ redirect: req.query.redirect, role }));
@@ -163,8 +165,16 @@ export const registerDonor = async (req, res) => {
   try {
     const { fullName, email, password, phone } = req.body;
 
+    if (!fullName?.trim() || !email?.trim() || !password || !phone?.trim()) {
+      return res.status(400).json({ message: 'All fields (Full Name, Email, Password, and Phone Number) are required' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
     if (!isDatabaseConnected(mongoose)) {
-      const user = createDemoUser({ fullName, email, phone, role: USER_ROLES.CUSTOMER });
+      const user = createDemoUser({ fullName: fullName.trim(), email: email.trim(), phone: phone.trim(), role: USER_ROLES.CUSTOMER });
       return res.status(201).json({
         token: generateDemoAuthToken(user),
         user: user.toPublicJSON(),
@@ -172,19 +182,73 @@ export const registerDonor = async (req, res) => {
       });
     }
 
-    const exists = await User.findOne({ email });
+    const exists = await User.findOne({ email: email.trim() });
     if (exists) {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
     const user = await User.create({
-      fullName,
-      email,
+      fullName: fullName.trim(),
+      email: email.trim(),
       password,
-      phone,
-      name: fullName,
+      phone: phone.trim(),
+      name: fullName.trim(),
       role: USER_ROLES.CUSTOMER,
-      referralCode: generateReferralCode(email),
+      referralCode: generateReferralCode(email.trim()),
+    });
+
+    res.status(201).json({
+      token: generateAuthToken(user._id),
+      user: user.toPublicJSON(),
+    });
+  } catch (error) {
+    handleAuthError(res, error);
+  }
+};
+
+export const registerManufacturer = async (req, res) => {
+  try {
+    const { fullName, email, password, phone, cnic, address } = req.body;
+
+    if (!fullName?.trim() || !email?.trim() || !password || !phone?.trim()) {
+      return res.status(400).json({ message: 'All fields (Full Name, Email, Password, and Phone Number) are required' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    if (!isDatabaseConnected(mongoose)) {
+      const user = createDemoUser({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        cnic: cnic?.trim() || '',
+        address: address?.trim() || '',
+        role: USER_ROLES.MANUFACTURER,
+      });
+      return res.status(201).json({
+        token: generateDemoAuthToken(user),
+        user: user.toPublicJSON(),
+        demoMode: true,
+      });
+    }
+
+    const exists = await User.findOne({ email: email.trim() });
+    if (exists) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
+    const user = await User.create({
+      fullName: fullName.trim(),
+      email: email.trim(),
+      password,
+      phone: phone.trim(),
+      cnic: cnic?.trim() || '',
+      address: address?.trim() || '',
+      name: fullName.trim(),
+      role: USER_ROLES.MANUFACTURER,
+      referralCode: generateReferralCode(email.trim()),
     });
 
     res.status(201).json({
@@ -200,14 +264,22 @@ export const registerFundraiser = async (req, res) => {
   try {
     const { fullName, email, password, phone, cnic, address } = req.body;
 
+    if (!fullName?.trim() || !email?.trim() || !password || !phone?.trim() || !cnic?.trim() || !address?.trim()) {
+      return res.status(400).json({ message: 'All fields (Full Name, Email, Password, Phone Number, CNIC, and Address) are required' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
     if (!isDatabaseConnected(mongoose)) {
       const user = createDemoUser({
-        fullName,
-        email,
-        phone,
-        cnic,
-        address,
-        role: USER_ROLES.MANAGER,
+        fullName: fullName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        cnic: cnic.trim(),
+        address: address.trim(),
+        role: USER_ROLES.FUNDRAISER,
       });
       return res.status(201).json({
         token: generateDemoAuthToken(user),
@@ -216,21 +288,21 @@ export const registerFundraiser = async (req, res) => {
       });
     }
 
-    const exists = await User.findOne({ email });
+    const exists = await User.findOne({ email: email.trim() });
     if (exists) {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
     const user = await User.create({
-      fullName,
-      email,
+      fullName: fullName.trim(),
+      email: email.trim(),
       password,
-      phone,
-      cnic,
-      address,
-      name: fullName,
-      role: USER_ROLES.MANAGER,
-      referralCode: generateReferralCode(email),
+      phone: phone.trim(),
+      cnic: cnic.trim(),
+      address: address.trim(),
+      name: fullName.trim(),
+      role: USER_ROLES.FUNDRAISER,
+      referralCode: generateReferralCode(email.trim()),
     });
 
     res.status(201).json({
@@ -314,11 +386,24 @@ export const updateReferralPrivacy = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { fullName, phone, address, profilePicture } = req.body;
+    const { fullName, phone, address, profilePicture, bankDetails } = req.body;
     if (fullName) req.user.fullName = fullName;
     if (phone) req.user.phone = phone;
     if (address !== undefined) req.user.address = address;
     if (profilePicture !== undefined) req.user.profilePicture = profilePicture;
+    if (req.body.role && Object.values(USER_ROLES).includes(req.body.role)) {
+      req.user.role = req.body.role;
+    }
+    if (bankDetails) {
+      req.user.bankDetails = {
+        accountHolderName: bankDetails.accountHolderName ?? req.user.bankDetails?.accountHolderName ?? '',
+        bankName: bankDetails.bankName ?? req.user.bankDetails?.bankName ?? '',
+        accountNumber: bankDetails.accountNumber ?? req.user.bankDetails?.accountNumber ?? '',
+        iban: bankDetails.iban ?? req.user.bankDetails?.iban ?? '',
+        easypaisaNumber: bankDetails.easypaisaNumber ?? req.user.bankDetails?.easypaisaNumber ?? '',
+        jazzcashNumber: bankDetails.jazzcashNumber ?? req.user.bankDetails?.jazzcashNumber ?? '',
+      };
+    }
     await req.user.save();
     res.json(req.user.toPublicJSON());
   } catch (error) {

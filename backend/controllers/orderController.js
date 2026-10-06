@@ -138,28 +138,102 @@ export const updateOrderPayment = async (req, res) => {
   }
 };
 
-export const getOrdersByCampaign = async (req, res) => {
+export const cancelOrder = async (req, res) => {
   try {
-    const { campaignId } = req.params;
+    const { id } = req.params;
+    const { reason = 'Customer requested cancellation' } = req.body;
 
-    if (!isDatabaseConnected(mongoose)) {
-      return res.json([]);
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
     }
 
-    const campaign = await Campaign.findById(campaignId);
-    if (!campaign) {
-      return res.status(404).json({ message: 'Campaign not found' });
+    const isOwner = order.customerId?.toString() === req.user._id.toString();
+    if (!isOwner && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to cancel this order' });
     }
 
-    if (req.user.role !== 'admin' && campaign.organizer.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to view this campaign\'s orders' });
+    if (order.orderStatus === 'cancelled') {
+      return res.status(400).json({ message: 'Order is already cancelled' });
     }
 
-    const orders = await Order.find({ campaignId })
-      .populate('customerId', 'fullName email')
-      .sort({ createdAt: -1 });
+    if (order.shippingStatus === 'shipped' || order.shippingStatus === 'delivered' || order.orderStatus === 'delivered') {
+      return res.status(400).json({ message: 'Cannot cancel an order that has already been shipped or delivered' });
+    }
 
-    res.json(orders);
+    // Check 2 days (48 hours) window
+    const orderAgeHours = (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60 * 60);
+    if (orderAgeHours > 48) {
+      return res.status(400).json({
+        message: 'Withdrawal and cancellation requests can only be made within 2 days (48 hours) of placing the order.',
+      });
+    }
+
+    order.orderStatus = 'cancelled';
+    order.refundStatus = 'requested';
+    order.refundReason = reason;
+    order.refundAmount = order.total;
+
+    // Deduct from campaign if it was paid
+    if (order.paymentStatus === 'paid' && order.campaignId) {
+      const campaign = await Campaign.findById(order.campaignId);
+      if (campaign) {
+        const splitAmount = order.revenueSplit?.organization || (order.total * 0.5);
+        campaign.amountRaised = Math.max(0, campaign.amountRaised - splitAmount);
+        campaign.raisedAmount = campaign.amountRaised;
+        await campaign.save();
+      }
+    }
+
+    await order.save();
+    res.json({ success: true, message: 'Order cancelled and withdrawal/refund request submitted successfully', order });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const requestSample = async (req, res) => {
+  try {
+    const { productId, campaignId, size, color, shippingAddress, notes } = req.body;
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const trackingNum = 'SMP-TRK-' + Math.floor(100000 + Math.random() * 900000);
+    const order = await Order.create({
+      customerId: req.user._id,
+      campaignId: campaignId || product.campaignId || undefined,
+      products: [{
+        productId: product._id,
+        name: `[Sample] ${product.name}`,
+        quantity: 1,
+        price: 0,
+        size: size || (product.sizes?.[0] || 'M'),
+        color: color || (product.colors?.[0] || 'Standard'),
+      }],
+      total: 0,
+      paymentStatus: 'paid',
+      orderStatus: 'paid',
+      productionStatus: 'sample_in_production',
+      shippingStatus: 'ready_to_ship',
+      shippingAddress: shippingAddress || {
+        fullName: req.user.fullName,
+        phone: req.user.phone,
+        line1: req.user.address || 'Standard Address',
+        city: 'Lahore',
+        country: 'Pakistan',
+      },
+      carrier: 'TCS Sample Logistics',
+      trackingNumber: trackingNum,
+      manufacturerNotes: notes || 'Sample requested by customer for review',
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Sample request submitted successfully. You will receive tracking updates as the sample is produced and dispatched.',
+      order,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -34,15 +34,29 @@ export default function App() {
             <Route
               path="/create-campaign"
               element={
-                <ProtectedRoute roles={['manager', 'fundraiser']}>
+                <ProtectedRoute>
                   <CreateCampaign />
                 </ProtectedRoute>
               }
             />
             <Route path="/store" element={<Store />} />
             <Route path="/product/:id" element={<ProductDetail />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
+            <Route
+              path="/cart"
+              element={
+                <ProtectedRoute>
+                  <Cart />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/checkout"
+              element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/order/:id" element={<OrderTracking />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/about" element={<About />} />

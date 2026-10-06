@@ -70,8 +70,6 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <SearchFilters
-          search={search}
-          setSearch={setSearch}
           category={category}
           setCategory={setCategory}
           sort={sort}
@@ -87,14 +85,16 @@ export default function Home() {
                 <div key={i} className="bg-white rounded-xl h-80 animate-pulse border border-slate-200" />
               ))}
             </div>
-          ) : campaigns.length === 0 ? (
+          ) : campaigns.filter((c) => !c.isEmergency).length === 0 ? (
             <p className="text-center text-slate-500 py-12">No campaigns found matching your criteria.</p>
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {campaigns.map((c) => (
-                  <CampaignCard key={c._id} campaign={c} />
-                ))}
+                {campaigns
+                  .filter((c) => !c.isEmergency)
+                  .map((c) => (
+                    <CampaignCard key={c._id} campaign={c} />
+                  ))}
               </div>
               {pagination.pages > 1 && (
                 <div className="flex justify-center gap-2 mt-8">

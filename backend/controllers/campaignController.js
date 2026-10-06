@@ -17,17 +17,17 @@ const publicFilter = {
 export const getFeaturedCampaigns = async (req, res) => {
   try {
     if (!isDatabaseConnected(mongoose)) {
-      const campaigns = inMemoryDB.campaigns.find({ isFeatured: true });
+      const campaigns = inMemoryDB.campaigns.find({ isFeatured: true, isEmergency: false });
       return res.json(campaigns);
     }
 
-    const campaigns = await Campaign.find({ ...publicFilter, isFeatured: true })
+    const campaigns = await Campaign.find({ ...publicFilter, isFeatured: true, isEmergency: { $ne: true } })
       .sort({ createdAt: -1 })
       .limit(10)
       .populate('organizer', 'fullName');
 
     if (campaigns.length === 0) {
-      const fallback = await Campaign.find(publicFilter)
+      const fallback = await Campaign.find({ ...publicFilter, isEmergency: { $ne: true } })
         .sort({ createdAt: -1 })
         .limit(10)
         .populate('organizer', 'fullName');

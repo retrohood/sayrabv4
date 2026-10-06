@@ -13,9 +13,18 @@ export default function Store() {
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-  const [cart, setCart] = useState(() => readCart());
+  const [cart, setCart] = useState(() => readCart(user?._id));
   const [allocation, setAllocation] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setCart(readCart(user?._id));
+    const handleCartUpdate = () => {
+      setCart(readCart(user?._id));
+    };
+    window.addEventListener('sayrab_cart_updated', handleCartUpdate);
+    return () => window.removeEventListener('sayrab_cart_updated', handleCartUpdate);
+  }, [user]);
 
   // Merchandise open store states
   const [myStore, setMyStore] = useState(null);
@@ -67,7 +76,12 @@ export default function Store() {
   }, [user]);
 
   const addToCart = (product) => {
-    setCart(addCartItem(product));
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    const updated = addCartItem(product, 1, user._id);
+    setCart(updated);
   };
 
   const handleOpenStoreClick = () => {
@@ -113,12 +127,17 @@ export default function Store() {
             Support Sayrab through branded merchandise. Profits fund charitable causes.
           </p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-primary-50 rounded-lg">
-          <ShoppingBag className="text-primary-600" size={20} />
-          <span className="font-medium text-primary-700">
-            Cart: {cart.length} items ({formatCurrency(cartTotal)})
-          </span>
-        </div>
+        {user && (
+          <Link
+            to="/cart"
+            className="flex items-center gap-2 px-4 py-2 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
+          >
+            <ShoppingBag className="text-primary-600" size={20} />
+            <span className="font-medium text-primary-700">
+              Cart: {cart.length} items ({formatCurrency(cartTotal)})
+            </span>
+          </Link>
+        )}
       </div>
 
       {allocation && (
@@ -234,7 +253,7 @@ export default function Store() {
         </div>
       </div>
 
-      {cart.length > 0 && (
+      {user && cart.length > 0 && (
         <div className="fixed bottom-4 right-4 bg-white shadow-xl border border-slate-200 rounded-xl p-4 max-w-xs z-40">
           <p className="font-semibold text-slate-800 mb-2">Shopping Cart</p>
           {cart.map((item) => (

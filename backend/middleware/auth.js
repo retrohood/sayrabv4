@@ -60,8 +60,8 @@ export const authorize = (...roles) => (req, res, next) => {
 };
 
 export const requireFundraiser = (req, res, next) => {
-  if (!req.user || (!isManagerRole(req.user.role) && req.user.role !== USER_ROLES.ADMIN)) {
-    return res.status(403).json({ message: 'Campaign manager account required' });
+  if (!req.user) {
+    return res.status(401).json({ message: 'Authentication required' });
   }
   next();
 };

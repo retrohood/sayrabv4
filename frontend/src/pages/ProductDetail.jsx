@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ShoppingCart, LogIn } from 'lucide-react';
 import api from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/format';
 import { addCartItem } from '../utils/cart';
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [product, setProduct] = useState(null);
   const [added, setAdded] = useState(false);
 
@@ -38,23 +41,36 @@ export default function ProductDetail() {
           )}
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={() => {
-                addCartItem(product);
-                setAdded(true);
-              }}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary-600 px-5 text-sm font-semibold text-white hover:bg-primary-700"
-            >
-              <ShoppingCart className="h-4 w-4" />
-              {added ? 'Added to Cart' : 'Add to Cart'}
-            </button>
-            <Link
-              to="/cart"
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-300 px-5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              View Cart
-            </Link>
+            {user ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    addCartItem(product, 1, user._id);
+                    setAdded(true);
+                  }}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary-600 px-5 text-sm font-semibold text-white hover:bg-primary-700 cursor-pointer"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  {added ? 'Added to Cart' : 'Add to Cart'}
+                </button>
+                <Link
+                  to="/cart"
+                  className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-300 px-5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  View Cart
+                </Link>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => navigate('/auth')}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary-600 px-5 text-sm font-semibold text-white hover:bg-primary-700 cursor-pointer"
+              >
+                <LogIn className="h-4 w-4" />
+                Login to Add to Cart
+              </button>
+            )}
           </div>
         </div>
       </div>

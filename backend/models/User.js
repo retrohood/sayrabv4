@@ -49,6 +49,14 @@ const userSchema = new mongoose.Schema(
       enum: ['public', 'anonymous'],
       default: 'public',
     },
+    bankDetails: {
+      accountHolderName: { type: String, trim: true, default: '' },
+      bankName: { type: String, trim: true, default: '' },
+      accountNumber: { type: String, trim: true, default: '' },
+      iban: { type: String, trim: true, default: '' },
+      easypaisaNumber: { type: String, trim: true, default: '' },
+      jazzcashNumber: { type: String, trim: true, default: '' },
+    },
     activityLog: [
       {
         action: { type: String, required: true },
@@ -104,6 +112,7 @@ userSchema.methods.toPublicJSON = function () {
     isVerifiedFundraiser: this.isVerifiedFundraiser,
     referralCode: this.referralCode,
     referralPrivacy: this.referralPrivacy,
+    bankDetails: this.bankDetails || {},
     activityLog: this.activityLog || [],
     authProvider: this.authProvider,
     createdAt: this.createdAt,

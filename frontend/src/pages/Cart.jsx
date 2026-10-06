@@ -1,15 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Minus, Plus, Trash2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { cartTotal, readCart, writeCart } from '../utils/cart';
 import { formatCurrency } from '../utils/format';
 
 export default function Cart() {
-  const [cart, setCart] = useState(() => readCart());
+  const { user } = useAuth();
+  const [cart, setCart] = useState(() => readCart(user?._id));
+
+  useEffect(() => {
+    setCart(readCart(user?._id));
+    const handleCartUpdate = () => {
+      setCart(readCart(user?._id));
+    };
+    window.addEventListener('sayrab_cart_updated', handleCartUpdate);
+    return () => window.removeEventListener('sayrab_cart_updated', handleCartUpdate);
+  }, [user]);
 
   const updateCart = (next) => {
     setCart(next);
-    writeCart(next);
+    writeCart(next, user?._id);
   };
 
   const updateQty = (id, delta) => {

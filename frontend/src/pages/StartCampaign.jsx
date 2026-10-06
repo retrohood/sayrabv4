@@ -13,11 +13,7 @@ export default function StartCampaign() {
   }
 
   if (!user) {
-    return <Navigate to="/auth?type=fundraiser&redirect=/create-campaign" replace />;
-  }
-
-  if (user.role === 'customer' || user.role === 'donor') {
-    return <Navigate to="/auth?type=fundraiser&redirect=/create-campaign" replace />;
+    return <Navigate to="/auth?redirect=/create-campaign" replace />;
   }
 
   return <Navigate to="/create-campaign" replace />;

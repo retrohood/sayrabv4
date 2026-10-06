@@ -4,7 +4,8 @@ import {
   getOrderById,
   getMyOrders,
   updateOrderPayment,
-  getOrdersByCampaign,
+  cancelOrder,
+  requestSample,
 } from '../controllers/orderController.js';
 import { optionalAuth, protect, authorize } from '../middleware/auth.js';
 import { USER_ROLES } from '../constants/index.js';
@@ -12,8 +13,9 @@ import { USER_ROLES } from '../constants/index.js';
 const router = express.Router();
 
 router.post('/', optionalAuth, createOrder);
+router.post('/sample', protect, requestSample);
 router.get('/my', protect, getMyOrders);
-router.get('/campaign/:campaignId', protect, getOrdersByCampaign);
+router.put('/:id/cancel', protect, cancelOrder);
 router.put('/:id/payment', protect, authorize(USER_ROLES.ADMIN), updateOrderPayment);
 router.get('/:id', optionalAuth, getOrderById);
 

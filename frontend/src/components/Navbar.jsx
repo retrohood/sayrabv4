@@ -5,9 +5,6 @@ import { useAuth } from '../context/AuthContext';
 
 const navLinks = [
   { to: '/', label: 'Home' },
-  { to: '/campaigns', label: 'Campaigns' },
-  { to: '/start-campaign', label: 'Start a Campaign' },
-  { to: '/store', label: 'Merchandise Store' },
   { to: '/reviews', label: 'Reviews' },
   { to: '/about', label: 'About Us' },
 ];
@@ -68,7 +65,7 @@ export default function Navbar() {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="px-4 py-2 text-sm font-medium text-slate-800 bg-white border border-white/30 rounded-lg hover:bg-white/90 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-slate-800 bg-white border border-white/30 rounded-lg hover:bg-white/90 transition-colors cursor-pointer"
                 >
                   Logout
                 </button>
@@ -83,13 +80,15 @@ export default function Navbar() {
             )}
           </div>
 
-          <button
-            className="lg:hidden p-2 text-white"
-            onClick={() => setOpen(!open)}
-            aria-label="Toggle menu"
-          >
-            {open ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="flex items-center gap-2 lg:hidden">
+            <button
+              className="p-2 text-white"
+              onClick={() => setOpen(!open)}
+              aria-label="Toggle menu"
+            >
+              {open ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
 
         {open && (

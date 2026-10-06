@@ -5,7 +5,8 @@ import { Eye, EyeOff } from 'lucide-react';
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
-  const defaultTab = searchParams.get('type') === 'fundraiser' ? 'fundraiser' : 'donor';
+  const typeParam = searchParams.get('type');
+  const defaultTab = typeParam === 'fundraiser' ? 'fundraiser' : typeParam === 'manufacturer' ? 'manufacturer' : 'customer';
   const [tab, setTab] = useState(defaultTab);
   const [mode, setMode] = useState('login');
   const [form, setForm] = useState({
@@ -22,7 +23,7 @@ export default function Auth() {
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, registerDonor, registerFundraiser, completeOAuthLogin } = useAuth();
+  const { login, registerDonor, registerFundraiser, registerManufacturer, completeOAuthLogin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,7 +47,11 @@ export default function Auth() {
 
   const handleGoogleLogin = () => {
     const redirect = searchParams.get('redirect') || '/dashboard';
-    const role = mode === 'register' && tab === 'fundraiser' ? 'fundraiser' : 'customer';
+    const role = mode === 'register' && tab === 'fundraiser' 
+      ? 'fundraiser' 
+      : mode === 'register' && tab === 'manufacturer' 
+      ? 'manufacturer' 
+      : 'customer';
     const params = new URLSearchParams({ redirect, role });
     const apiBase = import.meta.env.VITE_API_URL || '/api';
     window.location.href = `${apiBase}/auth/google?${params.toString()}`;
@@ -92,24 +97,32 @@ export default function Auth() {
     setError('');
 
     if (mode === 'register') {
+      if (!form.fullName.trim() || !form.email.trim() || !form.password || !form.confirmPassword || !form.phone.trim()) {
+        setError('Please fill in all required fields');
+        return;
+      }
+      if (form.password.length < 6) {
+        setError('Password must be at least 6 characters');
+        return;
+      }
       if (form.password !== form.confirmPassword) {
         setError('Passwords do not match');
         return;
       }
-      if (tab === 'fundraiser' && step === 1) {
-        if (!form.fullName || !form.email || !form.password || !form.phone) {
-          setError('Please fill in all required fields');
-          return;
-        }
+      if (form.phone.length < 10) {
+        setError('Please enter a valid phone number (at least 10 digits)');
+        return;
+      }
+      if ((tab === 'fundraiser' || tab === 'manufacturer') && step === 1) {
         setStep(2);
         return;
       }
-      if (tab === 'fundraiser' && step === 2) {
-        if (!form.cnic || !form.address) {
-          setError('Please fill in CNIC and Address');
+      if ((tab === 'fundraiser' || tab === 'manufacturer') && step === 2) {
+        if (!form.cnic.trim() || !form.address.trim()) {
+          setError(tab === 'manufacturer' ? 'Please fill in Tax / NTN / CNIC ID and Factory Address' : 'Please fill in CNIC and Address');
           return;
         }
-        if (form.cnic.length !== 15) {
+        if (tab === 'fundraiser' && form.cnic.length !== 15) {
           setError('Invalid CNIC format. Expected: XXXXX-XXXXXXX-X');
           return;
         }
@@ -120,21 +133,30 @@ export default function Auth() {
     try {
       if (mode === 'login') {
         await login(form.email, form.password);
-      } else if (tab === 'donor') {
+      } else if (tab === 'customer' || tab === 'donor') {
         await registerDonor({
-          fullName: form.fullName,
-          email: form.email,
+          fullName: form.fullName.trim(),
+          email: form.email.trim(),
           password: form.password,
-          phone: form.phone || undefined,
+          phone: form.phone.trim(),
+        });
+      } else if (tab === 'manufacturer') {
+        await registerManufacturer({
+          fullName: form.fullName.trim(),
+          email: form.email.trim(),
+          password: form.password,
+          phone: form.phone.trim(),
+          cnic: form.cnic.trim(),
+          address: form.address.trim(),
         });
       } else {
         await registerFundraiser({
-          fullName: form.fullName,
-          email: form.email,
+          fullName: form.fullName.trim(),
+          email: form.email.trim(),
           password: form.password,
-          phone: form.phone,
-          cnic: form.cnic,
-          address: form.address,
+          phone: form.phone.trim(),
+          cnic: form.cnic.trim(),
+          address: form.address.trim(),
         });
       }
       const redirect = searchParams.get('redirect') || '/dashboard';
@@ -158,44 +180,53 @@ export default function Auth() {
           {mode === 'login' ? 'Welcome Back' : 'Create Account'}
         </h1>
         <p className="text-center text-slate-500 text-sm mb-6">
-          Join Sayrab to donate, fundraise, and make an impact
+          Join Sayrab to donate, fundraise, and manufacture merchandise
         </p>
 
         {mode === 'register' && (
-          <div className="flex rounded-lg bg-slate-100 p-1 mb-6">
+          <div className="flex rounded-lg bg-slate-100 p-1 mb-6 gap-1">
             <button
               type="button"
-              onClick={() => handleTabChange('donor')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                tab === 'donor' ? 'bg-white shadow text-primary-700' : 'text-slate-600'
+              onClick={() => handleTabChange('customer')}
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                tab === 'customer' || tab === 'donor' ? 'bg-white shadow text-primary-700' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Donor Account
+              Customer
             </button>
             <button
               type="button"
               onClick={() => handleTabChange('fundraiser')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                tab === 'fundraiser' ? 'bg-white shadow text-primary-700' : 'text-slate-600'
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                tab === 'fundraiser' ? 'bg-white shadow text-primary-700' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Fundraiser Account
+              Fundraiser
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange('manufacturer')}
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                tab === 'manufacturer' ? 'bg-white shadow text-primary-700' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Manufacturer
             </button>
           </div>
         )}
 
-        {mode === 'register' && tab === 'fundraiser' && (
+        {mode === 'register' && (tab === 'fundraiser' || tab === 'manufacturer') && (
           <div className="flex items-center justify-between mb-6">
             <div className={`flex-1 text-center border-b-2 pb-2 transition-colors duration-300 text-xs font-semibold ${
               step === 1 ? 'border-primary-500 text-primary-700' : 'border-slate-200 text-slate-400'
             }`}>
-              1. Personal Info
+              1. Contact Info
             </div>
             <div className="w-8 h-0.5 bg-slate-200 mb-2"></div>
             <div className={`flex-1 text-center border-b-2 pb-2 transition-colors duration-300 text-xs font-semibold ${
               step === 2 ? 'border-primary-500 text-primary-700' : 'border-slate-200 text-slate-400'
             }`}>
-              2. Address Info
+              {tab === 'manufacturer' ? '2. Facility & Tax Info' : '2. Address & CNIC'}
             </div>
           </div>
         )}
@@ -237,7 +268,7 @@ export default function Auth() {
                 <>
                   <input
                     name="fullName"
-                    placeholder="Full Name *"
+                    placeholder={tab === 'manufacturer' ? 'Company / Factory Name *' : 'Full Name *'}
                     value={form.fullName}
                     onChange={handleChange}
                     required
@@ -246,7 +277,7 @@ export default function Auth() {
                   <input
                     name="email"
                     type="email"
-                    placeholder="Email Address *"
+                    placeholder={tab === 'manufacturer' ? 'Business Email Address *' : 'Email Address *'}
                     value={form.email}
                     onChange={handleChange}
                     required
@@ -291,10 +322,10 @@ export default function Auth() {
                   </div>
                   <input
                     name="phone"
-                    placeholder={tab === 'fundraiser' ? 'Phone Number *' : 'Phone Number (optional)'}
+                    placeholder="Phone Number *"
                     value={form.phone}
                     onChange={handleChange}
-                    required={tab === 'fundraiser'}
+                    required
                     className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
                   />
                 </>
@@ -324,13 +355,38 @@ export default function Auth() {
                   </p>
                 </>
               )}
+
+              {step === 2 && tab === 'manufacturer' && (
+                <>
+                  <input
+                    name="cnic"
+                    placeholder="Tax Reg / NTN / CNIC Number *"
+                    value={form.cnic}
+                    onChange={handleChange}
+                    required
+                    maxLength={15}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                  />
+                  <input
+                    name="address"
+                    placeholder="Factory / Production Facility Address *"
+                    value={form.address}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                  />
+                  <p className="text-xs text-slate-500">
+                    Manufacturer accounts enable Techpack sync, sample production queues, and bulk order requests.
+                  </p>
+                </>
+              )}
             </>
           )}
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           <div className="flex gap-3">
-            {mode === 'register' && tab === 'fundraiser' && step === 2 && (
+            {mode === 'register' && (tab === 'fundraiser' || tab === 'manufacturer') && step === 2 && (
               <button
                 type="button"
                 onClick={() => setStep(1)}
@@ -343,14 +399,14 @@ export default function Auth() {
               type="submit"
               disabled={loading}
               className={`py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer ${
-                mode === 'register' && tab === 'fundraiser' && step === 2 ? 'w-2/3' : 'w-full'
+                mode === 'register' && (tab === 'fundraiser' || tab === 'manufacturer') && step === 2 ? 'w-2/3' : 'w-full'
               }`}
             >
               {loading
                 ? 'Please wait...'
                 : mode === 'login'
                 ? 'Login'
-                : tab === 'fundraiser' && step === 1
+                : (tab === 'fundraiser' || tab === 'manufacturer') && step === 1
                 ? 'Next Step'
                 : 'Sign Up'}
             </button>

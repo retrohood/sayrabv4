@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import {
   Users,
   Share2,
@@ -8,6 +8,7 @@ import {
   Heart,
   Trophy,
   ShoppingBag,
+  LogIn,
 } from 'lucide-react';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -23,7 +24,7 @@ import {
 export default function CampaignDetail() {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [campaign, setCampaign] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
@@ -72,6 +73,10 @@ export default function CampaignDetail() {
   }, [slug]);
 
   const handleBuyClick = (product) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
     setSelectedProduct(product);
     setBuyForm({
       size: product.sizes?.[0] || '',
@@ -83,6 +88,10 @@ export default function CampaignDetail() {
 
   const handleCheckoutSubmit = (e) => {
     e.preventDefault();
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
     if (selectedProduct.sizes?.length > 0 && !buyForm.size) {
       setBuyError('Please select a size');
       return;
@@ -100,7 +109,7 @@ export default function CampaignDetail() {
       ...selectedProduct,
       selectedSize: buyForm.size || undefined,
       selectedColor: buyForm.color || undefined,
-    }, buyForm.qty);
+    }, buyForm.qty, user._id);
 
     setSelectedProduct(null);
     navigate('/checkout');
@@ -133,10 +142,31 @@ export default function CampaignDetail() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="max-w-md mx-auto my-20 p-8 bg-white rounded-2xl shadow-sm border border-slate-200 text-center">
+        <div className="w-14 h-14 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <LogIn size={26} />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Sign up/Log in</h2>
+        <p className="text-slate-600 mb-6 text-sm">
+          Please sign up or log in to your account to view and participate in this campaign.
+        </p>
+        <Link
+          to={`/auth?redirect=/campaigns/${slug}`}
+          className="inline-flex items-center justify-center gap-2 w-full py-3 px-6 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition shadow-sm"
+        >
+          <LogIn size={18} />
+          Sign up / Log in
+        </Link>
       </div>
     );
   }
