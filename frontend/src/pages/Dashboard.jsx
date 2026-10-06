@@ -840,14 +840,17 @@ export default function Dashboard() {
   };
 
   const handleAdvanceSampleStage = (sampleId) => {
-    setMfgSamples(prev => prev.map(smp => {
-      if (smp.id !== sampleId) return smp;
-      const nextStage = smp.status === 'queued' ? 'fabric_cutting'
-        : smp.status === 'fabric_cutting' ? 'in_sampling'
-        : smp.status === 'in_sampling' ? 'sampling_completed'
-        : 'sampling_completed';
-      return { ...smp, status: nextStage };
-    }));
+    const target = mfgSamples.find(s => s.id === sampleId);
+    if (!target) return;
+
+    if (target.status === 'in_sampling') {
+      setMfgSamples(prev => prev.map(smp => smp.id === sampleId ? { ...smp, status: 'sampling_completed' } : smp));
+    } else if (target.status === 'sampling_completed') {
+      handleDispatchDirectSample(target);
+    } else {
+      const nextStage = target.status === 'queued' ? 'fabric_cutting' : 'in_sampling';
+      setMfgSamples(prev => prev.map(smp => smp.id === sampleId ? { ...smp, status: nextStage } : smp));
+    }
   };
 
   const handleAdvanceBulkStage = (bulkId) => {
@@ -915,11 +918,17 @@ export default function Dashboard() {
       eta: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     };
 
+    // Add to Delivery & Tracking
     setMfgSampleTracking(prev => [newTrk, ...prev]);
+
     // Remove dispatched sample from Produce Sample queue
     setMfgSamples(prev => prev.filter(s => s.id !== smp.id && s.code !== smp.code));
 
-    alert(`📦 Sample Prototype Dispatched!\n\n"${smp.productName}" has been removed from "Produce Sample" and moved to "Delivery & Tracking" under tracking code ${trackingCode}.`);
+    // Automatically switch to Delivery & Tracking tab
+    setActiveTab('delivery_tracking');
+    setMfgTrackingSubTab('sample_tracking');
+
+    alert(`📦 Sample Prototype Dispatched & Moved to Tracking!\n\n"${smp.productName}" for ${smp.requesterName} has been removed from "Produce Sample" and is now added to "Delivery & Tracking" (Tracking: ${trackingCode}).`);
   };
 
   const [trackingModal, setTrackingModal] = useState({
@@ -2857,7 +2866,7 @@ export default function Dashboard() {
                   mfgTrackingSubTab === 'sample_tracking' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
-                <Layers size={16} /> Sample Tracking (Org & Customer)
+                <Layers size={16} /> Sample & Small Batch Tracking (Org & Customer) ({mfgSampleTracking.length})
               </button>
               <button
                 onClick={() => setMfgTrackingSubTab('product_tracking')}
@@ -2865,7 +2874,7 @@ export default function Dashboard() {
                   mfgTrackingSubTab === 'product_tracking' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
-                <ShoppingBag size={16} /> Product Delivery Tracking (Customer Only)
+                <ShoppingBag size={16} /> Product Delivery Tracking (Customer Only) ({mfgProductTracking.length})
               </button>
             </div>
 
