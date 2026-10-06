@@ -758,7 +758,8 @@ export default function Dashboard() {
     const tp = mfgTechpacks.find(t => t.id === techpackId);
     if (!tp) return;
 
-    setMfgTechpacks(prev => prev.map(item => item.id === techpackId ? { ...item, status: 'accepted_by_manufacturer' } : item));
+    // Remove accepted request from Receive Techpack queue
+    setMfgTechpacks(prev => prev.filter(item => item.id !== techpackId));
 
     if (tp.quantity > 5) {
       // Automatically add to Bulk Order requests starting at Step 1 (queued)
@@ -792,7 +793,10 @@ export default function Dashboard() {
         return [newBulk, ...prev];
       });
 
-      alert(`✅ Techpack Accepted!\n\nOrder Quantity: ${tp.quantity} units (> 5 units).\nThis order has been moved to "Bulk Order Requests" with the progress stepper initialized at Step 1 (Spec & BOM Review).`);
+      // Switch to Bulk Orders tab
+      setActiveTab('bulk_orders');
+
+      alert(`✅ Techpack Accepted!\n\nOrder Quantity: ${tp.quantity} units (> 5 units).\nThis order has been removed from "Receive Techpack" and moved to "Bulk Order Requests" (Step 1: Spec & BOM Review).`);
     } else {
       // Small Techpack (<= 5 units): Directly move to Delivery & Tracking!
       const trackingCode = `TCS-${tp.requesterType === 'organization' ? 'SMP' : 'PRD'}-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -814,6 +818,8 @@ export default function Dashboard() {
           };
           return [newTrk, ...prev];
         });
+        setActiveTab('delivery_tracking');
+        setMfgTrackingSubTab('sample_tracking');
       } else {
         setMfgProductTracking(prev => {
           const exists = prev.some(t => t.orderId === `ORD-${tp.code}`);
@@ -833,9 +839,11 @@ export default function Dashboard() {
           };
           return [newPrd, ...prev];
         });
+        setActiveTab('delivery_tracking');
+        setMfgTrackingSubTab('product_tracking');
       }
 
-      alert(`✅ Small Techpack Accepted!\n\nOrder Quantity: ${tp.quantity} units (≤ 5 units).\nThis order has been directly moved to "Delivery & Tracking" under tracking code ${trackingCode}.`);
+      alert(`✅ Small Techpack Accepted!\n\nOrder Quantity: ${tp.quantity} units (≤ 5 units).\nThis order has been removed from "Receive Techpack" and directly moved to "Delivery & Tracking" (Tracking: ${trackingCode}).`);
     }
   };
 
@@ -2468,13 +2476,11 @@ export default function Dashboard() {
 
                 <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1">
                   {[
-                    { id: 'all', label: 'All Requests' },
+                    { id: 'all', label: `All Requests (${mfgTechpacks.length})` },
                     { id: 'organization', label: '🏢 Org Requests' },
                     { id: 'customer', label: '👤 Customer Requests' },
                     { id: 'bulk', label: '📦 Bulk Orders (>5 Units)' },
                     { id: 'small', label: '👕 Small Batches (≤5)' },
-                    { id: 'pending_review', label: 'Pending Review' },
-                    { id: 'accepted_by_manufacturer', label: 'Accepted' },
                   ].map((f) => (
                     <button
                       key={f.id}
@@ -2490,160 +2496,184 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Techpacks Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {mfgTechpacks
-                .filter(tp => {
-                  const matchStatus = 
-                    mfgTechpackFilter === 'all' ? true :
-                    mfgTechpackFilter === 'organization' ? tp.requesterType === 'organization' :
-                    mfgTechpackFilter === 'customer' ? tp.requesterType === 'customer' :
-                    mfgTechpackFilter === 'bulk' ? tp.quantity > 5 :
-                    mfgTechpackFilter === 'small' ? tp.quantity <= 5 :
-                    tp.status === mfgTechpackFilter;
+            {/* Techpacks Grid or Empty State */}
+            {mfgTechpacks
+              .filter(tp => {
+                const matchStatus = 
+                  mfgTechpackFilter === 'all' ? true :
+                  mfgTechpackFilter === 'organization' ? tp.requesterType === 'organization' :
+                  mfgTechpackFilter === 'customer' ? tp.requesterType === 'customer' :
+                  mfgTechpackFilter === 'bulk' ? tp.quantity > 5 :
+                  mfgTechpackFilter === 'small' ? tp.quantity <= 5 :
+                  tp.status === mfgTechpackFilter;
 
-                  const matchSearch = !mfgTechpackSearch || (
-                    tp.code.toLowerCase().includes(mfgTechpackSearch.toLowerCase()) ||
-                    tp.title.toLowerCase().includes(mfgTechpackSearch.toLowerCase()) ||
-                    tp.organization.toLowerCase().includes(mfgTechpackSearch.toLowerCase()) ||
-                    tp.category.toLowerCase().includes(mfgTechpackSearch.toLowerCase())
-                  );
-                  return matchStatus && matchSearch;
-                })
-                .map((tp, idx) => (
-                  <div key={tp.id ? `${tp.id}-${idx}` : idx} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-start gap-2">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-mono text-xs font-extrabold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-md border border-primary-200">
-                              {tp.code}
-                            </span>
-                            <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-md ${
-                              tp.requesterType === 'organization' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
-                            }`}>
-                              {tp.requesterType === 'organization' ? '🏢 Org Request' : '👤 Customer Request'}
-                            </span>
-                            <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                              {tp.category}
-                            </span>
-                          </div>
-                          <h3 className="font-bold text-slate-900 text-base mt-2">{tp.title}</h3>
-                          <p className="text-xs font-semibold text-slate-600">
-                            Client: <strong>{tp.organization}</strong> ({tp.contactPerson} · {tp.phone})
-                          </p>
-                          <p className="text-[11px] text-slate-400">Received Date: {tp.dateReceived}</p>
-                        </div>
-
-                        <div className="flex flex-col items-end gap-1.5">
-                          <span className={`text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider ${
-                            tp.status === 'accepted_by_manufacturer' ? 'bg-emerald-100 text-emerald-800' :
-                            tp.status === 'bom_verified' ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'
-                          }`}>
-                            {tp.status.replace(/_/g, ' ')}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Quantity & Pipeline Banner */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-500">Order Quantity:</span>
-                          <span className="text-sm font-black text-slate-900 bg-white px-3 py-1 rounded-lg border border-slate-300 shadow-2xs">
-                            {tp.quantity} {tp.quantity === 1 ? 'Unit' : 'Units'}
-                          </span>
-                        </div>
-                        {tp.quantity > 5 ? (
-                          <span className="text-[11px] font-extrabold px-2.5 py-1 rounded-md bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
-                            <Boxes size={13} /> Bulk Order (&gt;5 Units)
-                          </span>
-                        ) : (
-                          <span className="text-[11px] font-bold px-2.5 py-1 rounded-md bg-slate-200 text-slate-700">
-                            👕 Standard Batch (≤5 Units)
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100 grid grid-cols-2 gap-3 text-xs">
-                        <div>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Fabric & Weight</span>
-                          <span className="font-semibold text-slate-800">{tp.fabric} ({tp.gsm} GSM)</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Print / Technique</span>
-                          <span className="font-semibold text-slate-800">{tp.printTechnique}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Colorways</span>
-                          <span className="font-semibold text-slate-800">{tp.colorways.join(', ')}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase block">BOM Components</span>
-                          <span className="font-semibold text-slate-800">{tp.bomItemsCount} Verified Items</span>
-                        </div>
-                      </div>
-
-                      {/* Techpack Measurement Tolerance Specifications */}
-                      <div className="border border-slate-100 rounded-xl p-3 bg-white space-y-1.5">
-                        <p className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                          <FileText size={13} className="text-primary-600" /> Measurement & Tolerance Specs:
-                        </p>
-                        <div className="text-xs text-slate-600 space-y-1">
-                          {Object.entries(tp.specs).map(([key, val]) => (
-                            <div key={key} className="flex justify-between border-b border-slate-50 pb-1">
-                              <span className="capitalize font-medium text-slate-500">{key}:</span>
-                              <span className="font-semibold text-slate-800 text-right">{val}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 mt-4">
-                      <button
-                        onClick={() => alert(`Downloading full CAD/BOM vector spec pack for ${tp.code} (Qty: ${tp.quantity} pcs)...`)}
-                        className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Download size={14} /> Spec Pack (ZIP)
-                      </button>
-
-                      {tp.status !== 'accepted_by_manufacturer' ? (
-                        <button
-                          onClick={() => handleAcceptTechpack(tp.id)}
-                          className="px-4 py-2 bg-slate-900 hover:bg-primary-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-                        >
-                          {tp.quantity > 5 ? (
-                            <>
-                              <Boxes size={14} /> Accept & Move to Bulk Pipeline ({tp.quantity} pcs)
-                            </>
-                          ) : (
-                            <>
-                              <Truck size={14} /> Accept & Move to Delivery & Tracking ({tp.quantity} pcs)
-                            </>
-                          )}
-                        </button>
-                      ) : tp.quantity > 5 ? (
-                        <button
-                          onClick={() => setActiveTab('bulk_orders')}
-                          className="px-3.5 py-1.5 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <CheckCheck size={16} /> In Bulk Orders Pipeline (Step 1) →
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setActiveTab('delivery_tracking');
-                            setMfgTrackingSubTab(tp.requesterType === 'organization' ? 'sample_tracking' : 'product_tracking');
-                          }}
-                          className="px-3.5 py-1.5 bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-300 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <Truck size={15} /> View in Delivery & Tracking →
-                        </button>
-                      )}
-                    </div>
+                const matchSearch = !mfgTechpackSearch || (
+                  tp.code.toLowerCase().includes(mfgTechpackSearch.toLowerCase()) ||
+                  tp.title.toLowerCase().includes(mfgTechpackSearch.toLowerCase()) ||
+                  tp.organization.toLowerCase().includes(mfgTechpackSearch.toLowerCase()) ||
+                  tp.category.toLowerCase().includes(mfgTechpackSearch.toLowerCase())
+                );
+                return matchStatus && matchSearch;
+              }).length === 0 ? (
+                <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm space-y-4">
+                  <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                    <CheckCircle2 size={32} />
                   </div>
-                ))}
-            </div>
+                  <h3 className="text-xl font-bold text-slate-900">All Techpacks Accepted & Processed!</h3>
+                  <p className="text-sm text-slate-500 max-w-md mx-auto">
+                    All incoming techpack requests have been accepted and automatically routed to <strong>Bulk Order Requests</strong> (for orders &gt; 5 units) or <strong>Delivery & Tracking</strong> (for orders ≤ 5 units).
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-3 pt-2">
+                    <button
+                      onClick={() => setActiveTab('bulk_orders')}
+                      className="px-5 py-2.5 bg-slate-900 hover:bg-primary-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+                    >
+                      <Boxes size={15} /> View Bulk Orders Pipeline →
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveTab('delivery_tracking');
+                        setMfgTrackingSubTab('sample_tracking');
+                      }}
+                      className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
+                    >
+                      <Truck size={15} /> View Delivery & Tracking →
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {mfgTechpacks
+                    .filter(tp => {
+                      const matchStatus = 
+                        mfgTechpackFilter === 'all' ? true :
+                        mfgTechpackFilter === 'organization' ? tp.requesterType === 'organization' :
+                        mfgTechpackFilter === 'customer' ? tp.requesterType === 'customer' :
+                        mfgTechpackFilter === 'bulk' ? tp.quantity > 5 :
+                        mfgTechpackFilter === 'small' ? tp.quantity <= 5 :
+                        tp.status === mfgTechpackFilter;
+
+                      const matchSearch = !mfgTechpackSearch || (
+                        tp.code.toLowerCase().includes(mfgTechpackSearch.toLowerCase()) ||
+                        tp.title.toLowerCase().includes(mfgTechpackSearch.toLowerCase()) ||
+                        tp.organization.toLowerCase().includes(mfgTechpackSearch.toLowerCase()) ||
+                        tp.category.toLowerCase().includes(mfgTechpackSearch.toLowerCase())
+                      );
+                      return matchStatus && matchSearch;
+                    })
+                    .map((tp, idx) => (
+                      <div key={tp.id ? `${tp.id}-${idx}` : idx} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-start gap-2">
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-mono text-xs font-extrabold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-md border border-primary-200">
+                                  {tp.code}
+                                </span>
+                                <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-md ${
+                                  tp.requesterType === 'organization' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {tp.requesterType === 'organization' ? '🏢 Org Request' : '👤 Customer Request'}
+                                </span>
+                                <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                                  {tp.category}
+                                </span>
+                              </div>
+                              <h3 className="font-bold text-slate-900 text-base mt-2">{tp.title}</h3>
+                              <p className="text-xs font-semibold text-slate-600">
+                                Client: <strong>{tp.organization}</strong> ({tp.contactPerson} · {tp.phone})
+                              </p>
+                              <p className="text-[11px] text-slate-400">Received Date: {tp.dateReceived}</p>
+                            </div>
+
+                            <div className="flex flex-col items-end gap-1.5">
+                              <span className="text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider bg-amber-100 text-amber-800">
+                                {tp.status.replace(/_/g, ' ')}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Quantity & Pipeline Banner */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-slate-500">Order Quantity:</span>
+                              <span className="text-sm font-black text-slate-900 bg-white px-3 py-1 rounded-lg border border-slate-300 shadow-2xs">
+                                {tp.quantity} {tp.quantity === 1 ? 'Unit' : 'Units'}
+                              </span>
+                            </div>
+                            {tp.quantity > 5 ? (
+                              <span className="text-[11px] font-extrabold px-2.5 py-1 rounded-md bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                                <Boxes size={13} /> Bulk Order (&gt;5 Units)
+                              </span>
+                            ) : (
+                              <span className="text-[11px] font-bold px-2.5 py-1 rounded-md bg-slate-200 text-slate-700">
+                                👕 Standard Batch (≤5 Units)
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100 grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase block">Fabric & Weight</span>
+                              <span className="font-semibold text-slate-800">{tp.fabric} ({tp.gsm} GSM)</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase block">Print / Technique</span>
+                              <span className="font-semibold text-slate-800">{tp.printTechnique}</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase block">Colorways</span>
+                              <span className="font-semibold text-slate-800">{tp.colorways.join(', ')}</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase block">BOM Components</span>
+                              <span className="font-semibold text-slate-800">{tp.bomItemsCount} Verified Items</span>
+                            </div>
+                          </div>
+
+                          {/* Techpack Measurement Tolerance Specifications */}
+                          <div className="border border-slate-100 rounded-xl p-3 bg-white space-y-1.5">
+                            <p className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                              <FileText size={13} className="text-primary-600" /> Measurement & Tolerance Specs:
+                            </p>
+                            <div className="text-xs text-slate-600 space-y-1">
+                              {Object.entries(tp.specs).map(([key, val]) => (
+                                <div key={key} className="flex justify-between border-b border-slate-50 pb-1">
+                                  <span className="capitalize font-medium text-slate-500">{key}:</span>
+                                  <span className="font-semibold text-slate-800 text-right">{val}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 mt-4">
+                          <button
+                            onClick={() => alert(`Downloading full CAD/BOM vector spec pack for ${tp.code} (Qty: ${tp.quantity} pcs)...`)}
+                            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Download size={14} /> Spec Pack (ZIP)
+                          </button>
+
+                          <button
+                            onClick={() => handleAcceptTechpack(tp.id)}
+                            className="px-4 py-2 bg-slate-900 hover:bg-primary-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                          >
+                            {tp.quantity > 5 ? (
+                              <>
+                                <Boxes size={14} /> Accept & Move to Bulk Pipeline ({tp.quantity} pcs)
+                              </>
+                            ) : (
+                              <>
+                                <Truck size={14} /> Accept & Move to Delivery & Tracking ({tp.quantity} pcs)
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
           </div>
         )}
 
