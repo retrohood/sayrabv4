@@ -303,17 +303,21 @@ export default function Dashboard() {
   const [mfgTechpacks, setMfgTechpacks] = useState([
     {
       id: 'tp-101',
-      code: 'TP-SYR-TEE-240',
+      code: 'TP-ORG-EDH-240',
       title: 'Relief Heavy Cotton Tee 240GSM',
-      organization: 'Ansaar Welfare Foundation',
+      requesterType: 'organization',
+      organization: 'Edhi Emergency Relief Fund',
+      contactPerson: 'Faisal Edhi (Director)',
+      phone: '0300-1122334',
       category: 'Apparel',
+      quantity: 120, // > 5 (Bulk Order)
       fabric: '100% Combed Compact Cotton',
       gsm: 240,
       colorways: ['Jet Black', 'Off-White', 'Olive Green'],
       printTechnique: 'High-Density Screen Print (Front & Back)',
       bomItemsCount: 6,
       status: 'pending_review',
-      dateReceived: '2026-10-04',
+      dateReceived: '2026-10-06',
       specs: {
         chest: '22 inches (Size M)',
         length: '29 inches',
@@ -325,17 +329,21 @@ export default function Dashboard() {
     },
     {
       id: 'tp-102',
-      code: 'TP-SYR-HD-320',
+      code: 'TP-ORG-SKM-320',
       title: 'Charity Pullover Heavyweight Hoodie',
-      organization: 'Sayrab Relief Trust',
+      requesterType: 'organization',
+      organization: 'Shaukat Khanum Cancer Drive',
+      contactPerson: 'Dr. Asim Malik',
+      phone: '0321-9988776',
       category: 'Apparel',
+      quantity: 75, // > 5 (Bulk Order)
       fabric: '80% Organic Cotton / 20% Recycled Poly Fleece',
       gsm: 320,
       colorways: ['Heather Grey', 'Midnight Navy'],
       printTechnique: 'Chenille Embroidery & Puff Screen Print',
       bomItemsCount: 8,
-      status: 'accepted_by_manufacturer',
-      dateReceived: '2026-10-02',
+      status: 'pending_review',
+      dateReceived: '2026-10-05',
       specs: {
         chest: '24 inches (Size L)',
         length: '28.5 inches',
@@ -346,20 +354,143 @@ export default function Dashboard() {
     },
     {
       id: 'tp-103',
-      code: 'TP-SYR-CAP-008',
-      title: 'Emergency Response 6-Panel Cap',
-      organization: 'Pakistan Medical Aid',
+      code: 'TP-ORG-IND-008',
+      title: 'Emergency Medical 6-Panel Cap',
+      requesterType: 'organization',
+      organization: 'Indus Hospital & Health Network',
+      contactPerson: 'Saba Karim',
+      phone: '0333-4455667',
       category: 'Headwear',
+      quantity: 200, // > 5 (Bulk Order)
       fabric: 'Heavy Brushed Cotton Twill',
       gsm: 280,
-      colorways: ['Khaki', 'Charcoal Black'],
+      colorways: ['Navy Blue', 'Khaki', 'Charcoal Black'],
       printTechnique: '3D Front High-Relief Embroidery',
       bomItemsCount: 5,
-      status: 'bom_verified',
-      dateReceived: '2026-09-28',
+      status: 'pending_review',
+      dateReceived: '2026-10-04',
       specs: {
         panels: '6-panel structured crown with buckram lining',
         closure: 'Antique brass buckle with tuck-in grommet',
+      },
+      assetUrl: '#',
+    },
+    {
+      id: 'tp-104',
+      code: 'TP-ORG-TCF-01',
+      title: 'Education Volunteer Windbreaker Jacket',
+      requesterType: 'organization',
+      organization: 'The Citizens Foundation (TCF)',
+      contactPerson: 'Adeel Hashmi',
+      phone: '0345-6677889',
+      category: 'Outerwear',
+      quantity: 4, // <= 5 (Small batch / Sample)
+      fabric: 'Waterproof Taslan Nylon with Breathable Mesh Lining',
+      gsm: 190,
+      colorways: ['TCF Green', 'Carbon Black'],
+      printTechnique: 'Reflective Safety Vinyl Transfer',
+      bomItemsCount: 7,
+      status: 'pending_review',
+      dateReceived: '2026-10-03',
+      specs: {
+        chest: '23.5 inches (Size M)',
+        length: '28 inches',
+        zipper: 'YKK Waterproof Front Zip with chin guard',
+      },
+      assetUrl: '#',
+    },
+    {
+      id: 'tp-105',
+      code: 'TP-CST-POLO-09',
+      title: 'Custom Honeycomb Pique Cotton Polo',
+      requesterType: 'customer',
+      organization: 'Hamza Bilal (Campus Charity Gala)',
+      contactPerson: 'Hamza Bilal',
+      phone: '0301-5544332',
+      category: 'Apparel',
+      quantity: 35, // > 5 (Bulk Order)
+      fabric: '220 GSM 100% Combed Honeycomb Pique Cotton',
+      gsm: 220,
+      colorways: ['Royal Blue', 'Burgundy'],
+      printTechnique: 'Embroidered Chest Shield & Sleeve Patch',
+      bomItemsCount: 5,
+      status: 'pending_review',
+      dateReceived: '2026-10-06',
+      specs: {
+        chest: '21 inches (Size M)',
+        length: '28.5 inches',
+        collar: 'Flat knit ribbed collar with 3-button placket',
+      },
+      assetUrl: '#',
+    },
+    {
+      id: 'tp-106',
+      code: 'TP-CST-TEE-55',
+      title: 'Streetwear Oversized Boxy Tee',
+      requesterType: 'customer',
+      organization: 'Fatima Noor (Community Art Drop)',
+      contactPerson: 'Fatima Noor',
+      phone: '0322-8877665',
+      category: 'Apparel',
+      quantity: 18, // > 5 (Bulk Order)
+      fabric: '260 GSM Heavyweight French Terry Cotton',
+      gsm: 260,
+      colorways: ['Washed Charcoal', 'Vintage Off-White'],
+      printTechnique: 'Direct-to-Garment (DTG) Digital Art Print',
+      bomItemsCount: 4,
+      status: 'pending_review',
+      dateReceived: '2026-10-05',
+      specs: {
+        chest: '25 inches (Size L Boxy Fit)',
+        length: '29 inches',
+        dropShoulder: '9.5 inches drop sleeve with wide collar',
+      },
+      assetUrl: '#',
+    },
+    {
+      id: 'tp-107',
+      code: 'TP-CST-BAG-02',
+      title: 'Eco-Friendly Heavy Canvas Tote Bag',
+      requesterType: 'customer',
+      organization: 'Zainab Qureshi (Customer Supporter)',
+      contactPerson: 'Zainab Qureshi',
+      phone: '0308-3322114',
+      category: 'Accessories',
+      quantity: 3, // <= 5 (Small batch)
+      fabric: '14oz Natural Organic Cotton Duck Canvas',
+      gsm: 380,
+      colorways: ['Natural Raw Canvas'],
+      printTechnique: 'Dual-Sided Water-Based Screen Print',
+      bomItemsCount: 3,
+      status: 'pending_review',
+      dateReceived: '2026-10-04',
+      specs: {
+        dimensions: '16in Height x 15in Width x 4in Gusset',
+        straps: '24in reinforced cross-stitched webbing handles',
+      },
+      assetUrl: '#',
+    },
+    {
+      id: 'tp-108',
+      code: 'TP-CST-HD-04',
+      title: 'Limited Edition Acid Wash Zip Hoodie',
+      requesterType: 'customer',
+      organization: 'Ahmed Farooq (Customer)',
+      contactPerson: 'Ahmed Farooq',
+      phone: '0315-9988112',
+      category: 'Apparel',
+      quantity: 1, // <= 5 (Sample)
+      fabric: '350 GSM Acid Wash Fleece',
+      gsm: 350,
+      colorways: ['Vintage Washed Black'],
+      printTechnique: 'High-Density 3D Puff Print & Custom Metal Puller',
+      bomItemsCount: 6,
+      status: 'pending_review',
+      dateReceived: '2026-10-02',
+      specs: {
+        chest: '23 inches (Size M)',
+        length: '28 inches',
+        zipper: 'Antique silver two-way full zip',
       },
       assetUrl: '#',
     },
@@ -482,62 +613,104 @@ export default function Dashboard() {
   const [mfgBulkOrders, setMfgBulkOrders] = useState([
     {
       id: 'blk-501',
-      orderCode: 'BLK-SYR-00501',
-      clientName: 'Pakistan Medical Aid Foundation',
-      campaign: 'Emergency Hospital Drive 2026',
+      techpackId: 'tp-101',
+      orderCode: 'BLK-TP-ORG-EDH-240',
+      clientName: 'Edhi Emergency Relief Fund',
+      campaign: 'Relief Heavy Cotton Tee 240GSM',
       item: 'Relief Heavy Cotton Tee 240GSM',
-      totalUnits: 150,
-      breakdown: { S: 25, M: 50, L: 50, XL: 25 },
+      totalUnits: 120,
+      breakdown: { S: 20, M: 50, L: 40, XL: 10 },
       unitPrice: 1800,
-      totalValue: 270000,
-      mfgPayout: 121500,
-      status: 'in_production',
-      orderDate: '2026-10-01',
-      targetCompletion: '2026-10-12',
-      trackingNumber: 'TCS-CARGO-884102',
+      totalValue: 216000,
+      mfgPayout: 97200,
+      status: 'queued', // Starts at Step 1: Spec Review & BOM Sync
+      orderDate: '2026-10-06',
+      targetCompletion: '2026-10-18',
+      trackingNumber: 'Pending Freight Dispatch',
       notes: 'High-volume relief volunteer shirts with dual screen print on chest and sleeve.',
     },
     {
       id: 'blk-502',
-      orderCode: 'BLK-SYR-00502',
-      clientName: 'Sayrab Youth Community Drive',
-      campaign: 'Winter Warmth Appeal 2026',
+      techpackId: 'tp-102',
+      orderCode: 'BLK-TP-ORG-SKM-320',
+      clientName: 'Shaukat Khanum Cancer Drive',
+      campaign: 'Charity Pullover Heavyweight Hoodie',
       item: 'Charity Pullover Heavyweight Hoodie',
-      totalUnits: 60,
-      breakdown: { M: 20, L: 30, XL: 10 },
+      totalUnits: 75,
+      breakdown: { M: 25, L: 35, XL: 15 },
       unitPrice: 3800,
-      totalValue: 228000,
-      mfgPayout: 102600,
-      status: 'fabric_sourcing',
-      orderDate: '2026-10-04',
-      targetCompletion: '2026-10-16',
+      totalValue: 285000,
+      mfgPayout: 128250,
+      status: 'fabric_sourcing', // Step 2
+      orderDate: '2026-10-05',
+      targetCompletion: '2026-10-17',
       trackingNumber: 'Pending Dispatch',
       notes: 'Fleece hoodies with heavy ribbing and kangaroo pocket.',
     },
     {
       id: 'blk-503',
-      orderCode: 'BLK-SYR-00503',
-      clientName: 'Al-Khidmat Flood Relief Volunteers',
-      campaign: 'Sindh Flood Emergency Support',
-      item: 'Emergency Response 6-Panel Cap',
-      totalUnits: 300,
-      breakdown: { Standard: 300 },
+      techpackId: 'tp-103',
+      orderCode: 'BLK-TP-ORG-IND-008',
+      clientName: 'Indus Hospital & Health Network',
+      campaign: 'Emergency Medical 6-Panel Cap',
+      item: 'Emergency Medical 6-Panel Cap',
+      totalUnits: 200,
+      breakdown: { Standard: 200 },
       unitPrice: 950,
-      totalValue: 285000,
-      mfgPayout: 128250,
-      status: 'qc_passed',
-      orderDate: '2026-09-26',
-      targetCompletion: '2026-10-08',
+      totalValue: 190000,
+      mfgPayout: 85500,
+      status: 'in_production', // Step 3
+      orderDate: '2026-10-04',
+      targetCompletion: '2026-10-15',
       trackingNumber: 'TCS-CARGO-773190',
-      notes: '300 high-durability brushed cotton caps for field workers.',
+      notes: '200 high-durability brushed cotton caps with 3D embroidery.',
     },
   ]);
   const [mfgBulkFilter, setMfgBulkFilter] = useState('all');
 
   // Manufacturer Action Handlers
   const handleAcceptTechpack = (techpackId) => {
-    setMfgTechpacks(prev => prev.map(tp => tp.id === techpackId ? { ...tp, status: 'accepted_by_manufacturer' } : tp));
-    alert('Techpack accepted successfully! Bill of Materials confirmed for production scheduling.');
+    const tp = mfgTechpacks.find(t => t.id === techpackId);
+    if (!tp) return;
+
+    setMfgTechpacks(prev => prev.map(item => item.id === techpackId ? { ...item, status: 'accepted_by_manufacturer' } : item));
+
+    if (tp.quantity > 5) {
+      // Automatically add to Bulk Order requests starting at Step 1 (queued)
+      setMfgBulkOrders(prev => {
+        const exists = prev.some(b => b.techpackId === tp.id || b.orderCode === `BLK-${tp.code}`);
+        if (exists) return prev;
+
+        const newBulk = {
+          id: `blk-${Date.now()}`,
+          techpackId: tp.id,
+          orderCode: `BLK-${tp.code}`,
+          clientName: tp.organization,
+          campaign: tp.title,
+          item: tp.title,
+          totalUnits: tp.quantity,
+          breakdown: {
+            S: Math.max(1, Math.floor(tp.quantity * 0.2)),
+            M: Math.max(1, Math.floor(tp.quantity * 0.4)),
+            L: Math.max(1, Math.floor(tp.quantity * 0.3)),
+            XL: Math.max(1, Math.floor(tp.quantity * 0.1)),
+          },
+          unitPrice: tp.category === 'Outerwear' ? 4500 : tp.category === 'Apparel' ? 2200 : 1200,
+          totalValue: tp.quantity * (tp.category === 'Outerwear' ? 4500 : tp.category === 'Apparel' ? 2200 : 1200),
+          mfgPayout: Math.round(tp.quantity * (tp.category === 'Outerwear' ? 4500 : tp.category === 'Apparel' ? 2200 : 1200) * 0.45),
+          status: 'queued', // Always starts from the very beginning (Step 1: Spec Review & BOM Sync)
+          orderDate: new Date().toISOString().split('T')[0],
+          targetCompletion: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          trackingNumber: 'Pending Freight Dispatch',
+          notes: `${tp.requesterType === 'organization' ? '🏢 Organization' : '👤 Customer'} bulk order for ${tp.quantity} units. Spec: ${tp.fabric}, ${tp.printTechnique}.`,
+        };
+        return [newBulk, ...prev];
+      });
+
+      alert(`✅ Techpack Accepted!\n\nOrder Quantity: ${tp.quantity} units (> 5 units).\nThis order has been automatically transferred to "Bulk Order Requests" with the progress stepper initialized at Step 1 (Spec & BOM Review).`);
+    } else {
+      alert(`✅ Techpack Accepted!\n\nOrder Quantity: ${tp.quantity} units (Standard batch <= 5 units).`);
+    }
   };
 
   const handleAdvanceSampleStage = (sampleId) => {
@@ -560,6 +733,13 @@ export default function Dashboard() {
         : blk.status === 'qc_passed' ? 'pallet_dispatched'
         : 'pallet_dispatched';
       return { ...blk, status: nextStatus };
+    }));
+  };
+
+  const handleResetBulkStage = (bulkId) => {
+    setMfgBulkOrders(prev => prev.map(blk => {
+      if (blk.id !== bulkId) return blk;
+      return { ...blk, status: 'queued' };
     }));
   };
 
@@ -2093,16 +2273,24 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
-                  {['all', 'pending_review', 'bom_verified', 'accepted_by_manufacturer'].map((statusKey) => (
+                <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1">
+                  {[
+                    { id: 'all', label: 'All Requests' },
+                    { id: 'organization', label: '🏢 Org Requests' },
+                    { id: 'customer', label: '👤 Customer Requests' },
+                    { id: 'bulk', label: '📦 Bulk Orders (>5 Units)' },
+                    { id: 'small', label: '👕 Small Batches (≤5)' },
+                    { id: 'pending_review', label: 'Pending Review' },
+                    { id: 'accepted_by_manufacturer', label: 'Accepted' },
+                  ].map((f) => (
                     <button
-                      key={statusKey}
-                      onClick={() => setMfgTechpackFilter(statusKey)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer capitalize ${
-                        mfgTechpackFilter === statusKey ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      key={f.id}
+                      onClick={() => setMfgTechpackFilter(f.id)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
+                        mfgTechpackFilter === f.id ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                       }`}
                     >
-                      {statusKey.replace(/_/g, ' ')}
+                      {f.label}
                     </button>
                   ))}
                 </div>
@@ -2113,7 +2301,14 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {mfgTechpacks
                 .filter(tp => {
-                  const matchStatus = mfgTechpackFilter === 'all' || tp.status === mfgTechpackFilter;
+                  const matchStatus = 
+                    mfgTechpackFilter === 'all' ? true :
+                    mfgTechpackFilter === 'organization' ? tp.requesterType === 'organization' :
+                    mfgTechpackFilter === 'customer' ? tp.requesterType === 'customer' :
+                    mfgTechpackFilter === 'bulk' ? tp.quantity > 5 :
+                    mfgTechpackFilter === 'small' ? tp.quantity <= 5 :
+                    tp.status === mfgTechpackFilter;
+
                   const matchSearch = !mfgTechpackSearch || (
                     tp.code.toLowerCase().includes(mfgTechpackSearch.toLowerCase()) ||
                     tp.title.toLowerCase().includes(mfgTechpackSearch.toLowerCase()) ||
@@ -2125,25 +2320,55 @@ export default function Dashboard() {
                 .map((tp, idx) => (
                   <div key={tp.id ? `${tp.id}-${idx}` : idx} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
                     <div className="space-y-4">
-                      <div className="flex justify-between items-start">
+                      <div className="flex justify-between items-start gap-2">
                         <div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="font-mono text-xs font-extrabold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-md border border-primary-200">
                               {tp.code}
+                            </span>
+                            <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-md ${
+                              tp.requesterType === 'organization' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {tp.requesterType === 'organization' ? '🏢 Org Request' : '👤 Customer Request'}
                             </span>
                             <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
                               {tp.category}
                             </span>
                           </div>
                           <h3 className="font-bold text-slate-900 text-base mt-2">{tp.title}</h3>
-                          <p className="text-xs font-semibold text-slate-600">Client: {tp.organization} · Received {tp.dateReceived}</p>
+                          <p className="text-xs font-semibold text-slate-600">
+                            Client: <strong>{tp.organization}</strong> ({tp.contactPerson} · {tp.phone})
+                          </p>
+                          <p className="text-[11px] text-slate-400">Received Date: {tp.dateReceived}</p>
                         </div>
-                        <span className={`text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider ${
-                          tp.status === 'accepted_by_manufacturer' ? 'bg-emerald-100 text-emerald-800' :
-                          tp.status === 'bom_verified' ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {tp.status.replace(/_/g, ' ')}
-                        </span>
+
+                        <div className="flex flex-col items-end gap-1.5">
+                          <span className={`text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider ${
+                            tp.status === 'accepted_by_manufacturer' ? 'bg-emerald-100 text-emerald-800' :
+                            tp.status === 'bom_verified' ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {tp.status.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Quantity & Pipeline Banner */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-500">Order Quantity:</span>
+                          <span className="text-sm font-black text-slate-900 bg-white px-3 py-1 rounded-lg border border-slate-300 shadow-2xs">
+                            {tp.quantity} {tp.quantity === 1 ? 'Unit' : 'Units'}
+                          </span>
+                        </div>
+                        {tp.quantity > 5 ? (
+                          <span className="text-[11px] font-extrabold px-2.5 py-1 rounded-md bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                            <Boxes size={13} /> Bulk Order (&gt;5 Units)
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-bold px-2.5 py-1 rounded-md bg-slate-200 text-slate-700">
+                            👕 Standard Batch (≤5 Units)
+                          </span>
+                        )}
                       </div>
 
                       <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100 grid grid-cols-2 gap-3 text-xs">
@@ -2152,7 +2377,7 @@ export default function Dashboard() {
                           <span className="font-semibold text-slate-800">{tp.fabric} ({tp.gsm} GSM)</span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Print / Embroidery</span>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Print / Technique</span>
                           <span className="font-semibold text-slate-800">{tp.printTechnique}</span>
                         </div>
                         <div>
@@ -2183,10 +2408,10 @@ export default function Dashboard() {
 
                     <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 mt-4">
                       <button
-                        onClick={() => alert(`Downloading full CAD/BOM vector spec pack for ${tp.code}...`)}
+                        onClick={() => alert(`Downloading full CAD/BOM vector spec pack for ${tp.code} (Qty: ${tp.quantity} pcs)...`)}
                         className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
                       >
-                        <Download size={14} /> Download Spec Pack (ZIP)
+                        <Download size={14} /> Spec Pack (ZIP)
                       </button>
 
                       {tp.status !== 'accepted_by_manufacturer' ? (
@@ -2194,7 +2419,22 @@ export default function Dashboard() {
                           onClick={() => handleAcceptTechpack(tp.id)}
                           className="px-4 py-2 bg-slate-900 hover:bg-primary-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                         >
-                          <CheckCircle size={14} /> Accept Techpack
+                          {tp.quantity > 5 ? (
+                            <>
+                              <Boxes size={14} /> Accept & Move to Bulk Pipeline ({tp.quantity} pcs)
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle size={14} /> Accept Techpack ({tp.quantity} pcs)
+                            </>
+                          )}
+                        </button>
+                      ) : tp.quantity > 5 ? (
+                        <button
+                          onClick={() => setActiveTab('bulk_orders')}
+                          className="px-3.5 py-1.5 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <CheckCheck size={16} /> In Bulk Orders Pipeline (Step 1) →
                         </button>
                       ) : (
                         <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
@@ -2696,21 +2936,77 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    {/* Production Stage Stepper */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-xs font-bold text-slate-700">
-                        <span>Production Progress Stepper:</span>
-                        <span className="text-primary-700 font-bold capitalize">{blk.status.replace(/_/g, ' ')}</span>
+                    {/* Production Progress Stepper (Always Starts from Step 1) */}
+                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black uppercase tracking-wider text-slate-800">
+                            Production Progress Stepper:
+                          </span>
+                          <span className="text-xs font-extrabold text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded-full border border-primary-200 capitalize">
+                            {blk.status === 'queued' ? 'Step 1 of 5: Spec Review & BOM Sync (Initial Stage)' :
+                             blk.status === 'fabric_sourcing' ? 'Step 2 of 5: Fabric Sourcing & Cutting' :
+                             blk.status === 'in_production' ? 'Step 3 of 5: In High-Speed Production' :
+                             blk.status === 'qc_passed' ? 'Step 4 of 5: Quality Control & Packaging' :
+                             'Step 5 of 5: Pallet Dispatched & Freight Cargo'}
+                          </span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-500">
+                          Progress: {
+                            blk.status === 'queued' ? '10%' :
+                            blk.status === 'fabric_sourcing' ? '35%' :
+                            blk.status === 'in_production' ? '65%' :
+                            blk.status === 'qc_passed' ? '85%' : '100%'
+                          }
+                        </span>
                       </div>
-                      <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+
+                      {/* 5-Step Visual Stepper Circles */}
+                      <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+                        {[
+                          { step: 1, key: 'queued', label: '1. Spec & BOM', desc: 'BOM Sync' },
+                          { step: 2, key: 'fabric_sourcing', label: '2. Sourcing', desc: 'Cutting' },
+                          { step: 3, key: 'in_production', label: '3. Production', desc: 'Screen Print' },
+                          { step: 4, key: 'qc_passed', label: '4. QC Passed', desc: 'Packaging' },
+                          { step: 5, key: 'pallet_dispatched', label: '5. Dispatched', desc: 'Freight Cargo' },
+                        ].map((st, sIdx) => {
+                          const stepOrder = ['queued', 'fabric_sourcing', 'in_production', 'qc_passed', 'pallet_dispatched'];
+                          const currentIdx = stepOrder.indexOf(blk.status);
+                          const isCompleted = sIdx < currentIdx;
+                          const isCurrent = sIdx === currentIdx;
+
+                          return (
+                            <div key={st.key} className="flex flex-col items-center text-center">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition-all shadow-xs ${
+                                isCurrent
+                                  ? 'bg-slate-900 text-white ring-4 ring-slate-300'
+                                  : isCompleted
+                                  ? 'bg-emerald-600 text-white'
+                                  : 'bg-slate-200 text-slate-500'
+                              }`}>
+                                {isCompleted ? '✓' : st.step}
+                              </div>
+                              <p className={`text-[10px] sm:text-[11px] font-bold mt-1.5 leading-tight ${
+                                isCurrent ? 'text-slate-900' : isCompleted ? 'text-emerald-700' : 'text-slate-400'
+                              }`}>
+                                {st.label}
+                              </p>
+                              <span className="text-[9px] text-slate-400 hidden md:block">{st.desc}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                         <div
-                          className="bg-slate-900 h-3 rounded-full transition-all duration-300"
+                          className="bg-slate-900 h-2.5 rounded-full transition-all duration-500"
                           style={{
-                            width: blk.status === 'queued' ? '20%'
-                              : blk.status === 'fabric_sourcing' ? '40%'
-                              : blk.status === 'in_production' ? '65%'
-                              : blk.status === 'qc_passed' ? '85%'
-                              : '100%',
+                            width:
+                              blk.status === 'queued' ? '15%' :
+                              blk.status === 'fabric_sourcing' ? '40%' :
+                              blk.status === 'in_production' ? '65%' :
+                              blk.status === 'qc_passed' ? '85%' : '100%',
                           }}
                         ></div>
                       </div>
@@ -2725,19 +3021,26 @@ export default function Dashboard() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
                           onClick={() => alert(`Generated Bulk Cargo Packing Slip & Invoice for ${blk.orderCode}`)}
-                          className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                          className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
                         >
                           Download Packing Slip
+                        </button>
+                        <button
+                          onClick={() => handleResetBulkStage(blk.id)}
+                          className="px-3 py-2 bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                          title="Reset progress back to Step 1"
+                        >
+                          Reset to Step 1
                         </button>
                         {blk.status !== 'pallet_dispatched' && (
                           <button
                             onClick={() => handleAdvanceBulkStage(blk.id)}
                             className="px-4 py-2 bg-slate-900 hover:bg-primary-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                           >
-                            <RefreshCw size={14} /> Advance Bulk Phase
+                            <RefreshCw size={14} /> Advance to Next Stage →
                           </button>
                         )}
                       </div>
