@@ -501,7 +501,7 @@ export default function Dashboard() {
   const [mfgSamples, setMfgSamples] = useState([
     {
       id: 'smp-801',
-      code: 'SMP-2026-081',
+      code: 'SMP-ORG-ANS-081',
       requesterType: 'organization',
       requesterName: 'Ansaar Welfare Foundation',
       contactPerson: 'Tariq Mehmood (Org Lead)',
@@ -518,10 +518,10 @@ export default function Dashboard() {
     },
     {
       id: 'smp-802',
-      code: 'SMP-2026-082',
+      code: 'SMP-CST-FAR-082',
       requesterType: 'customer',
-      requesterName: 'Farhan Ali',
-      contactPerson: 'Farhan Ali (Customer)',
+      requesterName: 'Farhan Ali (Customer)',
+      contactPerson: 'Farhan Ali',
       phone: '0321-4478129',
       address: 'House 14, Street 8, DHA Phase 5, Lahore',
       productName: 'Charity Pullover Heavyweight Hoodie',
@@ -535,7 +535,7 @@ export default function Dashboard() {
     },
     {
       id: 'smp-803',
-      code: 'SMP-2026-083',
+      code: 'SMP-ORG-SRY-083',
       requesterType: 'organization',
       requesterName: 'Sayrab Relief Youth Guild',
       contactPerson: 'Ayesha Siddiqui',
@@ -549,6 +549,91 @@ export default function Dashboard() {
       notes: 'Embroidery stitch density sample prototype check.',
       status: 'in_sampling',
       requestDate: '2026-10-01',
+    },
+    {
+      id: 'smp-804',
+      code: 'SMP-ORG-EDH-084',
+      requesterType: 'organization',
+      requesterName: 'Edhi Emergency Ambulance Wing',
+      contactPerson: 'Faisal Edhi',
+      phone: '0300-1122334',
+      address: 'Edhi Head Office, Tower, Karachi',
+      productName: 'Reflective Volunteer Safety Vest',
+      size: 'XL',
+      color: 'Fluorescent Safety Green',
+      fabric: 'High-Vis Breathable Mesh with 3M Silver Tape',
+      units: 2,
+      notes: 'Field test sample for ambulance crew rescue night shifts.',
+      status: 'queued',
+      requestDate: '2026-10-06',
+    },
+    {
+      id: 'smp-805',
+      code: 'SMP-CST-AYS-085',
+      requesterType: 'customer',
+      requesterName: 'Ayesha Siddiqui (Creator)',
+      contactPerson: 'Ayesha Siddiqui',
+      phone: '0322-9988112',
+      address: 'House 77, Street 12, F-8/2, Islamabad',
+      productName: 'Acid Wash Oversized Vintage Tee',
+      size: 'M',
+      color: 'Washed Charcoal',
+      fabric: '260 GSM French Terry Cotton',
+      units: 1,
+      notes: 'Testing DTG digital color vibrancy on enzyme-washed fabric.',
+      status: 'in_sampling',
+      requestDate: '2026-10-04',
+    },
+    {
+      id: 'smp-806',
+      code: 'SMP-ORG-SKM-086',
+      requesterType: 'organization',
+      requesterName: 'Shaukat Khanum Cancer Drive',
+      contactPerson: 'Dr. Asim Malik',
+      phone: '0321-9988776',
+      address: 'Johar Town, Lahore, Pakistan',
+      productName: 'Embroidered Pink Ribbon Polo',
+      size: 'L',
+      color: 'Pearl White',
+      fabric: '220 GSM Honeycomb Pique Cotton',
+      units: 2,
+      notes: 'Embroidery tension check on left breast and right sleeve.',
+      status: 'fabric_cutting',
+      requestDate: '2026-10-05',
+    },
+    {
+      id: 'smp-807',
+      code: 'SMP-CST-BIL-087',
+      requesterType: 'customer',
+      requesterName: 'Bilal Tariq (Supporter)',
+      contactPerson: 'Bilal Tariq',
+      phone: '0301-4433221',
+      address: 'Gulberg III, Main Boulevard, Lahore',
+      productName: 'Eco Heavy Canvas Tote Bag',
+      size: 'Standard',
+      color: 'Natural Raw Cotton',
+      fabric: '14oz Cotton Duck Canvas',
+      units: 1,
+      notes: 'Sample check for cross-stitched strap reinforcement strength.',
+      status: 'queued',
+      requestDate: '2026-10-06',
+    },
+    {
+      id: 'smp-808',
+      code: 'SMP-CST-ZUB-088',
+      requesterType: 'customer',
+      requesterName: 'Zubair Hassan (Customer)',
+      contactPerson: 'Zubair Hassan',
+      phone: '0345-7788990',
+      address: 'Block 5, Clifton, Karachi',
+      productName: 'Fleece Zip-Up Track Jacket',
+      size: 'L',
+      color: 'Racing Green',
+      fabric: '300 GSM Brushed Poly-Cotton Fleece',
+      units: 1,
+      notes: 'Zipper smooth glide and chest embroidery stitch inspection.',
+      status: 'sampling_completed',
+      requestDate: '2026-10-02',
     },
   ]);
   const [mfgSampleFilter, setMfgSampleFilter] = useState('all');
@@ -815,6 +900,28 @@ export default function Dashboard() {
     }));
   };
 
+  const handleDispatchDirectSample = (smp) => {
+    const trackingCode = `TCS-SMP-${Math.floor(100000 + Math.random() * 900000)}`;
+    const newTrk = {
+      id: `trk-smp-${Date.now()}`,
+      sampleId: smp.code,
+      requesterType: smp.requesterType,
+      recipient: `${smp.requesterName} (${smp.address || 'Pakistan'})`,
+      item: `${smp.productName} (${smp.units} ${smp.units === 1 ? 'pc' : 'pcs'})`,
+      carrier: 'TCS Express',
+      trackingNumber: trackingCode,
+      dispatchDate: new Date().toISOString().split('T')[0],
+      status: 'in_transit',
+      eta: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    };
+
+    setMfgSampleTracking(prev => [newTrk, ...prev]);
+    // Remove dispatched sample from Produce Sample queue
+    setMfgSamples(prev => prev.filter(s => s.id !== smp.id && s.code !== smp.code));
+
+    alert(`📦 Sample Prototype Dispatched!\n\n"${smp.productName}" has been removed from "Produce Sample" and moved to "Delivery & Tracking" under tracking code ${trackingCode}.`);
+  };
+
   const [trackingModal, setTrackingModal] = useState({
     open: false,
     type: 'sample', // 'sample' | 'product'
@@ -858,7 +965,8 @@ export default function Dashboard() {
           ...mfgSampleTracking,
         ]);
       }
-      setMfgSamples(prev => prev.map(s => s.id === trackingModal.item.id ? { ...s, status: 'dispatched' } : s));
+      // Remove from produce sample queue once dispatched
+      setMfgSamples(prev => prev.filter(s => s.id !== trackingModal.item.id && s.code !== trackingModal.item.code));
     } else {
       setMfgProductTracking([
         {
@@ -2560,9 +2668,9 @@ export default function Dashboard() {
                 <Filter size={12} /> Filter:
               </span>
               {[
-                { id: 'all', label: 'All Requests' },
-                { id: 'organization', label: '🏢 Organization Requests' },
-                { id: 'customer', label: '👤 Customer Requests' },
+                { id: 'all', label: `All Requests (${mfgSamples.length})` },
+                { id: 'organization', label: `🏢 Org Requests (${mfgSamples.filter(s => s.requesterType === 'organization').length})` },
+                { id: 'customer', label: `👤 Customer Requests (${mfgSamples.filter(s => s.requesterType === 'customer').length})` },
                 { id: 'fabric_cutting', label: 'Fabric Cutting' },
                 { id: 'in_sampling', label: 'In Sampling' },
                 { id: 'sampling_completed', label: 'Sampling Completed' },
@@ -2579,117 +2687,137 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* Sample Requests Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {mfgSamples
-                .filter(smp => {
-                  if (mfgSampleFilter === 'all') return true;
-                  if (mfgSampleFilter === 'organization') return smp.requesterType === 'organization';
-                  if (mfgSampleFilter === 'customer') return smp.requesterType === 'customer';
-                  return smp.status === mfgSampleFilter;
-                })
-                .map((smp, idx) => (
-                  <div key={smp.id ? `${smp.id}-${idx}` : idx} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
-                    <div className="space-y-4">
-                      {/* Top Badges */}
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wide ${
-                            smp.requesterType === 'organization' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'
-                          }`}>
-                            {smp.requesterType === 'organization' ? '🏢 Organization Request' : '👤 Customer Request'}
+            {/* Sample Requests Grid or Empty Dispatched State */}
+            {mfgSamples.filter(smp => {
+              if (mfgSampleFilter === 'all') return true;
+              if (mfgSampleFilter === 'organization') return smp.requesterType === 'organization';
+              if (mfgSampleFilter === 'customer') return smp.requesterType === 'customer';
+              return smp.status === mfgSampleFilter;
+            }).length === 0 ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm space-y-4">
+                <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                  <CheckCircle2 size={32} />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">All Prototype Samples Dispatched!</h3>
+                <p className="text-sm text-slate-500 max-w-md mx-auto">
+                  Active prototype samples have been dispatched and moved to <strong>Delivery & Tracking</strong> for live courier logistics.
+                </p>
+                <div className="flex justify-center gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      setActiveTab('delivery_tracking');
+                      setMfgTrackingSubTab('sample_tracking');
+                    }}
+                    className="px-5 py-2.5 bg-slate-900 hover:bg-primary-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    <Truck size={15} /> View in Delivery & Tracking →
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {mfgSamples
+                  .filter(smp => {
+                    if (mfgSampleFilter === 'all') return true;
+                    if (mfgSampleFilter === 'organization') return smp.requesterType === 'organization';
+                    if (mfgSampleFilter === 'customer') return smp.requesterType === 'customer';
+                    return smp.status === mfgSampleFilter;
+                  })
+                  .map((smp, idx) => (
+                    <div key={smp.id ? `${smp.id}-${idx}` : idx} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+                      <div className="space-y-4">
+                        {/* Top Badges */}
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wide ${
+                              smp.requesterType === 'organization' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'
+                            }`}>
+                              {smp.requesterType === 'organization' ? '🏢 Organization Request' : '👤 Customer Request'}
+                            </span>
+                            <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                              {smp.code}
+                            </span>
+                          </div>
+                          <span className="text-[11px] font-bold text-slate-400">{smp.requestDate}</span>
+                        </div>
+
+                        {/* Requester & Merchandise Info */}
+                        <div>
+                          <h3 className="font-bold text-slate-900 text-base">{smp.productName}</h3>
+                          <p className="text-xs font-bold text-primary-700 mt-0.5">{smp.requesterName}</p>
+                          <p className="text-xs text-slate-500 mt-1">Contact: {smp.contactPerson} · {smp.phone}</p>
+                          <p className="text-xs text-slate-500">Shipping Address: {smp.address}</p>
+                        </div>
+
+                        {/* Sample Specs Box */}
+                        <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100 grid grid-cols-3 gap-2 text-xs">
+                          <div>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase block">Size</span>
+                            <span className="font-bold text-slate-800">{smp.size}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase block">Color</span>
+                            <span className="font-bold text-slate-800">{smp.color}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase block">Sample Units</span>
+                            <span className="font-bold text-slate-800">{smp.units} Prototype pc</span>
+                          </div>
+                        </div>
+
+                        {/* Request Notes */}
+                        <div className="text-xs text-slate-600 bg-amber-50/60 border border-amber-200/60 p-3 rounded-xl">
+                          <span className="font-bold text-amber-900 block text-[11px] mb-0.5">Requester Instructions:</span>
+                          {smp.notes}
+                        </div>
+
+                        {/* Stepper Progress */}
+                        <div className="space-y-1.5 pt-2">
+                          <div className="flex justify-between text-[11px] font-bold text-slate-600">
+                            <span>Manufacturing Phase:</span>
+                            <span className="capitalize text-primary-700">{smp.status.replace(/_/g, ' ')}</span>
+                          </div>
+                          <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                            <div
+                              className="bg-slate-900 h-2.5 rounded-full transition-all duration-300"
+                              style={{
+                                width: smp.status === 'queued' ? '25%'
+                                  : smp.status === 'fabric_cutting' ? '50%'
+                                  : smp.status === 'in_sampling' ? '75%'
+                                  : '100%',
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 mt-4">
+                        {smp.status !== 'sampling_completed' ? (
+                          <button
+                            onClick={() => handleAdvanceSampleStage(smp.id)}
+                            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
+                          >
+                            <RefreshCw size={13} /> Advance Phase
+                          </button>
+                        ) : (
+                          <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                            <CheckCircle2 size={16} /> Sample Ready
                           </span>
-                          <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                            {smp.code}
-                          </span>
-                        </div>
-                        <span className="text-[11px] font-bold text-slate-400">{smp.requestDate}</span>
-                      </div>
+                        )}
 
-                      {/* Requester & Merchandise Info */}
-                      <div>
-                        <h3 className="font-bold text-slate-900 text-base">{smp.productName}</h3>
-                        <p className="text-xs font-bold text-primary-700 mt-0.5">{smp.requesterName}</p>
-                        <p className="text-xs text-slate-500 mt-1">Contact: {smp.contactPerson} · {smp.phone}</p>
-                        <p className="text-xs text-slate-500">Shipping Address: {smp.address}</p>
-                      </div>
-
-                      {/* Sample Specs Box */}
-                      <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100 grid grid-cols-3 gap-2 text-xs">
-                        <div>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Size</span>
-                          <span className="font-bold text-slate-800">{smp.size}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Color</span>
-                          <span className="font-bold text-slate-800">{smp.color}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase block">Sample Units</span>
-                          <span className="font-bold text-slate-800">{smp.units} Prototype pc</span>
-                        </div>
-                      </div>
-
-                      {/* Request Notes */}
-                      <div className="text-xs text-slate-600 bg-amber-50/60 border border-amber-200/60 p-3 rounded-xl">
-                        <span className="font-bold text-amber-900 block text-[11px] mb-0.5">Requester Instructions:</span>
-                        {smp.notes}
-                      </div>
-
-                      {/* Stepper Progress */}
-                      <div className="space-y-1.5 pt-2">
-                        <div className="flex justify-between text-[11px] font-bold text-slate-600">
-                          <span>Manufacturing Phase:</span>
-                          <span className="capitalize text-primary-700">{smp.status.replace(/_/g, ' ')}</span>
-                        </div>
-                        <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                          <div
-                            className="bg-slate-900 h-2.5 rounded-full transition-all duration-300"
-                            style={{
-                              width: smp.status === 'queued' ? '25%'
-                                : smp.status === 'fabric_cutting' ? '50%'
-                                : smp.status === 'in_sampling' ? '75%'
-                                : '100%',
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 mt-4">
-                      {smp.status !== 'sampling_completed' && smp.status !== 'dispatched' ? (
                         <button
-                          onClick={() => handleAdvanceSampleStage(smp.id)}
-                          className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
+                          onClick={() => handleDispatchDirectSample(smp)}
+                          className="px-4 py-2 bg-slate-900 hover:bg-primary-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                          title="Dispatch this prototype and move to Delivery & Tracking"
                         >
-                          <RefreshCw size={13} /> Advance Phase
+                          <Truck size={14} /> Dispatch & Move to Tracking →
                         </button>
-                      ) : (
-                        <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
-                          <CheckCircle2 size={16} /> Prototyping Finished
-                        </span>
-                      )}
-
-                      <button
-                        onClick={() => {
-                          setTrackingModal({
-                            open: true,
-                            type: 'sample',
-                            item: smp,
-                            carrier: 'TCS Express',
-                            trackingNumber: `TCS-SMP-${Math.floor(100000 + Math.random() * 900000)}`,
-                            status: 'in_transit',
-                          });
-                        }}
-                        className="px-4 py-2 bg-slate-900 hover:bg-primary-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Truck size={14} /> Dispatch & Track Sample →
-                      </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-            </div>
+                  ))}
+              </div>
+            )}
           </div>
         )}
 
