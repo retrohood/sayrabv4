@@ -930,6 +930,52 @@ export default function Dashboard() {
     }
   };
 
+  const handleDeleteCampaign = async () => {
+    if (!editingCampaign) return;
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete "${editingCampaign.title}"?\n\nThis will remove the campaign, its linked merchandise, and all associated buyer & fundraiser orders.`
+    );
+    if (!confirmed) return;
+
+    setIsSubmittingEdit(true);
+    setEditError('');
+    try {
+      await api.delete(`/campaigns/${editingCampaign._id}`);
+
+      // 1. Remove from campaigns list and recalculate stats
+      setCampaigns((prev) => {
+        const remaining = prev.filter((c) => c._id !== editingCampaign._id);
+        const total = remaining.reduce((sum, c) => sum + (c.amountRaised || 0), 0);
+        const active = remaining.filter((c) => c.lifecycleStatus === 'active').length;
+        setStats((s) => ({ ...s, totalRaised: total, activeCampaigns: active }));
+        return remaining;
+      });
+
+      // 2. Remove any orders placed for this campaign from fundraiser orders view
+      setCampaignOrders((prev) =>
+        prev.filter((o) => {
+          const cId = o.campaignId?._id ? o.campaignId._id.toString() : (o.campaignId ? o.campaignId.toString() : '');
+          return cId !== editingCampaign._id.toString();
+        })
+      );
+
+      // 3. Remove from buyer orders state as well
+      setBuyerOrders((prev) =>
+        prev.filter((o) => {
+          const cId = o.campaignId?._id ? o.campaignId._id.toString() : (o.campaignId ? o.campaignId.toString() : '');
+          return cId !== editingCampaign._id.toString();
+        })
+      );
+
+      setShowEditModal(false);
+      setEditingCampaign(null);
+    } catch (err) {
+      setEditError(err.response?.data?.message || 'Failed to delete campaign');
+    } finally {
+      setIsSubmittingEdit(false);
+    }
+  };
+
   const handleSaveDraft = (e) => {
     e?.preventDefault?.();
     localStorage.setItem('sayrab_campaign_draft', JSON.stringify({ campaignForm, linkedMerchForm }));
@@ -1959,21 +2005,31 @@ export default function Dashboard() {
                       />
                     </div>
 
-                    <div className="flex gap-3 pt-3 border-t border-slate-800">
+                    <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-800">
                       <button
                         type="button"
-                        onClick={() => setShowEditModal(false)}
-                        className="flex-1 py-2.5 border border-slate-700 text-slate-300 font-semibold rounded-xl hover:bg-slate-800 cursor-pointer text-sm"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
+                        onClick={handleDeleteCampaign}
                         disabled={isSubmittingEdit}
-                        className="flex-[2] py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-xl cursor-pointer text-sm shadow-lg shadow-cyan-500/20 disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
+                        className="py-2.5 px-4 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold rounded-xl cursor-pointer text-xs flex items-center justify-center gap-1.5 transition-all"
                       >
-                        {isSubmittingEdit ? 'Saving Changes...' : 'Save Campaign Changes'}
+                        <Trash2 size={15} /> Delete Campaign
                       </button>
+                      <div className="flex-1 flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setShowEditModal(false)}
+                          className="flex-1 py-2.5 border border-slate-700 text-slate-300 font-semibold rounded-xl hover:bg-slate-800 cursor-pointer text-xs"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isSubmittingEdit}
+                          className="flex-[2] py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-xl cursor-pointer text-xs shadow-lg shadow-cyan-500/20 disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
+                        >
+                          {isSubmittingEdit ? 'Saving Changes...' : 'Save Campaign Changes'}
+                        </button>
+                      </div>
                     </div>
                   </form>
                 </div>
