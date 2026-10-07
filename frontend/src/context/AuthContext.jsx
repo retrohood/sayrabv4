@@ -12,9 +12,15 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       api
         .get('/auth/me')
-        .then((res) => setUser(res.data))
+        .then((res) => {
+          setUser(res.data);
+          if (res.data?._id) {
+            localStorage.setItem('sayrab_current_user_id', res.data._id);
+          }
+        })
         .catch(() => {
           localStorage.removeItem('sayrab_token');
+          localStorage.removeItem('sayrab_current_user_id');
         })
         .finally(() => setLoading(false));
     } else {
@@ -25,6 +31,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
     localStorage.setItem('sayrab_token', res.data.token);
+    if (res.data.user?._id) {
+      localStorage.setItem('sayrab_current_user_id', res.data.user._id);
+    }
     setUser(res.data.user);
     return res.data;
   };
@@ -32,6 +41,9 @@ export const AuthProvider = ({ children }) => {
   const registerDonor = async (data) => {
     const res = await api.post('/auth/register/donor', data);
     localStorage.setItem('sayrab_token', res.data.token);
+    if (res.data.user?._id) {
+      localStorage.setItem('sayrab_current_user_id', res.data.user._id);
+    }
     setUser(res.data.user);
     return res.data;
   };
@@ -39,6 +51,9 @@ export const AuthProvider = ({ children }) => {
   const registerFundraiser = async (data) => {
     const res = await api.post('/auth/register/fundraiser', data);
     localStorage.setItem('sayrab_token', res.data.token);
+    if (res.data.user?._id) {
+      localStorage.setItem('sayrab_current_user_id', res.data.user._id);
+    }
     setUser(res.data.user);
     return res.data;
   };
@@ -46,12 +61,16 @@ export const AuthProvider = ({ children }) => {
   const completeOAuthLogin = useCallback(async (token) => {
     localStorage.setItem('sayrab_token', token);
     const res = await api.get('/auth/me');
+    if (res.data?._id) {
+      localStorage.setItem('sayrab_current_user_id', res.data._id);
+    }
     setUser(res.data);
     return res.data;
   }, []);
 
   const logout = () => {
     localStorage.removeItem('sayrab_token');
+    localStorage.removeItem('sayrab_current_user_id');
     setUser(null);
   };
 

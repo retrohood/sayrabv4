@@ -8,8 +8,31 @@ import { updateCampaignLifecycle } from '../utils/campaignLifecycle.js';
 import { isDatabaseConnected } from '../utils/demoAuth.js';
 import { inMemoryDB } from '../utils/inMemoryDB.js';
 
+import { isManagerRole, USER_ROLES } from '../constants/index.js';
+
 export const createDonation = async (req, res) => {
   try {
+    const isFundraiserAccount = (userObj) => {
+      if (!userObj) return false;
+      const r = (userObj.role || '').toLowerCase();
+      return (
+        r === USER_ROLES.FUNDRAISER ||
+        r === USER_ROLES.MANAGER ||
+        r === USER_ROLES.ORG_LEADER ||
+        r === 'fundraiser' ||
+        r === 'manager' ||
+        r === 'org_leader' ||
+        Boolean(userObj.isVerifiedFundraiser) ||
+        isManagerRole(r)
+      );
+    };
+
+    if (req.user && isFundraiserAccount(req.user)) {
+      return res.status(403).json({
+        message: 'Fundraiser accounts are strictly not permitted to make donations to campaigns. Please switch to a donor account.',
+      });
+    }
+
     const {
       campaignId,
       amount,
@@ -19,6 +42,24 @@ export const createDonation = async (req, res) => {
       donorEmail,
       referralCode,
     } = req.body;
+
+    if (donorEmail) {
+      if (!isDatabaseConnected(mongoose)) {
+        const existingDemo = inMemoryDB.users?.findOne?.({ email: donorEmail.toLowerCase().trim() });
+        if (existingDemo && isFundraiserAccount(existingDemo)) {
+          return res.status(403).json({
+            message: 'This email is linked to a Fundraiser account. Fundraisers cannot make donations.',
+          });
+        }
+      } else {
+        const existingUser = await User.findOne({ email: donorEmail.toLowerCase().trim() });
+        if (existingUser && isFundraiserAccount(existingUser)) {
+          return res.status(403).json({
+            message: 'This email is linked to a Fundraiser account. Fundraisers cannot make donations.',
+          });
+        }
+      }
+    }
 
     if (!isDatabaseConnected(mongoose)) {
       const campaign = inMemoryDB.campaigns.findOne({ _id: campaignId });

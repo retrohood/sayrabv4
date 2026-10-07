@@ -14,9 +14,9 @@ export const submitWithdrawal = async (req, res) => {
         return res.status(404).json({ message: 'Campaign not found' });
       }
 
-      const existing = inMemoryDB.withdrawals.find().find(w => w.campaign === campaignId);
+      const existing = inMemoryDB.withdrawals.find().find(w => w.campaign === campaignId && w.status !== 'rejected');
       if (existing) {
-        return res.status(400).json({ message: 'Withdrawal already requested for this campaign' });
+        return res.status(400).json({ message: 'A withdrawal request is already pending or approved for this campaign' });
       }
 
       const withdrawal = inMemoryDB.withdrawals.create({
@@ -27,7 +27,7 @@ export const submitWithdrawal = async (req, res) => {
         iban,
         easypaisaNumber,
         jazzcashNumber,
-        amount: campaign.amountRaised,
+        amount: Number(campaign.amountRaised) || 0,
       });
 
       return res.status(201).json(withdrawal);
@@ -42,9 +42,9 @@ export const submitWithdrawal = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    const existing = await WithdrawalRequest.findOne({ campaign: campaignId });
+    const existing = await WithdrawalRequest.findOne({ campaign: campaignId, status: { $ne: 'rejected' } });
     if (existing) {
-      return res.status(400).json({ message: 'Withdrawal already requested for this campaign' });
+      return res.status(400).json({ message: 'A withdrawal request is already pending or approved for this campaign' });
     }
 
     const withdrawal = await WithdrawalRequest.create({
@@ -55,7 +55,7 @@ export const submitWithdrawal = async (req, res) => {
       iban,
       easypaisaNumber,
       jazzcashNumber,
-      amount: campaign.amountRaised,
+      amount: Number(campaign.amountRaised) || 0,
     });
 
     res.status(201).json(withdrawal);

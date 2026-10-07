@@ -254,13 +254,133 @@ export const mockUploads = [];
 export const mockDonations = [];
 export const mockQuotations = [];
 
+export const mockOrders = [
+  {
+    _id: 'ord_918237192',
+    campaignId: {
+      _id: '64b1f481c002bc001dcd1234',
+      title: 'Urgent Heart Surgery Support for Ahmed',
+      slug: 'urgent-heart-surgery-support-for-ahmed',
+    },
+    customerId: {
+      _id: 'user_cust_1',
+      fullName: 'Tariq Mehmood',
+      email: 'tariq.mehmood@example.com',
+    },
+    products: [
+      {
+        name: 'Urgent Relief Campaign T-Shirt',
+        price: 2500,
+        quantity: 2,
+        size: 'L',
+        color: '#000000',
+      },
+    ],
+    total: 5000,
+    paymentStatus: 'paid',
+    orderStatus: 'delivered',
+    productionStatus: 'delivered',
+    revenueSplit: {
+      organization: 2500,
+      manufacturer: 2250,
+      platform: 250,
+    },
+    shippingAddress: {
+      fullName: 'Tariq Mehmood',
+      phone: '03001234567',
+      address: 'House 42, Street 8, F-10/2',
+      city: 'Islamabad',
+    },
+    paymentMethod: 'Bank Transfer / Card',
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: 'ord_918237193',
+    campaignId: {
+      _id: '64b1f481c002bc001dcd1235',
+      title: 'Sponsor Higher Education for Deserving Students',
+      slug: 'sponsor-higher-education-for-deserving-students',
+    },
+    customerId: {
+      _id: 'user_cust_2',
+      fullName: 'Ayesha Khan',
+      email: 'ayesha.k@example.com',
+    },
+    products: [
+      {
+        name: 'Student Support Branded Mug',
+        price: 1200,
+        quantity: 3,
+        size: 'Standard',
+        color: '#ffffff',
+      },
+    ],
+    total: 3600,
+    paymentStatus: 'paid',
+    orderStatus: 'in_production',
+    productionStatus: 'in_production',
+    revenueSplit: {
+      organization: 1800,
+      manufacturer: 1620,
+      platform: 180,
+    },
+    shippingAddress: {
+      fullName: 'Ayesha Khan',
+      phone: '03217654321',
+      address: 'DHA Phase 5, Block C',
+      city: 'Lahore',
+    },
+    paymentMethod: 'EasyPaisa',
+    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: 'ord_918237194',
+    campaignId: {
+      _id: '64b1f481c002bc001dcd1236',
+      title: 'Clean Water Initiative for Rural Communities',
+      slug: 'clean-water-initiative-for-rural-communities',
+    },
+    customerId: {
+      _id: 'user_cust_3',
+      fullName: 'Bilal Farooq',
+      email: 'bilal.farooq@example.com',
+    },
+    products: [
+      {
+        name: 'Thar Clean Water Thermal Bottle',
+        price: 2000,
+        quantity: 1,
+        size: 'Standard',
+        color: '#89ca2e',
+      },
+    ],
+    total: 2000,
+    paymentStatus: 'paid',
+    orderStatus: 'shipped',
+    productionStatus: 'shipped',
+    revenueSplit: {
+      organization: 1000,
+      manufacturer: 900,
+      platform: 100,
+    },
+    shippingAddress: {
+      fullName: 'Bilal Farooq',
+      phone: '03339876543',
+      address: 'Clifton Block 2',
+      city: 'Karachi',
+    },
+    paymentMethod: 'JazzCash',
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
 // Helper functions for mock CRUD operations
 export const inMemoryDB = {
   campaigns: {
     find: (filter = {}) => {
       let result = [...mockCampaigns];
       if (filter.isFeatured) result = result.filter(c => c.isFeatured);
-      if (filter.isEmergency) result = result.filter(c => c.isEmergency);
+      if (filter.isEmergency !== undefined) result = result.filter(c => Boolean(c.isEmergency) === Boolean(filter.isEmergency));
       if (filter.category && filter.category !== 'All') result = result.filter(c => c.category === filter.category);
       if (filter.$or && filter.$or[0]?.organizer) {
         const userId = filter.$or[0].organizer;
@@ -455,6 +575,31 @@ export const inMemoryDB = {
         updatedAt: new Date().toISOString(),
       };
       return mockQuotations[index];
+    }
+  },
+  orders: {
+    find: (filter = {}) => {
+      let result = [...mockOrders];
+      if (filter.campaignId) {
+        result = result.filter(o => 
+          (o.campaignId?._id && o.campaignId._id === filter.campaignId) ||
+          o.campaignId === filter.campaignId
+        );
+      }
+      return result;
+    },
+    findOne: (lookup) => {
+      const id = lookup._id || lookup.id;
+      return mockOrders.find(o => o._id === id) || null;
+    },
+    create: (data) => {
+      const newOrder = {
+        _id: 'ord_' + Math.random().toString(36).substr(2, 9),
+        createdAt: new Date().toISOString(),
+        ...data,
+      };
+      mockOrders.unshift(newOrder);
+      return newOrder;
     }
   }
 };

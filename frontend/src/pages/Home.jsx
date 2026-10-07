@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api/client';
+import { useAuth } from '../context/AuthContext';
+import { isFundraiserUser } from '../utils/format';
 import CampaignCarousel from '../components/CampaignCarousel';
 import SearchFilters from '../components/SearchFilters';
 import CampaignCard from '../components/CampaignCard';
-import { Link } from 'react-router-dom';
-import { AlertTriangle, Sparkles, ArrowRight } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, Sparkles, ArrowRight } from 'lucide-react';
 
 export default function Home() {
+  const { user } = useAuth();
+  const isFundraiser = isFundraiserUser(user);
   const [featured, setFeatured] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
   const [emergency, setEmergency] = useState([]);
@@ -66,31 +70,53 @@ export default function Home() {
   }, [search, category, sort]);
 
   return (
-    <div>
+    <div className="space-y-8 pb-16">
       <CampaignCarousel campaigns={featured} />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {isFundraiser && (
+          <div className="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 border border-slate-800 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-in">
+            <div className="flex items-start gap-3.5">
+              <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30 shrink-0 mt-0.5">
+                <ShieldAlert size={22} />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-white tracking-wide uppercase flex items-center gap-2">
+                  Fundraiser Account Notice <span>•</span> Platform Action Policy
+                </h3>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  You are currently logged in as a <strong>Fundraiser</strong>. In accordance with platform rules, fundraiser accounts <strong>cannot donate to campaigns or purchase merchandise</strong>. Please manage your campaigns from your portal.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/dashboard"
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-cyan-500/20 shrink-0 flex items-center gap-1.5 self-end sm:self-auto"
+            >
+              Open Fundraiser Portal <ArrowRight size={14} />
+            </Link>
+          </div>
+        )}
+
         <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 text-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-slate-800">
           <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold uppercase tracking-wider">
               <Sparkles size={12} /> New Module
             </div>
-            <h3 className="text-xl font-extrabold text-white">Chat-Controlled Instant Quotation</h3>
+            <h3 className="text-xl font-extrabold text-white">Garment Instant Quotation Workspace</h3>
             <p className="text-slate-300 text-xs sm:text-sm max-w-xl">
-              Describe your custom merchandise or upload drawings. AI manages the requirements while our deterministic engine calculates authoritative pricing.
+              Upload your apparel tech pack image. AI extracts specifications, size charts, and logo mockups with dual-engine costing.
             </p>
           </div>
           <Link
             to="/instant-quotation"
-            className="px-5 py-2.5 bg-primary-600 hover:bg-primary-500 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-sm shrink-0 flex items-center gap-2"
+            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-sm shrink-0 flex items-center gap-2"
           >
             Open Instant Quotation <ArrowRight size={16} />
           </Link>
         </div>
 
         <SearchFilters
-          search={search}
-          setSearch={setSearch}
           category={category}
           setCategory={setCategory}
           sort={sort}
@@ -98,39 +124,49 @@ export default function Home() {
           categories={categories}
         />
 
-        <section>
-          <h2 className="text-2xl font-bold text-slate-800 mb-6">Active Campaigns</h2>
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-black text-white tracking-tight">Active Campaigns</h2>
+            <span className="text-xs text-slate-400 font-medium">
+              Verified crowdfunding causes
+            </span>
+          </div>
+
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="bg-white rounded-xl h-80 animate-pulse border border-slate-200" />
+                <div key={i} className="bg-slate-900 rounded-2xl h-80 animate-pulse border border-slate-800" />
               ))}
             </div>
-          ) : campaigns.length === 0 ? (
-            <p className="text-center text-slate-500 py-12">No campaigns found matching your criteria.</p>
+          ) : campaigns.filter((c) => !c.isEmergency).length === 0 ? (
+            <div className="text-center py-16 bg-slate-900 rounded-2xl border border-slate-800">
+              <p className="text-slate-400 text-sm">No campaigns found matching your criteria.</p>
+            </div>
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {campaigns.map((c) => (
-                  <CampaignCard key={c._id} campaign={c} />
-                ))}
+                {campaigns
+                  .filter((c) => !c.isEmergency)
+                  .map((c) => (
+                    <CampaignCard key={c._id} campaign={c} />
+                  ))}
               </div>
               {pagination.pages > 1 && (
-                <div className="flex justify-center gap-2 mt-8">
+                <div className="flex justify-center items-center gap-2 mt-8 pt-4">
                   <button
                     disabled={page <= 1}
                     onClick={() => setPage((p) => p - 1)}
-                    className="px-4 py-2 border border-slate-300 rounded-lg disabled:opacity-50 hover:bg-slate-50"
+                    className="px-4 py-2 bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold rounded-xl disabled:opacity-40 hover:bg-slate-800 transition-colors cursor-pointer"
                   >
                     Previous
                   </button>
-                  <span className="px-4 py-2 text-sm text-slate-600">
+                  <span className="px-4 py-2 text-xs font-bold text-slate-400">
                     Page {page} of {pagination.pages}
                   </span>
                   <button
                     disabled={page >= pagination.pages}
                     onClick={() => setPage((p) => p + 1)}
-                    className="px-4 py-2 border border-slate-300 rounded-lg disabled:opacity-50 hover:bg-slate-50"
+                    className="px-4 py-2 bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold rounded-xl disabled:opacity-40 hover:bg-slate-800 transition-colors cursor-pointer"
                   >
                     Next
                   </button>
@@ -140,13 +176,13 @@ export default function Home() {
           )}
         </section>
 
-        <section className="bg-red-50 border border-red-200 rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="text-red-600" size={24} />
-            <h2 className="text-2xl font-bold text-red-800">Emergency Campaigns</h2>
+        <section className="bg-red-950/30 border border-red-900/50 rounded-2xl p-6 space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="text-red-400" size={24} />
+            <h2 className="text-xl font-black text-red-300 tracking-wide uppercase">Emergency Relief Campaigns</h2>
           </div>
           {emergency.length === 0 ? (
-            <p className="text-red-700 text-center py-8 font-medium">
+            <p className="text-red-400 text-center py-8 text-xs font-medium">
               No Emergency Campaigns Available
             </p>
           ) : (

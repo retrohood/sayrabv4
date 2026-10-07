@@ -1,19 +1,33 @@
-const CART_KEY = 'sayrab_cart';
+export const getCartKey = (userOrId) => {
+  if (typeof userOrId === 'string' && userOrId.trim()) {
+    return `sayrab_cart_${userOrId.trim()}`;
+  }
+  if (userOrId && typeof userOrId === 'object' && userOrId._id) {
+    return `sayrab_cart_${userOrId._id}`;
+  }
+  const currentUserId = typeof localStorage !== 'undefined' ? localStorage.getItem('sayrab_current_user_id') : null;
+  if (currentUserId) {
+    return `sayrab_cart_${currentUserId}`;
+  }
+  return 'sayrab_cart_guest';
+};
 
-export const readCart = () => {
+export const readCart = (userOrId) => {
   try {
-    return JSON.parse(localStorage.getItem(CART_KEY)) || [];
+    const key = getCartKey(userOrId);
+    return JSON.parse(localStorage.getItem(key)) || [];
   } catch {
     return [];
   }
 };
 
-export const writeCart = (cart) => {
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+export const writeCart = (cart, userOrId) => {
+  const key = getCartKey(userOrId);
+  localStorage.setItem(key, JSON.stringify(cart || []));
 };
 
-export const addCartItem = (product, quantity = 1) => {
-  const cart = readCart();
+export const addCartItem = (product, quantity = 1, userOrId) => {
+  const cart = readCart(userOrId);
   const existing = cart.find(
     (item) =>
       item._id === product._id &&
@@ -42,9 +56,14 @@ export const addCartItem = (product, quantity = 1) => {
         },
       ];
 
-  writeCart(next);
+  writeCart(next, userOrId);
   return next;
 };
 
+export const clearCart = (userOrId) => {
+  const key = getCartKey(userOrId);
+  localStorage.removeItem(key);
+};
+
 export const cartTotal = (cart) =>
-  cart.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 1), 0);
+  (cart || []).reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 1), 0);
