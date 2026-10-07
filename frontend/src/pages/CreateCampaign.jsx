@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, ShoppingBag, Plus, ArrowRight, Flame } from 'lucide-react';
+import { CheckCircle, ShoppingBag, Plus, ArrowRight, Flame, Trash2, Layers } from 'lucide-react';
 import api from '../api/client';
 
 const DOC_TYPES = {
@@ -66,6 +66,7 @@ export default function CreateCampaign() {
     stock: 100,
     image: '',
   });
+  const [merchList, setMerchList] = useState([]);
   const [productSuccess, setProductSuccess] = useState('');
   const [productLoading, setProductLoading] = useState(false);
   const [productError, setProductError] = useState('');
@@ -99,6 +100,52 @@ export default function CreateCampaign() {
     });
   };
 
+  const handleAddProductToList = () => {
+    setProductError('');
+    setProductSuccess('');
+
+    if (!productForm.name?.trim()) {
+      setProductError('Product name is required.');
+      return;
+    }
+    if (!productForm.price || Number(productForm.price) <= 0) {
+      setProductError('A valid price in PKR (> 0) is required.');
+      return;
+    }
+    if (!productForm.description?.trim()) {
+      setProductError('Product short description is required.');
+      return;
+    }
+
+    const newItem = {
+      name: productForm.name.trim(),
+      description: productForm.description.trim(),
+      category: productForm.category,
+      price: Number(productForm.price),
+      stock: Number(productForm.stock) || 100,
+      image: productForm.image?.trim() || `https://picsum.photos/seed/${encodeURIComponent(productForm.name)}/400/400`,
+      sizes: productForm.sizes.length > 0 ? productForm.sizes : ['Standard'],
+      colors: productForm.colors ? productForm.colors.split(',').map(c => c.trim()).filter(Boolean) : ['Classic'],
+    };
+
+    setMerchList(prev => [...prev, newItem]);
+    setProductSuccess(`Added "${newItem.name}" to merchandise list! You can add another product below.`);
+    setProductForm({
+      name: '',
+      description: '',
+      category: 'Apparel',
+      price: '',
+      sizes: ['M', 'L'],
+      colors: 'Black, White',
+      stock: 100,
+      image: '',
+    });
+  };
+
+  const handleRemoveProductFromList = (index) => {
+    setMerchList(prev => prev.filter((_, i) => i !== index));
+  };
+
   // Step 1: Validate campaign info and proceed to merchandise
   const handleNextToMerchandise = (e) => {
     e.preventDefault();
@@ -125,9 +172,36 @@ export default function CreateCampaign() {
     setProductError('');
     setProductSuccess('');
 
-    if (!productForm.name?.trim() || !productForm.price || Number(productForm.price) <= 0 || !productForm.description?.trim()) {
-      setProductError('Please provide complete merchandise details (Name, Price > 0, and Description). Campaign cannot be created without merchandise.');
-      return;
+    let productsToCreate = [...merchList];
+
+    // If no items staged, check if the current filled product form can be used
+    if (productsToCreate.length === 0) {
+      if (!productForm.name?.trim() || !productForm.price || Number(productForm.price) <= 0 || !productForm.description?.trim()) {
+        setProductError('Please provide at least one merchandise product (Name, Price > 0, and Description).');
+        return;
+      }
+      productsToCreate.push({
+        name: productForm.name.trim(),
+        description: productForm.description.trim(),
+        category: productForm.category,
+        price: Number(productForm.price),
+        stock: Number(productForm.stock) || 100,
+        image: productForm.image?.trim() || `https://picsum.photos/seed/${encodeURIComponent(productForm.name)}/400/400`,
+        sizes: productForm.sizes.length > 0 ? productForm.sizes : ['Standard'],
+        colors: productForm.colors ? productForm.colors.split(',').map(c => c.trim()).filter(Boolean) : ['Classic'],
+      });
+    } else if (productForm.name?.trim() && productForm.price && Number(productForm.price) > 0 && productForm.description?.trim()) {
+      // Also include current form if filled before clicking submit
+      productsToCreate.push({
+        name: productForm.name.trim(),
+        description: productForm.description.trim(),
+        category: productForm.category,
+        price: Number(productForm.price),
+        stock: Number(productForm.stock) || 100,
+        image: productForm.image?.trim() || `https://picsum.photos/seed/${encodeURIComponent(productForm.name)}/400/400`,
+        sizes: productForm.sizes.length > 0 ? productForm.sizes : ['Standard'],
+        colors: productForm.colors ? productForm.colors.split(',').map(c => c.trim()).filter(Boolean) : ['Classic'],
+      });
     }
 
     setProductLoading(true);
@@ -141,21 +215,16 @@ export default function CreateCampaign() {
 
       const newCampaign = campaignRes.data;
 
-      // 2. Create linked product immediately
-      const payload = {
-        name: productForm.name.trim(),
-        description: productForm.description.trim(),
-        category: productForm.category,
-        price: Number(productForm.price),
-        stock: Number(productForm.stock) || 100,
-        image: productForm.image?.trim() || `https://picsum.photos/seed/${productForm.name}/400/400`,
-        sizes: productForm.sizes.length > 0 ? productForm.sizes : ['Standard'],
-        colors: productForm.colors ? productForm.colors.split(',').map(c => c.trim()).filter(Boolean) : ['Classic'],
-        campaignId: newCampaign._id,
-      };
+      // 2. Create all linked products
+      const productPromises = productsToCreate.map(p =>
+        api.post('/products', {
+          ...p,
+          campaignId: newCampaign._id,
+        })
+      );
 
-      const productRes = await api.post('/products', payload);
-      setAddedProducts([productRes.data]);
+      const createdResponses = await Promise.all(productPromises);
+      setAddedProducts(createdResponses.map(r => r.data));
       setCreatedCampaign(newCampaign);
       setStep(3); // Success page
     } catch (err) {
@@ -184,7 +253,7 @@ export default function CreateCampaign() {
         {addedProducts.length > 0 && (
           <div className="p-6 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-3xl mb-8 space-y-4 shadow-xl">
             <h3 className="text-sm font-black text-white uppercase tracking-wider text-cyan-400 flex items-center gap-2">
-              <ShoppingBag size={18} /> Linked Campaign Merchandise:
+              <ShoppingBag size={18} /> Linked Campaign Merchandise ({addedProducts.length}):
             </h3>
             <div className="space-y-2">
               {addedProducts.map((p) => (
@@ -224,23 +293,84 @@ export default function CreateCampaign() {
 
   // Step 2: Merchandise Form
   if (step === 2) {
+    const totalCount = merchList.length + (productForm.name?.trim() && productForm.price ? 1 : 0);
+
     return (
       <div className="max-w-3xl mx-auto px-4 py-10 animate-fade-in pb-20 space-y-6">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-full text-xs font-bold mb-3">
-            Step 2 of 2 · Mandatory Linked Merchandise
+            Step 2 of 2 · Link Campaign Merchandise (1 or Multiple Products)
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight">Add Linked Merchandise</h1>
           <p className="text-slate-400 text-xs mt-1">
-            Every campaign on Sayrab must have at least one merchandise item linked to it. <strong>50% of all product sales</strong> directly fund your campaign goal.
+            Every campaign on Sayrab must have at least one merchandise item linked to it. You can link <strong>one or multiple products</strong>. <strong>50% of all product sales</strong> directly fund your campaign goal.
           </p>
         </div>
 
+        {/* Existing Added Merchandise List */}
+        {merchList.length > 0 && (
+          <div className="bg-slate-900/90 backdrop-blur-md rounded-3xl border border-cyan-500/30 p-5 shadow-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black text-white uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+                <Layers size={16} /> Products Ready to Link ({merchList.length})
+              </h3>
+              <span className="text-[11px] font-bold text-slate-400">
+                Will be created with campaign
+              </span>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {merchList.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="bg-slate-950 border border-slate-800 rounded-2xl p-3 flex items-start justify-between gap-3 relative group hover:border-cyan-500/40 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-12 h-12 rounded-xl object-cover bg-slate-900 border border-slate-800 shrink-0"
+                    />
+                    <div>
+                      <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">
+                        {item.category}
+                      </span>
+                      <p className="font-bold text-white text-xs line-clamp-1">{item.name}</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        PKR {Number(item.price).toLocaleString()} · {item.stock} in stock
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveProductFromList(idx)}
+                    className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer shrink-0"
+                    title="Remove product"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleFinalSubmitWithProduct} className="bg-slate-900/90 backdrop-blur-md rounded-3xl shadow-2xl border border-slate-800 p-6 sm:p-8 space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <legend className="text-sm font-black text-white uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+              <ShoppingBag size={18} /> {merchList.length === 0 ? 'Primary Merchandise Product' : `Add Another Product (#${merchList.length + 1})`}
+            </legend>
+            {merchList.length > 0 && (
+              <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                ✓ {merchList.length} in list
+              </span>
+            )}
+          </div>
+
           <fieldset className="space-y-4">
-            <legend className="text-sm font-black text-white uppercase tracking-wider text-cyan-400">Product Details</legend>
+            <legend className="text-xs font-bold text-slate-400 uppercase">Product Details</legend>
             <input
-              required
               placeholder="Product Name * (e.g. Flood Relief Hoodie)"
               value={productForm.name}
               onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
@@ -259,7 +389,6 @@ export default function CreateCampaign() {
                 <option value="Event Merchandise">Event Merchandise</option>
               </select>
               <input
-                required
                 type="number"
                 min="1"
                 placeholder="Price (PKR) *"
@@ -269,7 +398,6 @@ export default function CreateCampaign() {
               />
             </div>
             <textarea
-              required
               rows={3}
               placeholder="Short Description of the merchandise *"
               value={productForm.description}
@@ -279,10 +407,9 @@ export default function CreateCampaign() {
           </fieldset>
 
           <fieldset className="space-y-4">
-            <legend className="text-sm font-black text-white uppercase tracking-wider text-cyan-400">Inventory & Styling</legend>
+            <legend className="text-xs font-bold text-slate-400 uppercase">Inventory & Styling</legend>
             <div className="grid sm:grid-cols-2 gap-4">
               <input
-                required
                 type="number"
                 min="1"
                 placeholder="Stock Quantity *"
@@ -329,6 +456,20 @@ export default function CreateCampaign() {
             />
           </fieldset>
 
+          {/* Button to add current item to list so fundraiser can enter more products */}
+          <div className="p-3.5 bg-slate-950/70 border border-slate-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="text-xs text-slate-300">
+              Want to link multiple merchandise products? Add this item to the list and configure another!
+            </div>
+            <button
+              type="button"
+              onClick={handleAddProductToList}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/60 font-bold rounded-xl text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+            >
+              <Plus size={14} /> + Add Another Product
+            </button>
+          </div>
+
           {productError && <p className="text-xs text-red-300 p-3 bg-red-950/50 border border-red-800 rounded-xl">{productError}</p>}
           {productSuccess && <p className="text-xs text-emerald-300 font-semibold p-3 bg-emerald-950/50 border border-emerald-800 rounded-xl">{productSuccess}</p>}
 
@@ -345,7 +486,7 @@ export default function CreateCampaign() {
               disabled={productLoading}
               className="flex-1 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs rounded-xl transition-all shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
-              <Plus size={16} /> {productLoading ? 'Creating Campaign & Product...' : 'Create Campaign with Merchandise'}
+              <Plus size={16} /> {productLoading ? 'Creating Campaign & Merchandise...' : `Create Campaign & Link Merchandise (${Math.max(1, totalCount)} product${totalCount > 1 ? 's' : ''})`}
             </button>
           </div>
         </form>
