@@ -1,0 +1,755 @@
+[
+  {
+    "id": "S1",
+    "sheet": "Sheet1",
+    "client": "Andy and Jordan",
+    "project": "Reversible Zipup",
+    "garment_type": "reversible_zipup",
+    "reliability": "MEDIUM",
+    "lines": [
+      {
+        "technique": "zipper",
+        "pkr": 1500
+      },
+      {
+        "technique": "flannel",
+        "pkr": 1800
+      },
+      {
+        "technique": "french_terry_400gsm_80_20",
+        "pkr": 2600
+      },
+      {
+        "technique": "distressing",
+        "pkr": 500
+      },
+      {
+        "technique": "stitching",
+        "pkr": 3000
+      },
+      {
+        "technique": "pattern",
+        "pkr": 2250
+      },
+      {
+        "technique": "fuel_misc",
+        "pkr": 100
+      },
+      {
+        "technique": "rhinestone",
+        "pkr": 2500
+      },
+      {
+        "technique": "sizetag_woven",
+        "pkr": 1500
+      },
+      {
+        "technique": "double_sided_zip",
+        "pkr": 350
+      },
+      {
+        "technique": "printing",
+        "pkr": 10000
+      },
+      {
+        "technique": "fur",
+        "pkr": 1500
+      }
+    ],
+    "sheet_total_pkr": 27600,
+    "margin": null,
+    "fob_usd": null,
+    "ship_usd": {
+      "duty_paid_2kg": 49.72,
+      "dhl_direct": 54.49
+    },
+    "sheet_total_usd": {
+      "duty_paid": 153,
+      "direct": 155.99
+    },
+    "notes": [
+      "No margin/FOB computed on sheet (price typed as 101.1 = cost only)",
+      "Sizetag 1500 matches the \"Woven 1500 (per size)\" note in S4 => per-order label cost",
+      "Sheet total 153 != 101.1+49.72 (150.82): unexplained"
+    ],
+    "recomputed_total_pkr": 27600,
+    "cost_usd": 101.1
+  },
+  {
+    "id": "S2",
+    "sheet": "Sheet2",
+    "client": "Robert polos Bulk",
+    "project": "Howard University Polo",
+    "garment_type": "polo",
+    "reliability": "HIGH",
+    "lines": [
+      {
+        "technique": "fabric_polo",
+        "pkr": 1400
+      },
+      {
+        "technique": "embroidery",
+        "pkr": 1100
+      },
+      {
+        "technique": "stitching",
+        "pkr": 1000
+      },
+      {
+        "technique": "pattern",
+        "pkr": 300
+      },
+      {
+        "technique": "fuel_misc",
+        "pkr": 100
+      },
+      {
+        "technique": "button",
+        "pkr": 50
+      }
+    ],
+    "sheet_total_pkr": 3950,
+    "margin": 0.3,
+    "fob_usd": 20.67,
+    "ship": {
+      "usd_per_kg": 10,
+      "weight_kg": 0.65,
+      "usd": 6.5
+    },
+    "sheet_total_usd": 27.17,
+    "notes": [
+      "Bulk order"
+    ],
+    "recomputed_total_pkr": 3950,
+    "cost_usd": 14.47
+  },
+  {
+    "id": "S3",
+    "sheet": "Sheet3",
+    "client": "Robert polos",
+    "project": "Reversible Zipup",
+    "garment_type": "reversible_zipup",
+    "reliability": "LOW",
+    "lines": [
+      {
+        "technique": "fabric_premium",
+        "pkr": 5000
+      },
+      {
+        "technique": "embroidery",
+        "pkr": 10000
+      },
+      {
+        "technique": "stitching",
+        "pkr": 4000
+      },
+      {
+        "technique": "pattern",
+        "pkr": 3000
+      },
+      {
+        "technique": "fuel_misc",
+        "pkr": 2000
+      },
+      {
+        "technique": "button",
+        "pkr": 1000
+      }
+    ],
+    "sheet_total_pkr": 25000,
+    "margin": null,
+    "fob_usd": null,
+    "ship": {
+      "usd": 51,
+      "weight_kg": 1.5
+    },
+    "sheet_total_usd": 142.58,
+    "notes": [
+      "Likely very small quantity (pattern 3000, fuel 2000 not amortised)",
+      "No margin applied"
+    ],
+    "recomputed_total_pkr": 25000,
+    "cost_usd": 91.58
+  },
+  {
+    "id": "S4",
+    "sheet": "Sheet4",
+    "client": "Robert polos",
+    "project": "Reversible Zipup (v2)",
+    "garment_type": "reversible_zipup",
+    "reliability": "HIGH",
+    "lines": [
+      {
+        "technique": "zipper",
+        "pkr": 400
+      },
+      {
+        "technique": "fabric_light",
+        "pkr": 1100
+      },
+      {
+        "technique": "embroidery",
+        "pkr": 2000
+      },
+      {
+        "technique": "stitching",
+        "pkr": 2000
+      },
+      {
+        "technique": "pattern",
+        "pkr": 600
+      },
+      {
+        "technique": "fuel_misc",
+        "pkr": 200
+      },
+      {
+        "technique": "sizetag",
+        "pkr": 300
+      },
+      {
+        "technique": "quilt",
+        "pkr": 800
+      },
+      {
+        "technique": "custom_rib",
+        "pkr": 700
+      },
+      {
+        "technique": "zip_puller_woven",
+        "pkr": 200
+      }
+    ],
+    "sheet_total_pkr": 8300,
+    "margin": 0.3,
+    "fob_usd": 43.42,
+    "ship": {
+      "usd_per_kg": 10.44,
+      "weight_kg": 1,
+      "usd": 10.44
+    },
+    "sheet_total_usd": 53.86,
+    "reference_notes_from_sheet": [
+      "Fabric 1100",
+      "Quilt 800",
+      "Embroidery 1000-1200",
+      "Rib 700",
+      "Woven label 1500 (per size)",
+      "Pattern 1200 (per size)"
+    ],
+    "recomputed_total_pkr": 8300,
+    "cost_usd": 30.4
+  },
+  {
+    "id": "S5",
+    "sheet": "Sheet5",
+    "client": "Ivan Thomas",
+    "project": "Reversible Zipup",
+    "garment_type": "reversible_zipup",
+    "reliability": "HIGH",
+    "lines": [
+      {
+        "technique": "zipper",
+        "pkr": 200
+      },
+      {
+        "technique": "fabric_premium",
+        "pkr": 4200
+      },
+      {
+        "technique": "embroidery",
+        "pkr": 1100
+      },
+      {
+        "technique": "stitching",
+        "pkr": 2000
+      },
+      {
+        "technique": "pattern",
+        "pkr": 450
+      },
+      {
+        "technique": "fuel_misc",
+        "pkr": 200
+      },
+      {
+        "technique": "sizetag",
+        "pkr": 250
+      },
+      {
+        "technique": "quilt",
+        "pkr": 800
+      },
+      {
+        "technique": "custom_rib",
+        "pkr": 700
+      }
+    ],
+    "sheet_total_pkr": 9900,
+    "margin": 0.3,
+    "fob_usd": 51.8,
+    "ship": {
+      "usd_per_kg": 10.44,
+      "weight_kg": 1.5,
+      "usd": 15.66
+    },
+    "sheet_total_usd": 67.46,
+    "recomputed_total_pkr": 9900,
+    "cost_usd": 36.26
+  },
+  {
+    "id": "S6",
+    "sheet": "Sheet6",
+    "client": "Ivan Thomas",
+    "project": "Sweater",
+    "garment_type": "sweater",
+    "reliability": "MEDIUM",
+    "lines": [
+      {
+        "technique": "blank_sweater",
+        "pkr": 5000
+      },
+      {
+        "technique": "embroidery",
+        "pkr": 600
+      },
+      {
+        "technique": "fuel_misc",
+        "pkr": 200
+      },
+      {
+        "technique": "sizetag",
+        "pkr": 250
+      }
+    ],
+    "sheet_total_pkr": 6050,
+    "margin": 0.4,
+    "fob_usd": 36.9,
+    "ship": {
+      "usd_per_kg": 10.44,
+      "weight_kg": 1.5,
+      "usd": 15.66
+    },
+    "sheet_total_usd": 52.56,
+    "notes": [
+      "Garment bought blank, so no stitching/pattern"
+    ],
+    "recomputed_total_pkr": 6050,
+    "cost_usd": 22.16
+  },
+  {
+    "id": "S7",
+    "sheet": "Sheet7",
+    "client": "Ivan Thomas",
+    "project": "(label says Reversible Zipup; costs look like a simple tee/crewneck)",
+    "garment_type": "unknown_simple",
+    "reliability": "LOW",
+    "lines": [
+      {
+        "technique": "embroidery",
+        "pkr": 850
+      },
+      {
+        "technique": "stitching",
+        "pkr": 900
+      },
+      {
+        "technique": "pattern",
+        "pkr": 100
+      },
+      {
+        "technique": "fuel_misc",
+        "pkr": 100
+      }
+    ],
+    "sheet_total_pkr": 4400,
+    "expected_units": 175,
+    "margin_options": {
+      "0.4": 26.86,
+      "0.3": 23.02,
+      "0.5": 32.24,
+      "0.45": 29.3
+    },
+    "ship": {
+      "usd_per_kg": 9.62,
+      "weight_kg": 0.8,
+      "usd": 7.696
+    },
+    "totals_usd_by_margin": {
+      "0.4": 34.556,
+      "0.3": 32.64,
+      "0.5": 39.936,
+      "0.45": 36.996
+    },
+    "order_shipping_usd": 1346.8,
+    "notes": [
+      "Second shipping rate seen: 9.62 USD/kg",
+      "0.3 total (32.64) used shipping 0.8 not 7.696 (sheet formula inconsistency)"
+    ],
+    "recomputed_total_pkr": 1950,
+    "cost_usd": 7.14,
+    "data_quality_flag": "Line items sum to 1950 PKR but sheet total is typed as 4400 (difference 2450 PKR unexplained - probably deleted rows). Totals/FOB follow the typed total."
+  },
+  {
+    "id": "S8",
+    "sheet": "Sheet8",
+    "client": "Andy and Jordan",
+    "project": "Reversible Zipup (scratch/test)",
+    "garment_type": "reversible_zipup",
+    "reliability": "SCRATCH",
+    "lines": [
+      {
+        "technique": "zipper",
+        "pkr": 50
+      },
+      {
+        "technique": "flannel",
+        "pkr": 1000
+      },
+      {
+        "technique": "french_terry_400gsm_80_20",
+        "pkr": 2000
+      },
+      {
+        "technique": "distressing",
+        "pkr": 100
+      },
+      {
+        "technique": "stitching",
+        "pkr": 1200
+      },
+      {
+        "technique": "pattern",
+        "pkr": 250
+      },
+      {
+        "technique": "fuel_misc",
+        "pkr": 200
+      },
+      {
+        "technique": "rhinestone",
+        "pkr": 150
+      },
+      {
+        "technique": "double_sided_zip",
+        "pkr": 350
+      },
+      {
+        "technique": "printing",
+        "pkr": 800
+      },
+      {
+        "technique": "fur",
+        "pkr": 500
+      }
+    ],
+    "sheet_total_pkr": 6600,
+    "notes": [
+      "Looks like a what-if copy of S1 with much lower numbers; excluded from rate statistics"
+    ],
+    "recomputed_total_pkr": 6600,
+    "cost_usd": 24.18
+  },
+  {
+    "id": "S9a",
+    "sheet": "Sheet9 (block 1)",
+    "client": "Eta Mu Chapter",
+    "project": "Crewneck/sweatshirt",
+    "garment_type": "crewneck",
+    "reliability": "HIGH",
+    "lines": [
+      {
+        "technique": "fabric_standard",
+        "pkr": 1300
+      },
+      {
+        "technique": "embroidery",
+        "pkr": 400
+      },
+      {
+        "technique": "stitching",
+        "pkr": 900
+      },
+      {
+        "technique": "pattern",
+        "pkr": 50
+      },
+      {
+        "technique": "fuel_misc",
+        "pkr": 250
+      },
+      {
+        "technique": "chenille_embroidery",
+        "pkr": 850
+      },
+      {
+        "technique": "rhinestone",
+        "pkr": 150
+      },
+      {
+        "technique": "sizetag",
+        "pkr": 20
+      }
+    ],
+    "sheet_total_pkr": 3920,
+    "margin_options": {
+      "0.5": 28.72,
+      "0.4(sheet label 0.42)": 23.93,
+      "0.45": 26.106
+    },
+    "ship": {
+      "usd_per_kg": 10.44,
+      "weight_kg": 0.7,
+      "usd": 7.308
+    },
+    "totals_usd_by_margin": {
+      "0.5": 36.08,
+      "0.4": 31.29,
+      "0.45": 33.414
+    },
+    "volume_margin_tiers": [
+      {
+        "units": "50-100",
+        "margin": 0.5
+      },
+      {
+        "units": "100-150",
+        "margin": 0.45
+      },
+      {
+        "units": "150-200",
+        "margin": 0.4
+      }
+    ],
+    "profit_calc": {
+      "profit_usd_per_unit": 11.747,
+      "units": [
+        150,
+        175
+      ]
+    },
+    "recomputed_total_pkr": 3920,
+    "cost_usd": 14.36
+  },
+  {
+    "id": "S9b",
+    "sheet": "Sheet9 (block 2 \"updated\")",
+    "client": "Eta Mu Chapter",
+    "project": "Crewneck/sweatshirt updated (chenille removed, print added)",
+    "garment_type": "crewneck",
+    "reliability": "HIGH",
+    "lines": [
+      {
+        "technique": "fabric_standard",
+        "pkr": 1300
+      },
+      {
+        "technique": "embroidery",
+        "pkr": 400
+      },
+      {
+        "technique": "stitching",
+        "pkr": 900
+      },
+      {
+        "technique": "pattern",
+        "pkr": 50
+      },
+      {
+        "technique": "fuel_misc",
+        "pkr": 250
+      },
+      {
+        "technique": "rhinestone",
+        "pkr": 150
+      },
+      {
+        "technique": "sizetag",
+        "pkr": 20
+      },
+      {
+        "technique": "printing",
+        "pkr": 400
+      }
+    ],
+    "sheet_total_pkr": 3470,
+    "margin_options": {
+      "0.5": 25.42,
+      "0.4": 21.18,
+      "0.45": 23.1
+    },
+    "ship": {
+      "usd_per_kg": 10.44,
+      "weight_kg": 0.7,
+      "usd": 7.308
+    },
+    "totals_usd_by_margin": {
+      "0.5": 32.73,
+      "0.4": 28.488,
+      "0.45": 30.408
+    },
+    "volume_margin_tiers": [
+      {
+        "units": "50-100",
+        "margin": 0.5
+      },
+      {
+        "units": "100-150",
+        "margin": 0.45
+      },
+      {
+        "units": "150-200",
+        "margin": 0.4
+      }
+    ],
+    "notes": [
+      "Sheet B89/B91 mismatch: tier totals listed 30.408/28.488/36.08 (36.08 stale from block 1)"
+    ],
+    "recomputed_total_pkr": 3470,
+    "cost_usd": 12.71
+  },
+  {
+    "id": "S10a",
+    "sheet": "Sheet10 (embroidery version)",
+    "client": "Eta Mu Chapter",
+    "project": "Crewneck embroidery version (with applique)",
+    "garment_type": "crewneck",
+    "complexity": "complex",
+    "reliability": "MEDIUM",
+    "lines": [
+      {
+        "technique": "fabric_premium_crew",
+        "pkr": 1750
+      },
+      {
+        "technique": "applique_fabric",
+        "pkr": 1500
+      },
+      {
+        "technique": "embroidery",
+        "pkr": 8000
+      },
+      {
+        "technique": "stitching",
+        "pkr": 2500
+      },
+      {
+        "technique": "pattern",
+        "pkr": 1200
+      },
+      {
+        "technique": "rhinestone_pearls",
+        "pkr": 1000
+      }
+    ],
+    "sheet_total_pkr": 15950,
+    "margin": null,
+    "notes": [
+      "Margin/FOB blank (not yet priced)"
+    ],
+    "recomputed_total_pkr": 15950,
+    "cost_usd": 58.42
+  },
+  {
+    "id": "S10b",
+    "sheet": "Sheet10 (printing version)",
+    "client": "Eta Mu Chapter",
+    "project": "Crewneck printing version (with applique)",
+    "garment_type": "crewneck",
+    "complexity": "complex",
+    "reliability": "MEDIUM",
+    "lines": [
+      {
+        "technique": "fabric_premium_crew",
+        "pkr": 1750
+      },
+      {
+        "technique": "applique_fabric",
+        "pkr": 1500
+      },
+      {
+        "technique": "embroidery",
+        "pkr": 2000
+      },
+      {
+        "technique": "stitching",
+        "pkr": 2500
+      },
+      {
+        "technique": "pattern",
+        "pkr": 1200
+      },
+      {
+        "technique": "rhinestone",
+        "pkr": 1000
+      },
+      {
+        "technique": "printing",
+        "pkr": 4000
+      }
+    ],
+    "sheet_total_pkr": 13950,
+    "margin": null,
+    "shipping_estimate": {
+      "non_duty_paid_pkr": 15420,
+      "duty_usd": 30
+    },
+    "recomputed_total_pkr": 13950,
+    "cost_usd": 51.1
+  },
+  {
+    "id": "S11",
+    "sheet": "Sheet11",
+    "duplicate_of": "S9a",
+    "reliability": "DUPLICATE"
+  },
+  {
+    "id": "S12",
+    "sheet": "Sheet12",
+    "client": "Eta Mu Chapter",
+    "project": "Crewneck/sweatshirt (economy fabric + print/sublimation)",
+    "garment_type": "crewneck",
+    "reliability": "MEDIUM",
+    "lines": [
+      {
+        "technique": "fabric_economy",
+        "pkr": 500
+      },
+      {
+        "technique": "embroidery",
+        "pkr": 400
+      },
+      {
+        "technique": "stitching",
+        "pkr": 700
+      },
+      {
+        "technique": "pattern",
+        "pkr": 100
+      },
+      {
+        "technique": "fuel_misc",
+        "pkr": 250
+      },
+      {
+        "technique": "rhinestone",
+        "pkr": 150
+      },
+      {
+        "technique": "sizetag",
+        "pkr": 20
+      },
+      {
+        "technique": "printing_sublimation",
+        "pkr": 750
+      }
+    ],
+    "sheet_total_pkr": 2870,
+    "notes": [
+      "FOB cells (28.72/23.93/26.106) are STALE copies from S9a; cost is 10.51 USD so they do not follow the formula",
+      "Extra margin option 70 -> 33.7 (unexplained)"
+    ],
+    "recomputed_total_pkr": 2870,
+    "cost_usd": 10.51
+  }
+]

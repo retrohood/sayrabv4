@@ -60,15 +60,23 @@ export const createDemoUser = ({
 
 export const DEMO_ADMIN_EMAIL = 'admin@sayrab.com';
 export const DEMO_ADMIN_PASSWORD = 'password123';
+export const DEMO_MANUFACTURER_EMAIL = 'manufacturer@sayrab.com';
+export const DEMO_MANUFACTURER_PASSWORD = 'password123';
 
 export const isDemoLogin = (email, password) => {
   const normEmail = email?.toLowerCase();
   if (normEmail === DEMO_EMAIL && password === DEMO_PASSWORD) return true;
   if (normEmail === DEMO_ADMIN_EMAIL && (password === DEMO_ADMIN_PASSWORD || password === 'admin123')) return true;
+  if (normEmail === DEMO_MANUFACTURER_EMAIL && password === DEMO_MANUFACTURER_PASSWORD) return true;
   return false;
 };
 
 export const isAdminDemoLogin = (email, password) => {
   const normEmail = email?.toLowerCase();
   return normEmail === DEMO_ADMIN_EMAIL && (password === DEMO_ADMIN_PASSWORD || password === 'admin123');
+};
+
+export const isManufacturerDemoLogin = (email, password) => {
+  const normEmail = email?.toLowerCase();
+  return normEmail === DEMO_MANUFACTURER_EMAIL && password === DEMO_MANUFACTURER_PASSWORD;
 };

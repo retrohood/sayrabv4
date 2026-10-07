@@ -3,7 +3,8 @@ import api from '../api/client';
 import CampaignCarousel from '../components/CampaignCarousel';
 import SearchFilters from '../components/SearchFilters';
 import CampaignCard from '../components/CampaignCard';
-import { AlertTriangle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { AlertTriangle, Sparkles, ArrowRight } from 'lucide-react';
 
 export default function Home() {
   const [featured, setFeatured] = useState([]);
@@ -69,6 +70,24 @@ export default function Home() {
       <CampaignCarousel campaigns={featured} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 text-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-slate-800">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold uppercase tracking-wider">
+              <Sparkles size={12} /> New Module
+            </div>
+            <h3 className="text-xl font-extrabold text-white">Chat-Controlled Instant Quotation</h3>
+            <p className="text-slate-300 text-xs sm:text-sm max-w-xl">
+              Describe your custom merchandise or upload drawings. AI manages the requirements while our deterministic engine calculates authoritative pricing.
+            </p>
+          </div>
+          <Link
+            to="/instant-quotation"
+            className="px-5 py-2.5 bg-primary-600 hover:bg-primary-500 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-sm shrink-0 flex items-center gap-2"
+          >
+            Open Instant Quotation <ArrowRight size={16} />
+          </Link>
+        </div>
+
         <SearchFilters
           search={search}
           setSearch={setSearch}

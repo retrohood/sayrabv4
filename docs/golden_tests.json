@@ -1,0 +1,508 @@
+[
+  {
+    "test_id": "G1",
+    "sheet": "S2",
+    "input": {
+      "lines_pkr": [
+        {
+          "technique": "fabric_polo",
+          "pkr": 1400
+        },
+        {
+          "technique": "embroidery",
+          "pkr": 1100
+        },
+        {
+          "technique": "stitching",
+          "pkr": 1000
+        },
+        {
+          "technique": "pattern",
+          "pkr": 300
+        },
+        {
+          "technique": "fuel_misc",
+          "pkr": 100
+        },
+        {
+          "technique": "button",
+          "pkr": 50
+        }
+      ],
+      "margin": 0.3,
+      "weight_kg": 0.65,
+      "ship_rate_usd_per_kg": 10,
+      "fx": 273
+    },
+    "expected": {
+      "cost_usd": 14.47,
+      "fob_usd": 20.67,
+      "shipping_usd": 6.5,
+      "total_usd": 27.17
+    },
+    "sheet_values": {
+      "fob_usd": 20.67,
+      "total_usd": 27.17
+    },
+    "matches_sheet_within_0_05": true
+  },
+  {
+    "test_id": "G2",
+    "sheet": "S4",
+    "input": {
+      "lines_pkr": [
+        {
+          "technique": "zipper",
+          "pkr": 400
+        },
+        {
+          "technique": "fabric_light",
+          "pkr": 1100
+        },
+        {
+          "technique": "embroidery",
+          "pkr": 2000
+        },
+        {
+          "technique": "stitching",
+          "pkr": 2000
+        },
+        {
+          "technique": "pattern",
+          "pkr": 600
+        },
+        {
+          "technique": "fuel_misc",
+          "pkr": 200
+        },
+        {
+          "technique": "sizetag",
+          "pkr": 300
+        },
+        {
+          "technique": "quilt",
+          "pkr": 800
+        },
+        {
+          "technique": "custom_rib",
+          "pkr": 700
+        },
+        {
+          "technique": "zip_puller_woven",
+          "pkr": 200
+        }
+      ],
+      "margin": 0.3,
+      "weight_kg": 1,
+      "ship_rate_usd_per_kg": 10.44,
+      "fx": 273
+    },
+    "expected": {
+      "cost_usd": 30.4,
+      "fob_usd": 43.43,
+      "shipping_usd": 10.44,
+      "total_usd": 53.87
+    },
+    "sheet_values": {
+      "fob_usd": 43.42,
+      "total_usd": 53.86
+    },
+    "matches_sheet_within_0_05": true
+  },
+  {
+    "test_id": "G3",
+    "sheet": "S5",
+    "input": {
+      "lines_pkr": [
+        {
+          "technique": "zipper",
+          "pkr": 200
+        },
+        {
+          "technique": "fabric_premium",
+          "pkr": 4200
+        },
+        {
+          "technique": "embroidery",
+          "pkr": 1100
+        },
+        {
+          "technique": "stitching",
+          "pkr": 2000
+        },
+        {
+          "technique": "pattern",
+          "pkr": 450
+        },
+        {
+          "technique": "fuel_misc",
+          "pkr": 200
+        },
+        {
+          "technique": "sizetag",
+          "pkr": 250
+        },
+        {
+          "technique": "quilt",
+          "pkr": 800
+        },
+        {
+          "technique": "custom_rib",
+          "pkr": 700
+        }
+      ],
+      "margin": 0.3,
+      "weight_kg": 1.5,
+      "ship_rate_usd_per_kg": 10.44,
+      "fx": 273
+    },
+    "expected": {
+      "cost_usd": 36.26,
+      "fob_usd": 51.81,
+      "shipping_usd": 15.66,
+      "total_usd": 67.47
+    },
+    "sheet_values": {
+      "fob_usd": 51.8,
+      "total_usd": 67.46
+    },
+    "matches_sheet_within_0_05": true
+  },
+  {
+    "test_id": "G4",
+    "sheet": "S6",
+    "input": {
+      "lines_pkr": [
+        {
+          "technique": "blank_sweater",
+          "pkr": 5000
+        },
+        {
+          "technique": "embroidery",
+          "pkr": 600
+        },
+        {
+          "technique": "fuel_misc",
+          "pkr": 200
+        },
+        {
+          "technique": "sizetag",
+          "pkr": 250
+        }
+      ],
+      "margin": 0.4,
+      "weight_kg": 1.5,
+      "ship_rate_usd_per_kg": 10.44,
+      "fx": 273
+    },
+    "expected": {
+      "cost_usd": 22.16,
+      "fob_usd": 36.94,
+      "shipping_usd": 15.66,
+      "total_usd": 52.6
+    },
+    "sheet_values": {
+      "fob_usd": 36.9,
+      "total_usd": 52.56
+    },
+    "matches_sheet_within_0_05": true
+  },
+  {
+    "test_id": "G5",
+    "sheet": "S7",
+    "input": {
+      "lines_pkr": [
+        {
+          "technique": "embroidery",
+          "pkr": 850
+        },
+        {
+          "technique": "stitching",
+          "pkr": 900
+        },
+        {
+          "technique": "pattern",
+          "pkr": 100
+        },
+        {
+          "technique": "fuel_misc",
+          "pkr": 100
+        }
+      ],
+      "margin": 0.4,
+      "weight_kg": 0.8,
+      "ship_rate_usd_per_kg": 9.62,
+      "fx": 273
+    },
+    "expected": {
+      "cost_usd": 16.12,
+      "fob_usd": 26.86,
+      "shipping_usd": 7.7,
+      "total_usd": 34.56
+    },
+    "sheet_values": {
+      "fob_usd": 26.86,
+      "total_usd": 34.556
+    },
+    "matches_sheet_within_0_05": true
+  },
+  {
+    "test_id": "G6",
+    "sheet": "S7",
+    "input": {
+      "lines_pkr": [
+        {
+          "technique": "embroidery",
+          "pkr": 850
+        },
+        {
+          "technique": "stitching",
+          "pkr": 900
+        },
+        {
+          "technique": "pattern",
+          "pkr": 100
+        },
+        {
+          "technique": "fuel_misc",
+          "pkr": 100
+        }
+      ],
+      "margin": 0.5,
+      "weight_kg": 0.8,
+      "ship_rate_usd_per_kg": 9.62,
+      "fx": 273
+    },
+    "expected": {
+      "cost_usd": 16.12,
+      "fob_usd": 32.23,
+      "shipping_usd": 7.7,
+      "total_usd": 39.93
+    },
+    "sheet_values": {
+      "fob_usd": 32.24,
+      "total_usd": 39.936
+    },
+    "matches_sheet_within_0_05": true
+  },
+  {
+    "test_id": "G7",
+    "sheet": "S9a",
+    "input": {
+      "lines_pkr": [
+        {
+          "technique": "fabric_standard",
+          "pkr": 1300
+        },
+        {
+          "technique": "embroidery",
+          "pkr": 400
+        },
+        {
+          "technique": "stitching",
+          "pkr": 900
+        },
+        {
+          "technique": "pattern",
+          "pkr": 50
+        },
+        {
+          "technique": "fuel_misc",
+          "pkr": 250
+        },
+        {
+          "technique": "chenille_embroidery",
+          "pkr": 850
+        },
+        {
+          "technique": "rhinestone",
+          "pkr": 150
+        },
+        {
+          "technique": "sizetag",
+          "pkr": 20
+        }
+      ],
+      "margin": 0.5,
+      "weight_kg": 0.7,
+      "ship_rate_usd_per_kg": 10.44,
+      "fx": 273
+    },
+    "expected": {
+      "cost_usd": 14.36,
+      "fob_usd": 28.72,
+      "shipping_usd": 7.31,
+      "total_usd": 36.03
+    },
+    "sheet_values": {
+      "fob_usd": 28.72,
+      "total_usd": 36.08
+    },
+    "matches_sheet_within_0_05": true
+  },
+  {
+    "test_id": "G8",
+    "sheet": "S9a",
+    "input": {
+      "lines_pkr": [
+        {
+          "technique": "fabric_standard",
+          "pkr": 1300
+        },
+        {
+          "technique": "embroidery",
+          "pkr": 400
+        },
+        {
+          "technique": "stitching",
+          "pkr": 900
+        },
+        {
+          "technique": "pattern",
+          "pkr": 50
+        },
+        {
+          "technique": "fuel_misc",
+          "pkr": 250
+        },
+        {
+          "technique": "chenille_embroidery",
+          "pkr": 850
+        },
+        {
+          "technique": "rhinestone",
+          "pkr": 150
+        },
+        {
+          "technique": "sizetag",
+          "pkr": 20
+        }
+      ],
+      "margin": 0.45,
+      "weight_kg": 0.7,
+      "ship_rate_usd_per_kg": 10.44,
+      "fx": 273
+    },
+    "expected": {
+      "cost_usd": 14.36,
+      "fob_usd": 26.11,
+      "shipping_usd": 7.31,
+      "total_usd": 33.42
+    },
+    "sheet_values": {
+      "fob_usd": 26.106,
+      "total_usd": 33.414
+    },
+    "matches_sheet_within_0_05": true
+  },
+  {
+    "test_id": "G9",
+    "sheet": "S9b",
+    "input": {
+      "lines_pkr": [
+        {
+          "technique": "fabric_standard",
+          "pkr": 1300
+        },
+        {
+          "technique": "embroidery",
+          "pkr": 400
+        },
+        {
+          "technique": "stitching",
+          "pkr": 900
+        },
+        {
+          "technique": "pattern",
+          "pkr": 50
+        },
+        {
+          "technique": "fuel_misc",
+          "pkr": 250
+        },
+        {
+          "technique": "rhinestone",
+          "pkr": 150
+        },
+        {
+          "technique": "sizetag",
+          "pkr": 20
+        },
+        {
+          "technique": "printing",
+          "pkr": 400
+        }
+      ],
+      "margin": 0.4,
+      "weight_kg": 0.7,
+      "ship_rate_usd_per_kg": 10.44,
+      "fx": 273
+    },
+    "expected": {
+      "cost_usd": 12.71,
+      "fob_usd": 21.18,
+      "shipping_usd": 7.31,
+      "total_usd": 28.49
+    },
+    "sheet_values": {
+      "fob_usd": 21.18,
+      "total_usd": 28.488
+    },
+    "matches_sheet_within_0_05": true
+  },
+  {
+    "test_id": "G10",
+    "sheet": "S9b",
+    "input": {
+      "lines_pkr": [
+        {
+          "technique": "fabric_standard",
+          "pkr": 1300
+        },
+        {
+          "technique": "embroidery",
+          "pkr": 400
+        },
+        {
+          "technique": "stitching",
+          "pkr": 900
+        },
+        {
+          "technique": "pattern",
+          "pkr": 50
+        },
+        {
+          "technique": "fuel_misc",
+          "pkr": 250
+        },
+        {
+          "technique": "rhinestone",
+          "pkr": 150
+        },
+        {
+          "technique": "sizetag",
+          "pkr": 20
+        },
+        {
+          "technique": "printing",
+          "pkr": 400
+        }
+      ],
+      "margin": 0.45,
+      "weight_kg": 0.7,
+      "ship_rate_usd_per_kg": 10.44,
+      "fx": 273
+    },
+    "expected": {
+      "cost_usd": 12.71,
+      "fob_usd": 23.11,
+      "shipping_usd": 7.31,
+      "total_usd": 30.42
+    },
+    "sheet_values": {
+      "fob_usd": 23.1,
+      "total_usd": 30.408
+    },
+    "matches_sheet_within_0_05": true
+  }
+]

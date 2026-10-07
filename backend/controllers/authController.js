@@ -2,7 +2,15 @@ import mongoose from 'mongoose';
 import User from '../models/User.js';
 import { USER_ROLES } from '../constants/index.js';
 import { generateAuthToken, generateDemoAuthToken, generateReferralCode } from '../utils/generateToken.js';
-import { createDemoUser, isDatabaseConnected, isDemoLogin, isAdminDemoLogin, DEMO_ADMIN_EMAIL } from '../utils/demoAuth.js';
+import {
+  createDemoUser,
+  isDatabaseConnected,
+  isDemoLogin,
+  isAdminDemoLogin,
+  isManufacturerDemoLogin,
+  DEMO_ADMIN_EMAIL,
+  DEMO_MANUFACTURER_EMAIL,
+} from '../utils/demoAuth.js';
 
 const handleAuthError = (res, error) => {
   const databaseUnavailable =
@@ -249,15 +257,16 @@ export const login = async (req, res) => {
     if (!isDatabaseConnected(mongoose)) {
       if (!isDemoLogin(email, password)) {
         return res.status(401).json({
-          message: 'Use demo@sayrab.local or admin@sayrab.com with password123 until MongoDB is connected.',
+          message: 'Use demo@sayrab.local, admin@sayrab.com, or manufacturer@sayrab.com with password123 until MongoDB is connected.',
         });
       }
 
       const isAdmin = isAdminDemoLogin(email, password);
+      const isManufacturer = isManufacturerDemoLogin(email, password);
       const user = createDemoUser({
-        fullName: isAdmin ? 'Platform Administrator' : 'Demo User',
-        email: isAdmin ? DEMO_ADMIN_EMAIL : undefined,
-        role: isAdmin ? USER_ROLES.ADMIN : USER_ROLES.CUSTOMER,
+        fullName: isAdmin ? 'Platform Administrator' : isManufacturer ? 'Demo Manufacturer' : 'Demo User',
+        email: isAdmin ? DEMO_ADMIN_EMAIL : isManufacturer ? DEMO_MANUFACTURER_EMAIL : undefined,
+        role: isAdmin ? USER_ROLES.ADMIN : isManufacturer ? USER_ROLES.MANUFACTURER : USER_ROLES.CUSTOMER,
       });
 
       return res.json({
@@ -278,6 +287,18 @@ export const login = async (req, res) => {
         phone: '+923000000000',
         role: USER_ROLES.ADMIN,
         isVerifiedFundraiser: true,
+      });
+    }
+
+    if (!user && email?.toLowerCase() === 'manufacturer@sayrab.com' && password === 'password123') {
+      user = await User.create({
+        fullName: 'Sayrab Manufacturer',
+        name: 'Sayrab Manufacturer',
+        email: 'manufacturer@sayrab.com',
+        password: 'password123',
+        phone: '+923001111111',
+        role: USER_ROLES.MANUFACTURER,
+        status: 'active',
       });
     }
 

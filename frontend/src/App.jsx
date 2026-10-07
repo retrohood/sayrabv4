@@ -18,6 +18,7 @@ import About from './pages/About';
 import Dashboard from './pages/Dashboard';
 import AdminPortal from './pages/admin/AdminPortal';
 import ManufacturerPortal from './pages/manufacturer/ManufacturerPortal';
+import InstantQuotation from './pages/InstantQuotation';
 
 export default function App() {
   return (
@@ -46,6 +47,8 @@ export default function App() {
             <Route path="/order/:id" element={<OrderTracking />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/about" element={<About />} />
+            <Route path="/instant-quotation" element={<InstantQuotation />} />
+            <Route path="/quotation" element={<InstantQuotation />} />
             <Route
               path="/dashboard/*"
               element={

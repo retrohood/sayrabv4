@@ -252,6 +252,7 @@ export const mockStores = [];
 export const mockWithdrawals = [];
 export const mockUploads = [];
 export const mockDonations = [];
+export const mockQuotations = [];
 
 // Helper functions for mock CRUD operations
 export const inMemoryDB = {
@@ -422,6 +423,38 @@ export const inMemoryDB = {
       };
       mockDonations.push(newDonation);
       return newDonation;
+    }
+  },
+  quotations: {
+    find: (filter = {}) => {
+      let result = [...mockQuotations];
+      if (filter.owner) result = result.filter(q => q.owner === filter.owner);
+      return result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    },
+    findOne: (lookup) => {
+      const id = lookup._id || lookup.id;
+      return mockQuotations.find(q => q._id === id) || null;
+    },
+    create: (data) => {
+      const newQuotation = {
+        _id: 'quote_' + Math.random().toString(36).substr(2, 9),
+        status: data.calculation?.status || 'draft',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ...data,
+      };
+      mockQuotations.push(newQuotation);
+      return newQuotation;
+    },
+    update: (id, updates) => {
+      const index = mockQuotations.findIndex(q => q._id === id);
+      if (index === -1) return null;
+      mockQuotations[index] = {
+        ...mockQuotations[index],
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      };
+      return mockQuotations[index];
     }
   }
 };

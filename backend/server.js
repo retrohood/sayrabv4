@@ -22,9 +22,10 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import manufacturingRoutes from './routes/manufacturingRoutes.js';
 import manufacturerRoutes from './routes/manufacturerRoutes.js';
 import webhookRoutes from './routes/webhookRoutes.js';
+import quotationRoutes from './routes/quotationRoutes.js';
 import { CAMPAIGN_CATEGORIES, PRODUCT_CATEGORIES, SORT_OPTIONS } from './constants/index.js';
 
-dotenv.config({ path: fileURLToPath(new URL('.env', import.meta.url)) });
+dotenv.config({ path: fileURLToPath(new URL('.env', import.meta.url)), override: true });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -63,6 +64,7 @@ app.use('/api/withdrawals', withdrawalRoutes);
 app.use('/api/payouts', payoutRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/manufacturing', manufacturingRoutes);
+app.use('/api/quotations', quotationRoutes);
 app.use('/webhook', webhookRoutes);
 
 app.use((err, req, res, next) => {

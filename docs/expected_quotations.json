@@ -1,0 +1,349 @@
+{
+  "howard_polo_100": {
+    "extraction_id": "EXT-101",
+    "status": "DRAFT",
+    "quantity": 100,
+    "lines": [
+      {
+        "category": "construction",
+        "description": "stitching",
+        "rate_code": "SEW_POLO",
+        "unit_price_pkr": 1000,
+        "basis_qty": 1,
+        "per_garment_pkr": 1000,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "construction",
+        "description": "pattern",
+        "rate_code": "PAT_POLO",
+        "unit_price_pkr": 300,
+        "basis_qty": 1,
+        "per_garment_pkr": 300,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "fixed",
+        "description": "fuel_misc",
+        "rate_code": "FUEL_POLO",
+        "unit_price_pkr": 100,
+        "basis_qty": 1,
+        "per_garment_pkr": 100,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "fabric",
+        "description": "Fabric - polo_fabric",
+        "rate_code": "FAB_POLO",
+        "unit_price_pkr": 1400,
+        "basis_qty": 1,
+        "per_garment_pkr": 1400,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "embellishment",
+        "description": "embroidery - left_chest",
+        "rate_code": "EMB",
+        "unit_price_pkr": 1100,
+        "basis_qty": 1,
+        "per_garment_pkr": 1100,
+        "confidence": "HIGH",
+        "needs_review": true,
+        "warnings": [
+          "Band edges assumed - verify"
+        ]
+      },
+      {
+        "category": "trim",
+        "description": "Trim - button",
+        "rate_code": "BTN_POLO",
+        "unit_price_pkr": 50,
+        "basis_qty": 1,
+        "per_garment_pkr": 50,
+        "confidence": "MEDIUM",
+        "needs_review": false,
+        "warnings": []
+      }
+    ],
+    "cost_per_garment_pkr": 3950,
+    "cost_usd": 14.47,
+    "margin": 0.3,
+    "margin_flagged": false,
+    "fob_usd": 20.67,
+    "weight_kg": 0.65,
+    "shipping_usd": 6.79,
+    "total_per_garment_usd": 27.46,
+    "order_total_usd": 2746,
+    "warnings": [
+      "REVIEW embroidery - left_chest: Band edges assumed - verify"
+    ]
+  },
+  "eta_mu_crewneck_150": {
+    "extraction_id": "EXT-102",
+    "status": "DRAFT",
+    "quantity": 150,
+    "lines": [
+      {
+        "category": "construction",
+        "description": "stitching",
+        "rate_code": "SEW_CREW",
+        "unit_price_pkr": 900,
+        "basis_qty": 1,
+        "per_garment_pkr": 900,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "construction",
+        "description": "pattern",
+        "rate_code": "PAT_CREW",
+        "unit_price_pkr": 50,
+        "basis_qty": 1,
+        "per_garment_pkr": 50,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "fixed",
+        "description": "fuel_misc",
+        "rate_code": "FUEL_CREW",
+        "unit_price_pkr": 250,
+        "basis_qty": 1,
+        "per_garment_pkr": 250,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "fabric",
+        "description": "Fabric - crewneck_standard",
+        "rate_code": "FAB_CREW_STD",
+        "unit_price_pkr": 1300,
+        "basis_qty": 1,
+        "per_garment_pkr": 1300,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "embellishment",
+        "description": "embroidery - left_chest",
+        "rate_code": "EMB",
+        "unit_price_pkr": 400,
+        "basis_qty": 1,
+        "per_garment_pkr": 400,
+        "confidence": "HIGH",
+        "needs_review": true,
+        "warnings": [
+          "Band edges assumed - verify"
+        ]
+      },
+      {
+        "category": "embellishment",
+        "description": "chenille_embroidery - front",
+        "rate_code": "CHENILLE",
+        "unit_price_pkr": 850,
+        "basis_qty": 1,
+        "per_garment_pkr": 850,
+        "confidence": "MEDIUM",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "embellishment",
+        "description": "rhinestones - front",
+        "rate_code": "RHINE",
+        "unit_price_pkr": 150,
+        "basis_qty": 1,
+        "per_garment_pkr": 150,
+        "confidence": "MEDIUM",
+        "needs_review": true,
+        "warnings": [
+          "Band edges assumed - verify"
+        ]
+      },
+      {
+        "category": "trim",
+        "description": "Trim - sizetag",
+        "rate_code": "TAG_PRINT",
+        "unit_price_pkr": 20,
+        "basis_qty": 1,
+        "per_garment_pkr": 20,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      }
+    ],
+    "cost_per_garment_pkr": 3920,
+    "cost_usd": 14.36,
+    "margin": 0.4,
+    "margin_flagged": false,
+    "fob_usd": 23.93,
+    "weight_kg": 0.7,
+    "shipping_usd": 7.31,
+    "total_per_garment_usd": 31.24,
+    "order_total_usd": 4686,
+    "warnings": [
+      "REVIEW embroidery - left_chest: Band edges assumed - verify",
+      "REVIEW rhinestones - front: Band edges assumed - verify"
+    ]
+  },
+  "reversible_zipup_50_gaps": {
+    "extraction_id": "EXT-103",
+    "status": "DRAFT",
+    "quantity": 50,
+    "lines": [
+      {
+        "category": "construction",
+        "description": "stitching",
+        "rate_code": "SEW_ZIPUP",
+        "unit_price_pkr": 2500,
+        "basis_qty": 1,
+        "per_garment_pkr": 2500,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "construction",
+        "description": "pattern",
+        "rate_code": "PAT_ZIPUP",
+        "unit_price_pkr": 1425,
+        "basis_qty": 1,
+        "per_garment_pkr": 1425,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "fixed",
+        "description": "fuel_misc",
+        "rate_code": "FUEL_ZIPUP",
+        "unit_price_pkr": 200,
+        "basis_qty": 1,
+        "per_garment_pkr": 200,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "fabric",
+        "description": "Fabric - zipup_light",
+        "rate_code": "FAB_ZIPUP_LIGHT",
+        "unit_price_pkr": 1100,
+        "basis_qty": 1,
+        "per_garment_pkr": 1100,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "fabric",
+        "description": "Fabric - sherpa_fleece",
+        "rate_code": null,
+        "unit_price_pkr": 0,
+        "basis_qty": 1,
+        "per_garment_pkr": 0,
+        "confidence": "LOW",
+        "needs_review": true,
+        "warnings": [
+          "No approved rate for fabric/sherpa_fleece - NOT priced"
+        ]
+      },
+      {
+        "category": "embellishment",
+        "description": "embroidery - left_chest",
+        "rate_code": "EMB",
+        "unit_price_pkr": 1100,
+        "basis_qty": 1,
+        "per_garment_pkr": 1100,
+        "confidence": "HIGH",
+        "needs_review": true,
+        "warnings": [
+          "Band edges assumed - verify"
+        ]
+      },
+      {
+        "category": "embellishment",
+        "description": "laser_cutting - sleeve",
+        "rate_code": null,
+        "unit_price_pkr": 0,
+        "basis_qty": 1,
+        "per_garment_pkr": 0,
+        "confidence": "MEDIUM",
+        "needs_review": true,
+        "warnings": [
+          "No approved rate for embellishment/laser_cutting - NOT priced"
+        ]
+      },
+      {
+        "category": "trim",
+        "description": "Trim - zipper",
+        "rate_code": "ZIP",
+        "unit_price_pkr": 400,
+        "basis_qty": 1,
+        "per_garment_pkr": 400,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "trim",
+        "description": "Trim - quilt",
+        "rate_code": "QUILT",
+        "unit_price_pkr": 800,
+        "basis_qty": 1,
+        "per_garment_pkr": 800,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "trim",
+        "description": "Trim - custom_rib",
+        "rate_code": "RIB_CUSTOM",
+        "unit_price_pkr": 700,
+        "basis_qty": 1,
+        "per_garment_pkr": 700,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      },
+      {
+        "category": "trim",
+        "description": "Trim - sizetag",
+        "rate_code": "TAG_WOVEN",
+        "unit_price_pkr": 250,
+        "basis_qty": 1,
+        "per_garment_pkr": 250,
+        "confidence": "HIGH",
+        "needs_review": false,
+        "warnings": []
+      }
+    ],
+    "cost_per_garment_pkr": 8475,
+    "cost_usd": 31.04,
+    "margin": 0.3,
+    "margin_flagged": false,
+    "fob_usd": 44.35,
+    "weight_kg": 1.5,
+    "shipping_usd": 15.66,
+    "total_per_garment_usd": 60.01,
+    "order_total_usd": 3000.5,
+    "warnings": [
+      "REVIEW Fabric - sherpa_fleece: No approved rate for fabric/sherpa_fleece - NOT priced",
+      "REVIEW embroidery - left_chest: Band edges assumed - verify",
+      "REVIEW laser_cutting - sleeve: No approved rate for embellishment/laser_cutting - NOT priced"
+    ]
+  }
+}
