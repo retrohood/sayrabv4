@@ -152,14 +152,15 @@ export const createOrder = async (req, res) => {
       total,
       paymentStatus: paymentStatus || 'paid',
       orderStatus: paymentStatus === 'paid' ? 'paid' : 'placed',
-      productionStatus: paymentStatus === 'paid' ? 'queued' : undefined,
+      productionStatus: paymentStatus === 'paid' ? 'waiting' : 'waiting',
       revenueSplit: calculateRevenueSplit(total),
       shippingAddress: {
         fullName: shippingAddress.fullName || req.user?.fullName || 'Buyer',
         phone: shippingAddress.phone || req.user?.phone || '',
-        address: shippingAddress.line1 || shippingAddress.address || '',
+        line1: shippingAddress.line1 || shippingAddress.address || 'Standard Delivery',
         city: shippingAddress.city || 'Lahore',
         state: shippingAddress.state || 'Punjab',
+        postalCode: shippingAddress.postalCode || '',
         country: shippingAddress.country || 'Pakistan',
       },
       stripeSessionId: req.body.stripeSessionId,
@@ -227,7 +228,7 @@ export const updateOrderPayment = async (req, res) => {
 
     if (order.paymentStatus === 'paid') {
       order.orderStatus = order.orderStatus === 'placed' ? 'paid' : order.orderStatus;
-      order.productionStatus = order.productionStatus || 'queued';
+      order.productionStatus = order.productionStatus || 'waiting';
     }
 
     await order.save();

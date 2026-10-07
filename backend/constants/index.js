@@ -123,10 +123,13 @@ export const ORDER_STATUSES = ['placed', 'paid', 'production', 'shipped', 'deliv
 export const DESIGN_STATUSES = ['draft', 'generated', 'approved', 'rejected'];
 export const PRODUCTION_STATUSES = [
   'waiting',
+  'queued',
   'in_production',
   'quality_check',
+  'ready_to_ship',
   'shipped',
   'delivered',
+  'cancelled',
 ];
 
 export const REVENUE_SPLIT = {

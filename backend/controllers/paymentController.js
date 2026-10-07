@@ -46,7 +46,7 @@ export const handleStripeWebhook = async (req, res) => {
     order.paymentIntentId = paymentIntentId || order.paymentIntentId;
     if (paymentStatus === 'paid') {
       order.orderStatus = order.orderStatus === 'placed' ? 'paid' : order.orderStatus;
-      order.productionStatus = order.productionStatus || 'queued';
+      order.productionStatus = order.productionStatus || 'waiting';
     }
     await order.save();
 
