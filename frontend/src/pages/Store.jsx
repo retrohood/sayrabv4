@@ -3,19 +3,25 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Search, Store as StoreIcon, ShieldAlert, CheckCircle, ArrowRight } from 'lucide-react';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency, isFundraiserUser } from '../utils/format';
 import { addCartItem, cartTotal as getCartTotal, readCart } from '../utils/cart';
 
 export default function Store() {
   const { user, setUser } = useAuth();
+  const isFundraiser = isFundraiserUser(user);
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-  const [cart, setCart] = useState(() => readCart());
+  const [cart, setCart] = useState(() => readCart(user?._id));
   const [allocation, setAllocation] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showFundraiserNotice, setShowFundraiserNotice] = useState(false);
+
+  useEffect(() => {
+    setCart(readCart(user?._id));
+  }, [user]);
 
   // Merchandise open store states
   const [myStore, setMyStore] = useState(null);
@@ -67,7 +73,15 @@ export default function Store() {
   }, [user]);
 
   const addToCart = (product) => {
-    setCart(addCartItem(product));
+    if (!user) {
+      navigate('/auth?mode=login&redirect=/store');
+      return;
+    }
+    if (isFundraiser) {
+      setShowFundraiserNotice(true);
+      return;
+    }
+    setCart(addCartItem(product, 1, user?._id));
   };
 
   const handleOpenStoreClick = () => {
@@ -113,13 +127,42 @@ export default function Store() {
             Support Sayrab through branded merchandise. Profits fund charitable causes.
           </p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-primary-50 rounded-lg">
-          <ShoppingBag className="text-primary-600" size={20} />
-          <span className="font-medium text-primary-700">
-            Cart: {cart.length} items ({formatCurrency(cartTotal)})
-          </span>
-        </div>
+        {!isFundraiser && (
+          <Link
+            to={user ? "/cart" : "/auth?mode=login&redirect=/cart"}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
+          >
+            <ShoppingBag className="text-primary-600" size={20} />
+            <span className="font-medium text-primary-700">
+              {user ? `Cart: ${cart.length} items (${formatCurrency(cartTotal)})` : 'Cart (Sign in required)'}
+            </span>
+          </Link>
+        )}
       </div>
+
+      {isFundraiser && (
+        <div className="bg-zinc-900 text-white rounded-2xl p-4 sm:p-5 border border-zinc-700 shadow-md mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-in">
+          <div className="flex items-start gap-3.5">
+            <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30 shrink-0 mt-0.5">
+              <ShieldAlert size={22} />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-white uppercase tracking-wide">
+                Fundraiser Account Notice <span>•</span> Purchasing Restricted
+              </h3>
+              <p className="text-xs text-zinc-300 mt-1 leading-relaxed">
+                As a registered fundraiser, purchasing store merchandise is restricted. Products are designated for buyers and donors whose purchases generate 50% revenue for active campaigns.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/dashboard"
+            className="px-4 py-2 bg-white text-zinc-950 hover:bg-zinc-200 text-xs font-bold rounded-xl transition-all shadow-sm shrink-0 flex items-center gap-1.5 self-end sm:self-auto"
+          >
+            My Fundraiser Portal <ArrowRight size={14} />
+          </Link>
+        </div>
+      )}
 
       {allocation && (
         <div className="bg-white rounded-xl border border-slate-200 p-6 mb-8">
@@ -191,12 +234,14 @@ export default function Store() {
                     >
                       View
                     </Link>
-                    <button
-                      onClick={() => addToCart(product)}
-                      className="px-3 py-1.5 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 cursor-pointer"
-                    >
-                      Add
-                    </button>
+                    {!isFundraiser && (
+                      <button
+                        onClick={() => addToCart(product)}
+                        className="px-3 py-1.5 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 cursor-pointer"
+                      >
+                        Add
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -415,6 +460,52 @@ export default function Store() {
             >
               Go to Dashboard <ArrowRight size={18} />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Fundraiser Role Policy Notice Modal */}
+      {showFundraiserNotice && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-zinc-200 animate-scale-up space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+              <div className="flex items-center gap-2 text-zinc-900">
+                <ShieldAlert className="text-red-600" size={22} />
+                <h3 className="text-base font-extrabold text-zinc-900">Purchasing Not Allowed</h3>
+              </div>
+              <button
+                onClick={() => setShowFundraiserNotice(false)}
+                className="text-zinc-400 hover:text-zinc-700 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-2">
+              <p className="text-xs text-zinc-800 leading-relaxed">
+                Fundraiser accounts cannot purchase merchandise products from the store. Store purchases are reserved for buyers and donors to fund active campaigns.
+              </p>
+              <p className="text-[11px] text-zinc-500">
+                You can create, link, and manage merchandise items for your own campaigns from the Fundraiser Portal.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Link
+                to="/dashboard"
+                onClick={() => setShowFundraiserNotice(false)}
+                className="flex-1 py-2.5 bg-black hover:bg-zinc-800 text-white text-xs font-bold rounded-xl text-center shadow-sm flex items-center justify-center gap-1.5"
+              >
+                Go to Fundraiser Portal <ArrowRight size={14} />
+              </Link>
+              <button
+                type="button"
+                onClick={() => setShowFundraiserNotice(false)}
+                className="py-2.5 px-4 border border-zinc-300 text-zinc-700 text-xs font-bold rounded-xl hover:bg-zinc-100 cursor-pointer text-center"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

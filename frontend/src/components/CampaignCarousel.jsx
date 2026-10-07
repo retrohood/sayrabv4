@@ -1,7 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/format';
 
 export default function CampaignCarousel({ campaigns }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   if (!campaigns?.length) return null;
 
   const doubled = [...campaigns, ...campaigns];
@@ -16,7 +19,13 @@ export default function CampaignCarousel({ campaigns }) {
           {doubled.map((campaign, i) => (
             <Link
               key={`${campaign._id}-${i}`}
-              to={`/campaigns/${campaign.slug}`}
+              to={user ? `/campaigns/${campaign.slug}` : `/auth?mode=login&redirect=/campaigns/${campaign.slug}`}
+              onClick={(e) => {
+                if (!user) {
+                  e.preventDefault();
+                  navigate(`/auth?mode=login&redirect=/campaigns/${campaign.slug}`);
+                }
+              }}
               className="flex-shrink-0 w-72 bg-white/10 backdrop-blur rounded-xl overflow-hidden hover:bg-white/20 transition-colors"
             >
               <div className="flex">

@@ -4,9 +4,33 @@ import Product from '../models/Product.js';
 import Campaign from '../models/Campaign.js';
 import { calculateRevenueSplit } from '../utils/revenueSplit.js';
 import { isDatabaseConnected } from '../utils/demoAuth.js';
+import { inMemoryDB } from '../utils/inMemoryDB.js';
+
+import { isManagerRole, USER_ROLES } from '../constants/index.js';
 
 export const createOrder = async (req, res) => {
   try {
+    const isFundraiserAccount = (userObj) => {
+      if (!userObj) return false;
+      const r = (userObj.role || '').toLowerCase();
+      return (
+        r === USER_ROLES.FUNDRAISER ||
+        r === USER_ROLES.MANAGER ||
+        r === USER_ROLES.ORG_LEADER ||
+        r === 'fundraiser' ||
+        r === 'manager' ||
+        r === 'org_leader' ||
+        Boolean(userObj.isVerifiedFundraiser) ||
+        isManagerRole(r)
+      );
+    };
+
+    if (req.user && isFundraiserAccount(req.user)) {
+      return res.status(403).json({
+        message: 'Fundraiser accounts cannot purchase merchandise. Merchandise purchases are for buyers and donors only.',
+      });
+    }
+
     const { campaignId, products = [], shippingAddress = {}, paymentStatus = 'pending' } = req.body;
 
     const campaign = await Campaign.findById(campaignId);
@@ -143,7 +167,8 @@ export const getOrdersByCampaign = async (req, res) => {
     const { campaignId } = req.params;
 
     if (!isDatabaseConnected(mongoose)) {
-      return res.json([]);
+      const orders = inMemoryDB.orders.find({ campaignId });
+      return res.json(orders);
     }
 
     const campaign = await Campaign.findById(campaignId);

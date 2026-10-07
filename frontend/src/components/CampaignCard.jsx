@@ -1,15 +1,26 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Users, Share2, ShieldCheck } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { formatCurrency, formatDate, getDaysRemaining, getVerificationLabel } from '../utils/format';
 
 export default function CampaignCard({ campaign }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const percent = Math.min(100, Math.round((campaign.amountRaised / campaign.fundingGoal) * 100));
   const daysLeft = getDaysRemaining(campaign.endDate);
   const isVerified = ['verified', 'emergency_verified'].includes(campaign.verificationStatus);
 
+  const handleClick = (e) => {
+    if (!user) {
+      e.preventDefault();
+      navigate(`/auth?mode=login&redirect=/campaigns/${campaign.slug}`);
+    }
+  };
+
   return (
     <Link
-      to={`/campaigns/${campaign.slug}`}
+      to={user ? `/campaigns/${campaign.slug}` : `/auth?mode=login&redirect=/campaigns/${campaign.slug}`}
+      onClick={handleClick}
       className="group bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg hover:border-primary-200 transition-all duration-300 flex flex-col"
     >
       <div className="relative aspect-[4/3] overflow-hidden">

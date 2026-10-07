@@ -48,8 +48,6 @@ export default function Campaigns() {
 
       <SearchFilters
         categories={categories}
-        search={search}
-        setSearch={setSearch}
         category={category}
         setCategory={setCategory}
         sort={sort}

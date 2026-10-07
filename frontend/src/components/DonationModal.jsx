@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { X, QrCode, Building2, CreditCard, Copy, Check } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { X, QrCode, Building2, CreditCard, Copy, Check, ShieldAlert, ArrowRight, Lock } from 'lucide-react';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { isFundraiserUser } from '../utils/format';
 
 const IBAN = 'PK21TMFB0000000098252908';
 
@@ -17,6 +19,8 @@ const PRESET_AMOUNTS = [500, 1000, 2500, 5000, 10000];
 
 export default function DonationModal({ campaign, referralCode, onClose, onSuccess }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const isFundraiser = isFundraiserUser(user);
   const [donationMethod, setDonationMethod] = useState('qr'); // 'qr', 'bank', 'online'
   const [amount, setAmount] = useState(1000);
   const [customAmount, setCustomAmount] = useState('');
@@ -36,7 +40,6 @@ export default function DonationModal({ campaign, referralCode, onClose, onSucce
       setIbanCopied(true);
       setTimeout(() => setIbanCopied(false), 2500);
     } catch {
-      // Fallback for older browsers
       const textArea = document.createElement('textarea');
       textArea.value = IBAN;
       document.body.appendChild(textArea);
@@ -51,6 +54,17 @@ export default function DonationModal({ campaign, referralCode, onClose, onSucce
   const handleDonate = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!user) {
+      navigate(`/auth?mode=login&redirect=/campaigns/${campaign.slug}`);
+      return;
+    }
+
+    if (isFundraiser) {
+      setError('Fundraiser accounts cannot make donations to campaigns.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -79,11 +93,13 @@ export default function DonationModal({ campaign, referralCode, onClose, onSucce
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-zinc-200 animate-scale-up">
         <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <h2 className="text-xl font-bold text-slate-800">Donate Now</h2>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600">
+          <h2 className="text-xl font-bold text-slate-800">
+            {isFundraiser ? 'Donation Restricted' : 'Donate Now'}
+          </h2>
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer">
             <X size={24} />
           </button>
         </div>
@@ -93,7 +109,40 @@ export default function DonationModal({ campaign, referralCode, onClose, onSucce
             Supporting: <strong>{campaign.title}</strong>
           </p>
 
-          {/* Donation Method Tabs */}
+          {isFundraiser ? (
+            <div className="space-y-4 py-2">
+              <div className="p-5 bg-red-50 border border-red-200 rounded-2xl text-red-950 space-y-2">
+                <div className="flex items-center gap-2 text-red-700 font-black text-sm uppercase">
+                  <ShieldAlert size={20} />
+                  <span>Donation Not Possible</span>
+                </div>
+                <p className="text-xs text-red-900 leading-relaxed font-medium">
+                  You are currently logged in as a <strong>Fundraiser</strong>. According to platform rules, fundraiser accounts <strong>cannot donate to any campaign</strong> or buy merchandise products.
+                </p>
+                <p className="text-[11px] text-red-700">
+                  Please log out and use a registered Donor/Customer account if you would like to contribute.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Link
+                  to="/dashboard"
+                  onClick={onClose}
+                  className="flex-1 py-2.5 bg-black hover:bg-zinc-800 text-white text-xs font-bold rounded-xl text-center shadow-sm flex items-center justify-center gap-1.5"
+                >
+                  Go to Fundraiser Portal <ArrowRight size={14} />
+                </Link>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="py-2.5 px-4 border border-zinc-300 text-zinc-700 text-xs font-bold rounded-xl hover:bg-zinc-100 cursor-pointer text-center"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
           <div className="flex rounded-lg border border-slate-200 overflow-hidden">
             {methodTabs.map((tab) => {
               const Icon = tab.icon;
@@ -277,16 +326,22 @@ export default function DonationModal({ campaign, referralCode, onClose, onSucce
 
               <button
                 type="submit"
-                disabled={loading || !finalAmount || finalAmount < 1}
-                className="w-full py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                disabled={isFundraiser || loading || !finalAmount || finalAmount < 1}
+                className="w-full py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors cursor-pointer"
               >
-                {loading ? 'Processing...' : `Donate PKR ${finalAmount?.toLocaleString()}`}
+                {isFundraiser
+                  ? 'Donations Disabled for Fundraiser Account'
+                  : loading
+                  ? 'Processing...'
+                  : `Donate PKR ${finalAmount?.toLocaleString()}`}
               </button>
 
               <p className="text-xs text-slate-500 text-center">
                 {user ? 'Donating as registered user' : 'Donating as guest'}
               </p>
             </form>
+          )}
+          </>
           )}
         </div>
       </div>

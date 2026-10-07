@@ -8,7 +8,7 @@ import { protect, optionalAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/', optionalAuth, createDonation);
+router.post('/', protect, createDonation);
 router.get('/my', protect, getMyDonations);
 router.get('/:id/receipt', protect, getDonationReceipt);
 

@@ -31,3 +31,14 @@ export const getVerificationLabel = (status) => {
   };
   return labels[status] || status;
 };
+
+export const isFundraiserUser = (user) => {
+  if (!user) return false;
+  const role = (user.role || '').toLowerCase();
+  return (
+    role === 'fundraiser' ||
+    role === 'manager' ||
+    role === 'org_leader' ||
+    Boolean(user.isVerifiedFundraiser)
+  );
+};

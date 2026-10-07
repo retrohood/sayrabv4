@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import {
   Users,
   Share2,
@@ -8,6 +8,9 @@ import {
   Heart,
   Trophy,
   ShoppingBag,
+  ShieldAlert,
+  X,
+  ArrowRight,
 } from 'lucide-react';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -18,16 +21,20 @@ import {
   formatDate,
   getDaysRemaining,
   getVerificationLabel,
+  isFundraiserUser,
 } from '../utils/format';
 
 export default function CampaignDetail() {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const isFundraiser = isFundraiserUser(user);
   const navigate = useNavigate();
   const [campaign, setCampaign] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [showDonate, setShowDonate] = useState(false);
+  const [showFundraiserNotice, setShowFundraiserNotice] = useState(false);
+  const [fundraiserNoticeText, setFundraiserNoticeText] = useState('');
   const [referralLink, setReferralLink] = useState('');
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -38,6 +45,12 @@ export default function CampaignDetail() {
   const [buyError, setBuyError] = useState('');
 
   const refCode = searchParams.get('ref');
+
+  useEffect(() => {
+    if (!user) {
+      navigate(`/auth?mode=login&redirect=/campaigns/${slug}`);
+    }
+  }, [user, slug, navigate]);
 
   useEffect(() => {
     if (refCode && slug) {
@@ -71,7 +84,29 @@ export default function CampaignDetail() {
     load();
   }, [slug]);
 
+  const handleDonateClick = () => {
+    if (isFundraiser) {
+      setFundraiserNoticeText(
+        'Fundraiser accounts are not allowed to make donations to campaigns on this platform. Please switch to or use a donor account to make a contribution.'
+      );
+      setShowFundraiserNotice(true);
+      return;
+    }
+    setShowDonate(true);
+  };
+
   const handleBuyClick = (product) => {
+    if (!user) {
+      navigate(`/auth?mode=login&redirect=/campaigns/${slug}`);
+      return;
+    }
+    if (isFundraiser) {
+      setFundraiserNoticeText(
+        'Fundraiser accounts cannot purchase merchandise products. Merchandise purchases are for buyers and donors to support charitable goals.'
+      );
+      setShowFundraiserNotice(true);
+      return;
+    }
     setSelectedProduct(product);
     setBuyForm({
       size: product.sizes?.[0] || '',
@@ -83,6 +118,10 @@ export default function CampaignDetail() {
 
   const handleCheckoutSubmit = (e) => {
     e.preventDefault();
+    if (!user) {
+      navigate(`/auth?mode=login&redirect=/campaigns/${slug}`);
+      return;
+    }
     if (selectedProduct.sizes?.length > 0 && !buyForm.size) {
       setBuyError('Please select a size');
       return;
@@ -100,7 +139,7 @@ export default function CampaignDetail() {
       ...selectedProduct,
       selectedSize: buyForm.size || undefined,
       selectedColor: buyForm.color || undefined,
-    }, buyForm.qty);
+    }, buyForm.qty, user?._id);
 
     setSelectedProduct(null);
     navigate('/checkout');
@@ -132,6 +171,15 @@ export default function CampaignDetail() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] p-4 text-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600 mb-3" />
+        <p className="text-slate-600 font-medium">Please wait, redirecting to login / sign up...</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -226,8 +274,8 @@ export default function CampaignDetail() {
 
           <div className="flex flex-wrap gap-3 mb-10">
             <button
-              onClick={() => setShowDonate(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors"
+              onClick={handleDonateClick}
+              className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors cursor-pointer"
             >
               <Heart size={20} /> Donate Now
             </button>
@@ -464,6 +512,52 @@ export default function CampaignDetail() {
                 <ShoppingBag size={18} /> Buy & Checkout
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Fundraiser Role Policy Notice Modal */}
+      {showFundraiserNotice && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-zinc-200 animate-scale-up space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+              <div className="flex items-center gap-2 text-zinc-900">
+                <ShieldAlert className="text-red-600" size={22} />
+                <h3 className="text-base font-extrabold text-zinc-900">Action Restricted for Fundraisers</h3>
+              </div>
+              <button
+                onClick={() => setShowFundraiserNotice(false)}
+                className="text-zinc-400 hover:text-zinc-700 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-2">
+              <p className="text-xs text-zinc-800 leading-relaxed">
+                {fundraiserNoticeText}
+              </p>
+              <p className="text-[11px] text-zinc-500">
+                Fundraiser accounts are strictly designated for campaign creation, merchandise launching, and payout tracking.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Link
+                to="/dashboard"
+                onClick={() => setShowFundraiserNotice(false)}
+                className="flex-1 py-2.5 bg-black hover:bg-zinc-800 text-white text-xs font-bold rounded-xl text-center shadow-sm flex items-center justify-center gap-1.5"
+              >
+                Go to Fundraiser Portal <ArrowRight size={14} />
+              </Link>
+              <button
+                type="button"
+                onClick={() => setShowFundraiserNotice(false)}
+                className="py-2.5 px-4 border border-zinc-300 text-zinc-700 text-xs font-bold rounded-xl hover:bg-zinc-100 cursor-pointer text-center"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

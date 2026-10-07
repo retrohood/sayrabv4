@@ -170,7 +170,7 @@ export default function Auth() {
                 tab === 'donor' ? 'bg-white shadow text-primary-700' : 'text-slate-600'
               }`}
             >
-              Donor Account
+              Buyer Account
             </button>
             <button
               type="button"

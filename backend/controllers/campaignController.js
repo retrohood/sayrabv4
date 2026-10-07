@@ -213,6 +213,7 @@ export const updateCampaign = async (req, res) => {
         'supportingDocuments',
         'status',
         'storeUrl',
+        'isEmergency',
       ];
 
       allowedFields.forEach((field) => {
@@ -256,6 +257,7 @@ export const updateCampaign = async (req, res) => {
       'supportingDocuments',
       'status',
       'storeUrl',
+      'isEmergency',
     ];
 
     allowedFields.forEach((field) => {
@@ -326,6 +328,7 @@ export const createCampaign = async (req, res) => {
       endDate,
       keywords,
       supportingDocuments,
+      isEmergency,
     } = req.body;
 
     const start = new Date(startDate);
@@ -358,6 +361,7 @@ export const createCampaign = async (req, res) => {
         goalAmount: Number(fundingGoal),
         deadline: end.toISOString(),
         banner: thumbnail || `https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=1200`,
+        isEmergency: Boolean(isEmergency),
         verificationStatus: VERIFICATION_STATUS.PENDING,
         lifecycleStatus: LIFECYCLE_STATUS.ACTIVE,
       });
@@ -384,6 +388,7 @@ export const createCampaign = async (req, res) => {
       goalAmount: fundingGoal,
       deadline: end,
       banner: thumbnail || `https://picsum.photos/seed/${Date.now()}/600/400`,
+      isEmergency: Boolean(isEmergency),
       verificationStatus: VERIFICATION_STATUS.PENDING,
       lifecycleStatus: LIFECYCLE_STATUS.ACTIVE,
     });

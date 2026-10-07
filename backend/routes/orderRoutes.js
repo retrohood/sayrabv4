@@ -11,7 +11,7 @@ import { USER_ROLES } from '../constants/index.js';
 
 const router = express.Router();
 
-router.post('/', optionalAuth, createOrder);
+router.post('/', protect, createOrder);
 router.get('/my', protect, getMyOrders);
 router.get('/campaign/:campaignId', protect, getOrdersByCampaign);
 router.put('/:id/payment', protect, authorize(USER_ROLES.ADMIN), updateOrderPayment);

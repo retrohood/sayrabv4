@@ -1,15 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Minus, Plus, Trash2, ShieldAlert, ArrowRight, Lock } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { cartTotal, readCart, writeCart } from '../utils/cart';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency, isFundraiserUser } from '../utils/format';
 
 export default function Cart() {
-  const [cart, setCart] = useState(() => readCart());
+  const { user } = useAuth();
+  const isFundraiser = isFundraiserUser(user);
+  const [cart, setCart] = useState(() => readCart(user?._id));
+
+  useEffect(() => {
+    setCart(readCart(user?._id));
+  }, [user]);
 
   const updateCart = (next) => {
     setCart(next);
-    writeCart(next);
+    writeCart(next, user?._id);
   };
 
   const updateQty = (id, delta) => {
@@ -23,6 +30,63 @@ export default function Cart() {
   const removeItem = (id) => {
     updateCart(cart.filter((item) => item._id !== id));
   };
+
+  if (!user) {
+    return (
+      <div className="max-w-xl mx-auto px-4 sm:px-6 py-16 text-center animate-fade-in">
+        <div className="bg-white rounded-2xl border border-zinc-200 p-8 shadow-sm space-y-4">
+          <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center">
+            <Lock size={30} />
+          </div>
+          <h2 className="text-2xl font-black text-zinc-900">Sign In Required</h2>
+          <p className="text-sm text-zinc-600 leading-relaxed">
+            You must be logged in or registered as a <strong>Buyer</strong> on Sayrab to view your shopping cart, manage items, and complete purchases.
+          </p>
+          <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              to="/auth?mode=login&redirect=/cart"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#89ca2e] hover:bg-[#78b326] text-black font-bold rounded-xl text-sm transition-all shadow-sm"
+            >
+              Sign In / Register <ArrowRight size={16} />
+            </Link>
+            <Link
+              to="/store"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-3 border border-zinc-300 text-zinc-700 hover:bg-zinc-50 font-bold rounded-xl text-sm transition-all"
+            >
+              Browse Store
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isFundraiser) {
+    return (
+      <div className="max-w-xl mx-auto px-4 sm:px-6 py-16 text-center animate-fade-in">
+        <div className="bg-white rounded-2xl border border-zinc-200 p-8 shadow-sm space-y-4">
+          <div className="w-14 h-14 bg-red-100 text-red-600 rounded-2xl mx-auto flex items-center justify-center">
+            <ShieldAlert size={32} />
+          </div>
+          <h2 className="text-2xl font-black text-zinc-900">Cart Not Available</h2>
+          <p className="text-sm text-zinc-600 leading-relaxed">
+            You are logged in as a <strong>Fundraiser</strong>. Fundraiser accounts cannot purchase store merchandise or use the shopping cart system.
+          </p>
+          <p className="text-xs text-zinc-500">
+            You can launch and manage merchandise items linked to your campaigns directly in your portal.
+          </p>
+          <div className="pt-2">
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-black hover:bg-zinc-800 text-white font-bold rounded-xl text-sm transition-colors shadow-sm"
+            >
+              Go to Fundraiser Portal <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

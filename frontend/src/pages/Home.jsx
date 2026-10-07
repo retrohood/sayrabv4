@@ -1,11 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api/client';
+import { useAuth } from '../context/AuthContext';
+import { isFundraiserUser } from '../utils/format';
 import CampaignCarousel from '../components/CampaignCarousel';
 import SearchFilters from '../components/SearchFilters';
 import CampaignCard from '../components/CampaignCard';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, ArrowRight } from 'lucide-react';
 
 export default function Home() {
+  const { user } = useAuth();
+  const isFundraiser = isFundraiserUser(user);
   const [featured, setFeatured] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
   const [emergency, setEmergency] = useState([]);
@@ -69,9 +74,31 @@ export default function Home() {
       <CampaignCarousel campaigns={featured} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {isFundraiser && (
+          <div className="bg-zinc-900 text-white rounded-2xl p-4 sm:p-5 border border-zinc-700 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-in">
+            <div className="flex items-start gap-3.5">
+              <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30 shrink-0 mt-0.5">
+                <ShieldAlert size={22} />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-white tracking-wide uppercase flex items-center gap-2">
+                  Fundraiser Account Notice <span>•</span> Action Policy
+                </h3>
+                <p className="text-xs text-zinc-300 mt-1 leading-relaxed">
+                  You are currently logged in as a <strong>Fundraiser</strong>. In accordance with platform policy, fundraiser accounts <strong>cannot donate to campaigns or purchase merchandise</strong>. Please manage your campaigns from your portal.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/dashboard"
+              className="px-4 py-2 bg-white text-zinc-950 hover:bg-zinc-200 text-xs font-black rounded-xl transition-all shadow-sm shrink-0 flex items-center gap-1.5 self-end sm:self-auto"
+            >
+              Open Fundraiser Portal <ArrowRight size={14} />
+            </Link>
+          </div>
+        )}
+
         <SearchFilters
-          search={search}
-          setSearch={setSearch}
           category={category}
           setCategory={setCategory}
           sort={sort}
@@ -87,14 +114,16 @@ export default function Home() {
                 <div key={i} className="bg-white rounded-xl h-80 animate-pulse border border-slate-200" />
               ))}
             </div>
-          ) : campaigns.length === 0 ? (
+          ) : campaigns.filter((c) => !c.isEmergency).length === 0 ? (
             <p className="text-center text-slate-500 py-12">No campaigns found matching your criteria.</p>
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {campaigns.map((c) => (
-                  <CampaignCard key={c._id} campaign={c} />
-                ))}
+                {campaigns
+                  .filter((c) => !c.isEmergency)
+                  .map((c) => (
+                    <CampaignCard key={c._id} campaign={c} />
+                  ))}
               </div>
               {pagination.pages > 1 && (
                 <div className="flex justify-center gap-2 mt-8">
