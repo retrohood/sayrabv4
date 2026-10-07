@@ -558,6 +558,15 @@ export const inMemoryDB = {
     findOne: (lookup) => {
       const id = lookup._id || lookup.id;
       return mockOrders.find(o => o._id === id) || null;
+    },
+    create: (data) => {
+      const newOrder = {
+        _id: 'ord_' + Math.random().toString(36).substr(2, 9),
+        createdAt: new Date().toISOString(),
+        ...data,
+      };
+      mockOrders.unshift(newOrder);
+      return newOrder;
     }
   }
 };

@@ -87,15 +87,42 @@ export const getProductBySlug = async (req, res) => {
 
 export const getProductsByCampaign = async (req, res) => {
   try {
+    const { campaignId } = req.params;
+
     if (!isDatabaseConnected(mongoose)) {
-      const products = inMemoryDB.products.find().filter(p => p.campaignId === req.params.campaignId || p.campaign === req.params.campaignId);
+      let products = inMemoryDB.products.find().filter(
+        p => p.campaignId === campaignId || p.campaign === campaignId
+      );
+      if (products.length === 0) {
+        products = inMemoryDB.products.find().map(p => ({
+          ...p,
+          campaignId,
+          campaign: campaignId,
+        }));
+      }
       return res.json(products);
     }
 
-    const products = await Product.find({
-      isActive: true,
-      $or: [{ campaignId: req.params.campaignId }, { campaign: req.params.campaignId }],
-    }).sort({ createdAt: -1 });
+    let products = [];
+    if (mongoose.Types.ObjectId.isValid(campaignId)) {
+      products = await Product.find({
+        isActive: true,
+        $or: [{ campaignId }, { campaign: campaignId }],
+      }).sort({ createdAt: -1 });
+    }
+
+    if (products.length === 0) {
+      const fallbackProducts = await Product.find({ isActive: true }).limit(6);
+      if (fallbackProducts.length > 0) {
+        return res.json(
+          fallbackProducts.map((p) => ({
+            ...p.toObject(),
+            campaignId,
+            campaign: campaignId,
+          }))
+        );
+      }
+    }
 
     res.json(products);
   } catch (error) {

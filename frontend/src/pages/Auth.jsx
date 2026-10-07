@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, HeartHandshake, ArrowRight } from 'lucide-react';
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -151,190 +151,242 @@ export default function Auth() {
   };
 
   return (
-    <div className="max-w-md mx-auto px-4 py-12">
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-        <img src="/sayrab.png" alt="Sayrab" className="h-20 w-auto mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-center text-slate-800 mb-2">
-          {mode === 'login' ? 'Welcome Back' : 'Create Account'}
-        </h1>
-        <p className="text-center text-slate-500 text-sm mb-6">
-          Join Sayrab to donate, fundraise, and make an impact
-        </p>
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
+      <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl shadow-2xl border border-slate-800 p-8 max-w-md w-full relative overflow-hidden">
+        {/* Glow backdrop decoration */}
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="text-center mb-6 relative z-10">
+          <Link to="/" className="inline-block hover:opacity-90 transition-opacity">
+            <img src="/sayrab.png" alt="Sayrab" className="h-16 w-auto mx-auto mb-3" />
+          </Link>
+          <h1 className="text-2xl font-black text-white tracking-tight">
+            {mode === 'login' ? 'Welcome Back' : 'Create an Account'}
+          </h1>
+          <p className="text-slate-400 text-xs mt-1">
+            Join Sayrab to support verified causes, shop merchandise, or launch fundraising campaigns.
+          </p>
+        </div>
 
         {mode === 'register' && (
-          <div className="flex rounded-lg bg-slate-100 p-1 mb-6">
+          <div className="flex rounded-xl bg-slate-950 p-1.5 mb-6 border border-slate-800 relative z-10">
             <button
               type="button"
               onClick={() => handleTabChange('donor')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                tab === 'donor' ? 'bg-white shadow text-primary-700' : 'text-slate-600'
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                tab === 'donor'
+                  ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/20'
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
-              Buyer Account
+              <HeartHandshake size={14} /> Buyer / Donor
             </button>
             <button
               type="button"
               onClick={() => handleTabChange('fundraiser')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                tab === 'fundraiser' ? 'bg-white shadow text-primary-700' : 'text-slate-600'
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                tab === 'fundraiser'
+                  ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/20'
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
-              Fundraiser Account
+              <ShieldCheck size={14} /> Fundraiser
             </button>
           </div>
         )}
 
         {mode === 'register' && tab === 'fundraiser' && (
-          <div className="flex items-center justify-between mb-6">
-            <div className={`flex-1 text-center border-b-2 pb-2 transition-colors duration-300 text-xs font-semibold ${
-              step === 1 ? 'border-primary-500 text-primary-700' : 'border-slate-200 text-slate-400'
+          <div className="flex items-center justify-between mb-6 relative z-10">
+            <div className={`flex-1 text-center border-b-2 pb-2 transition-colors duration-300 text-xs font-bold ${
+              step === 1 ? 'border-cyan-400 text-cyan-400' : 'border-slate-800 text-slate-500'
             }`}>
-              1. Personal Info
+              1. Personal Details
             </div>
-            <div className="w-8 h-0.5 bg-slate-200 mb-2"></div>
-            <div className={`flex-1 text-center border-b-2 pb-2 transition-colors duration-300 text-xs font-semibold ${
-              step === 2 ? 'border-primary-500 text-primary-700' : 'border-slate-200 text-slate-400'
+            <div className="w-8 h-0.5 bg-slate-800 mb-2"></div>
+            <div className={`flex-1 text-center border-b-2 pb-2 transition-colors duration-300 text-xs font-bold ${
+              step === 2 ? 'border-cyan-400 text-cyan-400' : 'border-slate-800 text-slate-500'
             }`}>
-              2. Address Info
+              2. Verification & Address
             </div>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
           {mode === 'login' ? (
             <>
-              <input
-                name="email"
-                type="email"
-                placeholder="Email Address *"
-                value={form.email}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-              />
-              <div className="relative">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Email Address</label>
                 <input
-                  name="password"
-                  type={showPass ? 'text' : 'password'}
-                  placeholder="Password *"
-                  value={form.password}
+                  name="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={form.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none pr-10"
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
-                >
-                  {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Password</label>
+                <div className="relative">
+                  <input
+                    name="password"
+                    type={showPass ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={form.password}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(!showPass)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
             </>
           ) : (
             <>
               {step === 1 && (
                 <>
-                  <input
-                    name="fullName"
-                    placeholder="Full Name *"
-                    value={form.fullName}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                  />
-                  <input
-                    name="email"
-                    type="email"
-                    placeholder="Email Address *"
-                    value={form.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                  />
-                  <div className="relative">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Full Name *</label>
                     <input
-                      name="password"
-                      type={showPass ? 'text' : 'password'}
-                      placeholder="Password *"
-                      value={form.password}
+                      name="fullName"
+                      placeholder="e.g. John Doe"
+                      value={form.fullName}
                       onChange={handleChange}
                       required
-                      minLength={6}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none pr-10"
+                      className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPass(!showPass)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
-                    >
-                      {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
                   </div>
-                  <div className="relative">
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Email Address *</label>
                     <input
-                      name="confirmPassword"
-                      type={showConfirmPass ? 'text' : 'password'}
-                      placeholder="Confirm Password *"
-                      value={form.confirmPassword}
+                      name="email"
+                      type="email"
+                      placeholder="name@example.com"
+                      value={form.email}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none pr-10"
+                      className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPass(!showConfirmPass)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
-                    >
-                      {showConfirmPass ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
                   </div>
-                  <input
-                    name="phone"
-                    placeholder={tab === 'fundraiser' ? 'Phone Number *' : 'Phone Number (optional)'}
-                    value={form.phone}
-                    onChange={handleChange}
-                    required={tab === 'fundraiser'}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                  />
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Password *</label>
+                    <div className="relative">
+                      <input
+                        name="password"
+                        type={showPass ? 'text' : 'password'}
+                        placeholder="At least 6 characters"
+                        value={form.password}
+                        onChange={handleChange}
+                        required
+                        minLength={6}
+                        className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPass(!showPass)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                      >
+                        {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Confirm Password *</label>
+                    <div className="relative">
+                      <input
+                        name="confirmPassword"
+                        type={showConfirmPass ? 'text' : 'password'}
+                        placeholder="Re-enter password"
+                        value={form.confirmPassword}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPass(!showConfirmPass)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                      >
+                        {showConfirmPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
+                      {tab === 'fundraiser' ? 'Phone Number *' : 'Phone Number (Optional)'}
+                    </label>
+                    <input
+                      name="phone"
+                      placeholder="03001234567"
+                      value={form.phone}
+                      onChange={handleChange}
+                      required={tab === 'fundraiser'}
+                      className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    />
+                  </div>
                 </>
               )}
 
               {step === 2 && tab === 'fundraiser' && (
                 <>
-                  <input
-                    name="cnic"
-                    placeholder="CNIC * (XXXXX-XXXXXXX-X)"
-                    value={form.cnic}
-                    onChange={handleChange}
-                    required
-                    maxLength={15}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                  />
-                  <input
-                    name="address"
-                    placeholder="Address *"
-                    value={form.address}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                  />
-                  <p className="text-xs text-slate-500">
-                    Identity verification documents may be required for high-value campaigns.
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">CNIC (National ID) *</label>
+                    <input
+                      name="cnic"
+                      placeholder="XXXXX-XXXXXXX-X"
+                      value={form.cnic}
+                      onChange={handleChange}
+                      required
+                      maxLength={15}
+                      className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Residential / Organization Address *</label>
+                    <input
+                      name="address"
+                      placeholder="Street, City, Province"
+                      value={form.address}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    />
+                  </div>
+
+                  <p className="text-[11px] text-slate-400 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    🔒 Identity verification documents may be reviewed prior to high-value payout disbursements.
                   </p>
                 </>
               )}
             </>
           )}
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && (
+            <div className="p-3 bg-red-950/50 border border-red-800 text-red-300 text-xs font-semibold rounded-xl">
+              {error}
+            </div>
+          )}
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-2">
             {mode === 'register' && tab === 'fundraiser' && step === 2 && (
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="w-1/3 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 cursor-pointer"
+                className="w-1/3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition-all cursor-pointer"
               >
                 Back
               </button>
@@ -342,62 +394,68 @@ export default function Auth() {
             <button
               type="submit"
               disabled={loading}
-              className={`py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 disabled:opacity-50 cursor-pointer ${
+              className={`py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs rounded-xl shadow-lg shadow-cyan-500/25 transition-all cursor-pointer disabled:opacity-50 ${
                 mode === 'register' && tab === 'fundraiser' && step === 2 ? 'w-2/3' : 'w-full'
               }`}
             >
               {loading
                 ? 'Please wait...'
                 : mode === 'login'
-                ? 'Login'
+                ? 'Sign In to Account'
                 : tab === 'fundraiser' && step === 1
-                ? 'Next Step'
-                : 'Sign Up'}
+                ? 'Proceed to Step 2 →'
+                : 'Complete Registration'}
             </button>
           </div>
         </form>
 
-        <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-slate-200" />
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-400">or</span>
-          <div className="h-px flex-1 bg-slate-200" />
+        <div className="my-6 flex items-center gap-3 relative z-10">
+          <div className="h-px flex-1 bg-slate-800" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">or continue with</span>
+          <div className="h-px flex-1 bg-slate-800" />
         </div>
 
         <button
           type="button"
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-800 px-4 py-2.5 text-xs font-bold text-slate-200 transition-all cursor-pointer disabled:opacity-50 relative z-10 shadow-sm"
         >
-          <span className="grid h-5 w-5 place-items-center rounded-full border border-slate-300 text-xs font-bold text-primary-700">
+          <span className="grid h-5 w-5 place-items-center rounded-full bg-slate-700 text-[11px] font-black text-cyan-400">
             G
           </span>
           Continue with Google
         </button>
 
-        <p className="text-center text-sm text-slate-600 mt-6">
+        <div className="text-center text-xs text-slate-400 mt-6 relative z-10">
           {mode === 'login' ? (
             <>
               Don&apos;t have an account?{' '}
-              <button onClick={() => handleModeChange('register')} className="text-primary-600 font-medium cursor-pointer">
-                Sign Up
+              <button
+                onClick={() => handleModeChange('register')}
+                className="text-cyan-400 hover:text-cyan-300 font-bold cursor-pointer underline ml-1"
+              >
+                Sign Up Now
               </button>
             </>
           ) : (
             <>
               Already have an account?{' '}
-              <button onClick={() => handleModeChange('login')} className="text-primary-600 font-medium cursor-pointer">
-                Login
+              <button
+                onClick={() => handleModeChange('login')}
+                className="text-cyan-400 hover:text-cyan-300 font-bold cursor-pointer underline ml-1"
+              >
+                Sign In
               </button>
             </>
           )}
-        </p>
+        </div>
 
-        <p className="text-center text-sm mt-4">
-          <Link to="/" className="text-slate-500 hover:text-primary-600">
+        <div className="text-center text-xs mt-4 relative z-10">
+          <Link to="/" className="text-slate-500 hover:text-cyan-400 transition-colors">
             ← Back to Home
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   );

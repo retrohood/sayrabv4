@@ -16,14 +16,16 @@ export default function SearchFilters({
   categories,
 }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
-          <label className="block text-sm font-medium text-slate-700 mb-1">Sort By</label>
+    <div className="bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-xl border border-slate-800 p-5 sm:p-6 space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="w-full sm:w-64">
+          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+            Sort Campaigns
+          </label>
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+            className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -35,28 +37,30 @@ export default function SearchFilters({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-2">Categories</label>
+        <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+          Campaign Categories
+        </label>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setCategory('All')}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               category === 'All'
-                ? 'bg-primary-600 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25'
+                : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-600 hover:text-white'
             }`}
           >
-            All
+            All Causes
           </button>
           {categories?.map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setCategory(cat)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 category === cat
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25'
+                  : 'bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-600 hover:text-white'
               }`}
             >
               {cat}

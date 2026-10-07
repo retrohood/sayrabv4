@@ -12,7 +12,7 @@ import { formatCurrency } from '../utils/format';
 const valueIcons = [Shield, Heart, Users, CheckCircle, TrendingUp];
 
 const DEFAULT_ABOUT_CONTENT = {
-  mission: "Sayrab is dedicated to connecting donors with verified campaigns and providing a trusted fundraising platform.",
+  mission: "Sayrab is dedicated to connecting donors with verified campaigns and providing a trusted fundraising platform with real-time merchandise allocation.",
   impactStatistics: {
     totalFundsRaised: 0,
     totalCampaignsSupported: 0,
@@ -38,7 +38,7 @@ export default function About() {
   if (!content) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-400" />
       </div>
     );
   }
@@ -48,17 +48,19 @@ export default function About() {
   const coreValues = Array.isArray(content.coreValues) ? content.coreValues : [];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <section className="text-center mb-12">
-        <img src="/sayrab.png" alt="Sayrab" className="h-32 mx-auto mb-4" />
-        <h1 className="text-4xl font-bold text-slate-800 mb-4">About Sayrab</h1>
-        <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12 pb-20">
+      <section className="text-center space-y-4">
+        <img src="/sayrab.png" alt="Sayrab" className="h-28 mx-auto mb-2" />
+        <h1 className="text-4xl font-black text-white tracking-tight">About Sayrab</h1>
+        <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
           {content.mission}
         </p>
       </section>
 
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">Impact Statistics</h2>
+      <section className="space-y-6">
+        <h2 className="text-xl font-black text-white uppercase tracking-wider text-center text-cyan-400">
+          Impact Statistics
+        </h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'Total Funds Raised', value: formatCurrency(stats.totalFundsRaised) },
@@ -68,45 +70,51 @@ export default function About() {
           ].map((stat) => (
             <div
               key={stat.label}
-              className="bg-white rounded-xl border border-slate-200 p-6 text-center"
+              className="bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-800 p-6 text-center shadow-xl hover:border-cyan-500/40 transition-all"
             >
-              <p className="text-2xl font-bold text-primary-600">{stat.value}</p>
-              <p className="text-sm text-slate-600 mt-1">{stat.label}</p>
+              <p className="text-2xl font-black text-cyan-400">{stat.value}</p>
+              <p className="text-xs text-slate-400 mt-1 font-semibold">{stat.label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">How It Works</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {howItWorks.map((step) => (
-            <div
-              key={step.step}
-              className="bg-white rounded-xl border border-slate-200 p-5 text-center"
-            >
-              <div className="w-10 h-10 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center font-bold mx-auto mb-3">
-                {step.step}
+      {howItWorks.length > 0 && (
+        <section className="space-y-6">
+          <h2 className="text-xl font-black text-white uppercase tracking-wider text-center text-cyan-400">
+            How It Works
+          </h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {howItWorks.map((step) => (
+              <div
+                key={step.step}
+                className="bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-800 p-5 text-center shadow-xl hover:border-cyan-500/40 transition-all"
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 text-white rounded-full flex items-center justify-center font-black mx-auto mb-3 shadow-md shadow-cyan-500/20 text-xs">
+                  {step.step}
+                </div>
+                <h3 className="font-bold text-white text-xs mb-1.5">{step.title}</h3>
+                <p className="text-[11px] text-slate-400 leading-relaxed">{step.description}</p>
               </div>
-              <h3 className="font-semibold text-slate-800 text-sm mb-2">{step.title}</h3>
-              <p className="text-xs text-slate-600">{step.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
 
-      <section>
-        <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">Core Values</h2>
+      <section className="space-y-6">
+        <h2 className="text-xl font-black text-white uppercase tracking-wider text-center text-cyan-400">
+          Core Values
+        </h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {coreValues.map((value, i) => {
             const Icon = valueIcons[i] || Heart;
             return (
               <div
                 key={value}
-                className="bg-primary-50 rounded-xl border border-primary-100 p-5 text-center"
+                className="bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-800 p-5 text-center shadow-xl hover:border-cyan-500/40 transition-all"
               >
-                <Icon className="text-primary-600 mx-auto mb-2" size={28} />
-                <p className="font-semibold text-slate-800">{value}</p>
+                <Icon className="text-cyan-400 mx-auto mb-2" size={26} />
+                <p className="font-bold text-white text-xs">{value}</p>
               </div>
             );
           })}

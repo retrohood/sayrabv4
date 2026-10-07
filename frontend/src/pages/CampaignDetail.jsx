@@ -135,11 +135,22 @@ export default function CampaignDetail() {
       return;
     }
 
-    addCartItem({
-      ...selectedProduct,
-      selectedSize: buyForm.size || undefined,
-      selectedColor: buyForm.color || undefined,
-    }, buyForm.qty, user?._id);
+    const linkedCampaignId =
+      (selectedProduct.campaignId?._id || selectedProduct.campaignId) ||
+      (selectedProduct.campaign?._id || selectedProduct.campaign) ||
+      campaign?._id;
+
+    addCartItem(
+      {
+        ...selectedProduct,
+        campaignId: linkedCampaignId,
+        campaignTitle: campaign?.title || selectedProduct.campaignTitle || 'Campaign Merchandise',
+        selectedSize: buyForm.size || undefined,
+        selectedColor: buyForm.color || undefined,
+      },
+      buyForm.qty,
+      user?._id
+    );
 
     setSelectedProduct(null);
     navigate('/checkout');
@@ -175,8 +186,8 @@ export default function CampaignDetail() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] p-4 text-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600 mb-3" />
-        <p className="text-slate-600 font-medium">Please wait, redirecting to login / sign up...</p>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-400 mb-3" />
+        <p className="text-slate-400 font-medium text-xs">Redirecting to login / sign up...</p>
       </div>
     );
   }
@@ -184,15 +195,16 @@ export default function CampaignDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-400" />
       </div>
     );
   }
 
   if (!campaign) {
     return (
-      <div className="text-center py-20">
-        <h2 className="text-2xl font-bold text-slate-800">Campaign not found</h2>
+      <div className="text-center py-20 bg-slate-900 rounded-3xl border border-slate-800 max-w-lg mx-auto my-12 p-8">
+        <h2 className="text-2xl font-black text-white">Campaign Not Found</h2>
+        <p className="text-slate-400 text-xs mt-2">The requested campaign could not be located or has ended.</p>
       </div>
     );
   }
@@ -202,133 +214,136 @@ export default function CampaignDetail() {
   const story = campaign.story || {};
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <img
-          src={campaign.thumbnail}
-          alt={campaign.title}
-          className="w-full h-64 sm:h-96 object-cover"
-        />
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 pb-16">
+      <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl shadow-2xl border border-slate-800 overflow-hidden">
+        <div className="relative aspect-[21/9] sm:h-96 w-full bg-slate-950 overflow-hidden">
+          <img
+            src={campaign.thumbnail}
+            alt={campaign.title}
+            className="w-full h-full object-cover"
+          />
+          {campaign.isEmergency && (
+            <span className="absolute top-4 left-4 px-3 py-1 bg-red-600 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md">
+              EMERGENCY RELIEF
+            </span>
+          )}
+        </div>
 
-        <div className="p-6 sm:p-8">
-          <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+        <div className="p-6 sm:p-8 space-y-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <span className="inline-block px-3 py-1 bg-primary-50 text-primary-700 text-sm font-medium rounded-full mb-2">
+              <span className="inline-block px-3 py-1 bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-extrabold rounded-full mb-2">
                 {campaign.category}
               </span>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">{campaign.title}</h1>
-              <p className="text-slate-600 mt-2">
-                Organized by <strong>{campaign.organizer?.fullName}</strong>
+              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{campaign.title}</h1>
+              <p className="text-slate-400 text-xs sm:text-sm mt-1">
+                Organized by <strong className="text-white">{campaign.organizer?.fullName}</strong>
                 {campaign.organizer?.isVerifiedFundraiser && (
-                  <span className="ml-2 text-primary-600 text-sm">✓ Verified Fundraiser</span>
+                  <span className="ml-2 text-emerald-400 text-xs font-bold">✓ Verified Fundraiser</span>
                 )}
               </p>
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 bg-primary-50 rounded-lg">
-              <ShieldCheck className="text-primary-600" size={20} />
-              <span className="text-sm font-medium text-primary-700">
+            <div className="flex items-center gap-2 px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl">
+              <ShieldCheck className="text-cyan-400" size={18} />
+              <span className="text-xs font-bold text-slate-200">
                 {getVerificationLabel(campaign.verificationStatus)}
               </span>
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 p-4 bg-slate-50 rounded-xl">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 p-5 bg-slate-950/80 border border-slate-800/80 rounded-2xl">
             <div>
-              <p className="text-sm text-slate-500">Raised</p>
-              <p className="text-xl font-bold text-primary-700">
+              <p className="text-[11px] font-bold text-slate-400 uppercase">Raised</p>
+              <p className="text-xl font-black text-cyan-400 mt-0.5">
                 {formatCurrency(campaign.amountRaised)}
               </p>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Goal</p>
-              <p className="text-xl font-bold">{formatCurrency(campaign.fundingGoal)}</p>
+              <p className="text-[11px] font-bold text-slate-400 uppercase">Target Goal</p>
+              <p className="text-xl font-black text-white mt-0.5">{formatCurrency(campaign.fundingGoal)}</p>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Donors</p>
-              <p className="text-xl font-bold flex items-center gap-1">
-                <Users size={20} /> {campaign.donorCount}
+              <p className="text-[11px] font-bold text-slate-400 uppercase">Total Donors</p>
+              <p className="text-xl font-black text-white mt-0.5 flex items-center gap-1.5">
+                <Users size={18} className="text-cyan-400" /> {campaign.donorCount}
               </p>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Time Left</p>
-              <p className="text-xl font-bold">{daysLeft} days</p>
+              <p className="text-[11px] font-bold text-slate-400 uppercase">Time Remaining</p>
+              <p className="text-xl font-black text-white mt-0.5">{daysLeft} days</p>
             </div>
           </div>
 
-          <div className="mb-2">
-            <div className="flex justify-between text-sm mb-1">
-              <span>{percent}% funded</span>
-              <span>{formatCurrency(campaign.amountRaised)} of {formatCurrency(campaign.fundingGoal)}</span>
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs font-semibold">
+              <span className="text-cyan-400 font-bold">{percent}% funded</span>
+              <span className="text-slate-400">{formatCurrency(campaign.amountRaised)} of {formatCurrency(campaign.fundingGoal)}</span>
             </div>
-            <div className="w-full bg-slate-200 rounded-full h-3">
+            <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/60">
               <div
-                className="bg-primary-500 h-3 rounded-full"
+                className="bg-gradient-to-r from-blue-600 to-cyan-500 h-2.5 rounded-full transition-all duration-500"
                 style={{ width: `${percent}%` }}
               />
             </div>
           </div>
 
-          <p className="text-sm text-slate-500 mb-8">
-            {formatDate(campaign.startDate)} — {formatDate(campaign.endDate)}
+          <p className="text-xs text-slate-500">
+            Active Campaign Period: {formatDate(campaign.startDate)} — {formatDate(campaign.endDate)}
           </p>
 
-          <div className="flex flex-wrap gap-3 mb-10">
+          <div className="flex flex-wrap gap-3 pt-2">
             <button
               onClick={handleDonateClick}
-              className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
             >
-              <Heart size={20} /> Donate Now
+              <Heart size={16} /> Donate Directly Now
             </button>
             <button
               onClick={handleShare}
-              className="flex items-center gap-2 px-6 py-3 border border-slate-300 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+              className="flex items-center gap-2 px-5 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-colors cursor-pointer"
             >
-              <Share2 size={20} /> Share Campaign
+              <Share2 size={16} /> Share Campaign
             </button>
             <button
               onClick={handleCopyLink}
-              className="flex items-center gap-2 px-6 py-3 border border-slate-300 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+              className="flex items-center gap-2 px-5 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-colors cursor-pointer"
             >
-              <Copy size={20} /> {copied ? 'Copied!' : 'Copy Referral Link'}
+              <Copy size={16} /> {copied ? 'Copied!' : 'Copy Referral Link'}
             </button>
           </div>
 
-          {!user && (
-            <p className="text-sm text-slate-500 mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              Log in to get a unique referral link and track your impact on the leaderboard.
-            </p>
-          )}
-
-          <section className="mb-10">
-            <h2 className="text-xl font-bold text-slate-800 mb-4">Campaign Story</h2>
-            <div className="space-y-4 text-slate-700 leading-relaxed">
+          <section className="border-t border-slate-800/80 pt-6">
+            <h2 className="text-lg font-black text-white uppercase tracking-wider text-cyan-400 mb-4">
+              Campaign Story & Impact
+            </h2>
+            <div className="space-y-4 text-slate-300 text-xs sm:text-sm leading-relaxed">
               {story.background && (
-                <div>
-                  <h3 className="font-semibold text-slate-800">Background</h3>
+                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/60">
+                  <h3 className="font-bold text-white mb-1">Background</h3>
                   <p>{story.background}</p>
                 </div>
               )}
               {story.currentSituation && (
-                <div>
-                  <h3 className="font-semibold text-slate-800">Current Situation</h3>
+                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/60">
+                  <h3 className="font-bold text-white mb-1">Current Situation</h3>
                   <p>{story.currentSituation}</p>
                 </div>
               )}
               {story.fundingNeed && (
-                <div>
-                  <h3 className="font-semibold text-slate-800">Funding Need</h3>
+                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/60">
+                  <h3 className="font-bold text-white mb-1">Funding Need & Allocation</h3>
                   <p>{story.fundingNeed}</p>
                 </div>
               )}
               {story.expectedImpact && (
-                <div>
-                  <h3 className="font-semibold text-slate-800">Expected Impact</h3>
+                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/60">
+                  <h3 className="font-bold text-white mb-1">Expected Community Impact</h3>
                   <p>{story.expectedImpact}</p>
                 </div>
               )}
               {story.supportingEvidence && (
-                <div>
-                  <h3 className="font-semibold text-slate-800">Supporting Evidence</h3>
+                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/60">
+                  <h3 className="font-bold text-white mb-1">Supporting Evidence & Verifications</h3>
                   <p>{story.supportingEvidence}</p>
                 </div>
               )}
@@ -336,41 +351,50 @@ export default function CampaignDetail() {
           </section>
 
           {products.length > 0 && (
-            <section className="mb-10 border-t border-slate-100 pt-8">
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">Campaign Merchandise</h2>
-              <p className="text-sm text-slate-600 mb-6">
-                Support this campaign by purchasing official merchandise. 50% of the proceeds will go directly to the campaign goal!
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <section className="border-t border-slate-800/80 pt-6 space-y-4">
+              <div>
+                <h2 className="text-xl font-black text-white">Campaign Merchandise</h2>
+                <p className="text-slate-400 text-xs mt-0.5">
+                  Support this campaign by purchasing official merchandise. 50% of the proceeds directly fund this campaign goal!
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                 {products.map((product) => {
                   const contribution = product.price * 0.5;
                   return (
-                    <div key={product._id} className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-                      <img
-                        src={product.image || product.images?.[0] || 'https://picsum.photos/seed/placeholder/300/300'}
-                        alt={product.name}
-                        className="w-full h-48 object-cover"
-                      />
-                      <div className="p-4 flex-1 flex flex-col justify-between">
-                        <div>
-                          <span className="text-xs font-semibold text-primary-600 uppercase tracking-wider">{product.category}</span>
-                          <h3 className="font-bold text-slate-800 mt-1 line-clamp-1">{product.name}</h3>
-                          <p className="text-xs text-slate-500 mt-1 line-clamp-2">{product.description}</p>
+                    <div
+                      key={product._id}
+                      className="bg-slate-950/80 rounded-2xl border border-slate-800 overflow-hidden flex flex-col justify-between hover:border-cyan-500/40 transition-all shadow-xl"
+                    >
+                      <div>
+                        <img
+                          src={product.image || product.images?.[0] || 'https://picsum.photos/seed/placeholder/300/300'}
+                          alt={product.name}
+                          className="w-full h-48 object-cover bg-slate-900"
+                        />
+                        <div className="p-4">
+                          <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block mb-1">
+                            {product.category}
+                          </span>
+                          <h3 className="font-bold text-white text-sm line-clamp-1">{product.name}</h3>
+                          <p className="text-xs text-slate-400 mt-1 line-clamp-2">{product.description}</p>
                         </div>
-                        <div className="mt-4 pt-4 border-t border-slate-100">
-                          <div className="flex items-baseline justify-between mb-3">
-                            <span className="text-xl font-extrabold text-slate-900">{formatCurrency(product.price)}</span>
-                            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
-                              {formatCurrency(contribution)} raised
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => handleBuyClick(product)}
-                            className="w-full py-2.5 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors text-sm cursor-pointer"
-                          >
-                            Buy Now
-                          </button>
+                      </div>
+
+                      <div className="p-4 pt-0">
+                        <div className="flex items-baseline justify-between pt-3 border-t border-slate-800/80 mb-3">
+                          <span className="text-lg font-black text-white">{formatCurrency(product.price)}</span>
+                          <span className="text-[10px] font-bold text-cyan-300 bg-cyan-500/20 px-2 py-0.5 rounded border border-cyan-500/30">
+                            +{formatCurrency(contribution)} to cause
+                          </span>
                         </div>
+                        <button
+                          onClick={() => handleBuyClick(product)}
+                          className="w-full py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
+                        >
+                          Buy Merchandise
+                        </button>
                       </div>
                     </div>
                   );
@@ -380,27 +404,27 @@ export default function CampaignDetail() {
           )}
 
           {leaderboard.length > 0 && (
-            <section>
-              <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Trophy className="text-accent-500" size={24} /> Referral Leaderboard
+            <section className="border-t border-slate-800/80 pt-6 space-y-4">
+              <h2 className="text-lg font-black text-white flex items-center gap-2">
+                <Trophy className="text-amber-400" size={20} /> Referral Leaderboard
               </h2>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-slate-200 text-left text-slate-500">
-                      <th className="py-2 pr-4">Rank</th>
-                      <th className="py-2 pr-4">Promoter</th>
-                      <th className="py-2 pr-4">Donors Referred</th>
-                      <th className="py-2">Amount Raised</th>
+                    <tr className="border-b border-slate-800 text-left text-slate-400 font-bold uppercase">
+                      <th className="py-2.5 pr-4">Rank</th>
+                      <th className="py-2.5 pr-4">Promoter</th>
+                      <th className="py-2.5 pr-4">Donors Referred</th>
+                      <th className="py-2.5 text-right">Amount Raised</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-800/60 text-slate-300">
                     {leaderboard.map((entry) => (
-                      <tr key={entry.rank} className="border-b border-slate-100">
-                        <td className="py-3 pr-4 font-bold">#{entry.rank}</td>
-                        <td className="py-3 pr-4">{entry.name}</td>
-                        <td className="py-3 pr-4">{entry.donationCount}</td>
-                        <td className="py-3">{formatCurrency(entry.amountRaised)}</td>
+                      <tr key={entry.rank} className="hover:bg-slate-800/30 transition-colors">
+                        <td className="py-3 pr-4 font-mono font-bold text-cyan-400">#{entry.rank}</td>
+                        <td className="py-3 pr-4 font-semibold text-white">{entry.name}</td>
+                        <td className="py-3 pr-4">{entry.donationCount} supporters</td>
+                        <td className="py-3 text-right font-bold text-cyan-400">{formatCurrency(entry.amountRaised)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -423,31 +447,33 @@ export default function CampaignDetail() {
       )}
 
       {selectedProduct && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 relative">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-800 relative animate-scale-up space-y-4">
             <button
               onClick={() => setSelectedProduct(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-white cursor-pointer"
             >
               ✕
             </button>
-            <h3 className="text-lg font-bold text-slate-900 mb-1">{selectedProduct.name}</h3>
-            <p className="text-sm text-slate-500 mb-4">{formatCurrency(selectedProduct.price)} · 50% split contribution</p>
+            <div>
+              <h3 className="text-lg font-black text-white">{selectedProduct.name}</h3>
+              <p className="text-xs text-cyan-400 mt-0.5">{formatCurrency(selectedProduct.price)} · 50% split contribution</p>
+            </div>
 
             <form onSubmit={handleCheckoutSubmit} className="space-y-4">
               {selectedProduct.sizes?.length > 0 && (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase mb-1.5">Select Size *</label>
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Select Size *</label>
                   <div className="flex flex-wrap gap-2">
                     {selectedProduct.sizes.map((s) => (
                       <button
                         key={s}
                         type="button"
                         onClick={() => setBuyForm({ ...buyForm, size: s })}
-                        className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                           buyForm.size === s
-                            ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
-                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                            ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white border-transparent shadow-md shadow-cyan-500/25'
+                            : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-600'
                         }`}
                       >
                         {s}
@@ -459,17 +485,17 @@ export default function CampaignDetail() {
 
               {selectedProduct.colors?.length > 0 && (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase mb-1.5">Select Color *</label>
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Select Color *</label>
                   <div className="flex flex-wrap gap-2">
                     {selectedProduct.colors.map((c) => (
                       <button
                         key={c}
                         type="button"
                         onClick={() => setBuyForm({ ...buyForm, color: c })}
-                        className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                           buyForm.color === c
-                            ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
-                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                            ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white border-transparent shadow-md shadow-cyan-500/25'
+                            : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-600'
                         }`}
                       >
                         {c}
@@ -480,36 +506,36 @@ export default function CampaignDetail() {
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1.5">Quantity *</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Quantity *</label>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     disabled={buyForm.qty <= 1}
                     onClick={() => setBuyForm({ ...buyForm, qty: buyForm.qty - 1 })}
-                    className="w-10 h-10 border border-slate-200 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-50 cursor-pointer animate-scale-in"
+                    className="w-10 h-10 border border-slate-700 bg-slate-800 rounded-xl flex items-center justify-center text-slate-200 hover:bg-slate-700 disabled:opacity-40 cursor-pointer"
                   >
                     -
                   </button>
-                  <span className="w-12 text-center font-bold text-slate-800">{buyForm.qty}</span>
+                  <span className="w-12 text-center font-bold text-white text-sm">{buyForm.qty}</span>
                   <button
                     type="button"
                     disabled={buyForm.qty >= selectedProduct.stock}
                     onClick={() => setBuyForm({ ...buyForm, qty: buyForm.qty + 1 })}
-                    className="w-10 h-10 border border-slate-200 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-50 cursor-pointer animate-scale-in"
+                    className="w-10 h-10 border border-slate-700 bg-slate-800 rounded-xl flex items-center justify-center text-slate-200 hover:bg-slate-700 disabled:opacity-40 cursor-pointer"
                   >
                     +
                   </button>
-                  <span className="text-xs text-slate-500 font-medium">({selectedProduct.stock} available)</span>
+                  <span className="text-xs text-slate-400 font-medium">({selectedProduct.stock} in stock)</span>
                 </div>
               </div>
 
-              {buyError && <p className="text-xs text-red-600 font-semibold">{buyError}</p>}
+              {buyError && <p className="text-xs text-red-400 font-semibold">{buyError}</p>}
 
               <button
                 type="submit"
-                className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl text-sm transition-colors cursor-pointer shadow-md flex items-center justify-center gap-2"
+                className="w-full py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold rounded-xl text-xs transition-all cursor-pointer shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2"
               >
-                <ShoppingBag size={18} /> Buy & Checkout
+                <ShoppingBag size={16} /> Add to Cart & Checkout
               </button>
             </form>
           </div>
@@ -518,26 +544,26 @@ export default function CampaignDetail() {
 
       {/* Fundraiser Role Policy Notice Modal */}
       {showFundraiserNotice && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-zinc-200 animate-scale-up space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
-              <div className="flex items-center gap-2 text-zinc-900">
-                <ShieldAlert className="text-red-600" size={22} />
-                <h3 className="text-base font-extrabold text-zinc-900">Action Restricted for Fundraisers</h3>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-800 animate-scale-up space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2 text-white">
+                <ShieldAlert className="text-amber-400" size={22} />
+                <h3 className="text-base font-extrabold text-white">Action Restricted for Fundraisers</h3>
               </div>
               <button
                 onClick={() => setShowFundraiserNotice(false)}
-                className="text-zinc-400 hover:text-zinc-700 cursor-pointer"
+                className="text-slate-400 hover:text-white cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-2">
-              <p className="text-xs text-zinc-800 leading-relaxed">
+            <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+              <p className="text-xs text-slate-300 leading-relaxed">
                 {fundraiserNoticeText}
               </p>
-              <p className="text-[11px] text-zinc-500">
+              <p className="text-[11px] text-slate-500">
                 Fundraiser accounts are strictly designated for campaign creation, merchandise launching, and payout tracking.
               </p>
             </div>
@@ -546,14 +572,14 @@ export default function CampaignDetail() {
               <Link
                 to="/dashboard"
                 onClick={() => setShowFundraiserNotice(false)}
-                className="flex-1 py-2.5 bg-black hover:bg-zinc-800 text-white text-xs font-bold rounded-xl text-center shadow-sm flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xs font-bold rounded-xl text-center shadow-md shadow-cyan-500/20 flex items-center justify-center gap-1.5"
               >
                 Go to Fundraiser Portal <ArrowRight size={14} />
               </Link>
               <button
                 type="button"
                 onClick={() => setShowFundraiserNotice(false)}
-                className="py-2.5 px-4 border border-zinc-300 text-zinc-700 text-xs font-bold rounded-xl hover:bg-zinc-100 cursor-pointer text-center"
+                className="py-2.5 px-4 bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-700 cursor-pointer text-center"
               >
                 Close
               </button>

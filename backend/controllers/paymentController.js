@@ -1,4 +1,6 @@
+import mongoose from 'mongoose';
 import Order from '../models/Order.js';
+import { isDatabaseConnected } from '../utils/demoAuth.js';
 
 export const createPaymentSession = async (req, res) => {
   try {
@@ -10,7 +12,7 @@ export const createPaymentSession = async (req, res) => {
 
     const sessionId = `mock_session_${Date.now()}`;
 
-    if (orderId) {
+    if (orderId && isDatabaseConnected(mongoose) && mongoose.Types.ObjectId.isValid(orderId)) {
       await Order.findByIdAndUpdate(orderId, { stripeSessionId: sessionId });
     }
 

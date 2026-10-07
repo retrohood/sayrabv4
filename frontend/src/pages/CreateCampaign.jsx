@@ -99,7 +99,7 @@ export default function CreateCampaign() {
     });
   };
 
-  // Step 1: Validate campaign info and proceed to merchandise without creating DB record
+  // Step 1: Validate campaign info and proceed to merchandise
   const handleNextToMerchandise = (e) => {
     e.preventDefault();
     setError('');
@@ -170,48 +170,50 @@ export default function CreateCampaign() {
   // Step 3: Success Screen
   if (step === 3 && createdCampaign) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-8 animate-fade-in">
-        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 mb-8 flex items-start gap-4">
-          <CheckCircle className="text-emerald-600 shrink-0" size={32} />
-          <div>
-            <h2 className="text-xl font-bold text-emerald-800">Campaign & Merchandise Created Successfully!</h2>
-            <p className="text-emerald-700 mt-1 text-sm">
-              Your campaign <strong>"{createdCampaign.title}"</strong> and its linked merchandise have been submitted and are now pending verification.
-            </p>
+      <div className="max-w-3xl mx-auto px-4 py-12 animate-fade-in pb-20">
+        <div className="bg-slate-900 rounded-3xl border border-slate-800 p-8 mb-8 shadow-2xl space-y-4 text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-cyan-500/20">
+            <CheckCircle size={36} />
           </div>
+          <h2 className="text-2xl font-black text-white">Campaign & Merchandise Created!</h2>
+          <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-xl mx-auto">
+            Your campaign <strong className="text-cyan-400">"{createdCampaign.title}"</strong> and its linked merchandise have been submitted and are now pending review.
+          </p>
         </div>
 
         {addedProducts.length > 0 && (
-          <div className="p-5 bg-white border border-slate-200 rounded-2xl mb-6 space-y-3">
-            <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <ShoppingBag size={18} className="text-primary-600" /> Linked Campaign Merchandise:
+          <div className="p-6 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-3xl mb-8 space-y-4 shadow-xl">
+            <h3 className="text-sm font-black text-white uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+              <ShoppingBag size={18} /> Linked Campaign Merchandise:
             </h3>
             <div className="space-y-2">
               {addedProducts.map((p) => (
-                <div key={p._id} className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between">
+                <div key={p._id} className="p-4 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-slate-800 text-sm">{p.name}</p>
-                    <p className="text-xs text-slate-500">PKR {p.price} · Stock: {p.stock} units · 50% proceeds support campaign</p>
+                    <p className="font-bold text-white text-sm">{p.name}</p>
+                    <p className="text-xs text-slate-400">PKR {p.price} · Stock: {p.stock} units · 50% proceeds support campaign</p>
                   </div>
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-md">Linked</span>
+                  <span className="text-[11px] font-bold text-cyan-300 bg-cyan-500/20 px-3 py-1 rounded-full border border-cyan-500/30">
+                    Linked
+                  </span>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <button
             type="button"
             onClick={() => navigate('/dashboard')}
-            className="flex-1 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors cursor-pointer text-center"
+            className="flex-1 py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-cyan-500/20 transition-all cursor-pointer text-center"
           >
             Go to Fundraiser Dashboard
           </button>
           <button
             type="button"
             onClick={() => navigate(`/campaigns/${createdCampaign.slug}`)}
-            className="flex-1 py-3 border border-slate-300 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-colors cursor-pointer text-center"
+            className="flex-1 py-3.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-colors cursor-pointer text-center"
           >
             View Public Page →
           </button>
@@ -220,35 +222,35 @@ export default function CreateCampaign() {
     );
   }
 
-  // Step 2: Merchandise Form (Required before DB creation)
+  // Step 2: Merchandise Form
   if (step === 2) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-8 animate-fade-in">
-        <div className="mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-50 text-primary-700 border border-primary-200 rounded-full text-xs font-bold mb-3">
-            Step 2 of 2 · Mandatory Requirement
+      <div className="max-w-3xl mx-auto px-4 py-10 animate-fade-in pb-20 space-y-6">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-full text-xs font-bold mb-3">
+            Step 2 of 2 · Mandatory Linked Merchandise
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">Add Linked Merchandise</h1>
-          <p className="text-slate-600 text-sm">
-            Each campaign on SAYRAB must have at least one merchandise product linked to it. <strong>50% of all product sales</strong> directly fund your campaign goal. Campaign will only be created once merchandise info is provided.
+          <h1 className="text-3xl font-black text-white tracking-tight">Add Linked Merchandise</h1>
+          <p className="text-slate-400 text-xs mt-1">
+            Every campaign on Sayrab must have at least one merchandise item linked to it. <strong>50% of all product sales</strong> directly fund your campaign goal.
           </p>
         </div>
 
-        <form onSubmit={handleFinalSubmitWithProduct} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 space-y-6">
+        <form onSubmit={handleFinalSubmitWithProduct} className="bg-slate-900/90 backdrop-blur-md rounded-3xl shadow-2xl border border-slate-800 p-6 sm:p-8 space-y-6">
           <fieldset className="space-y-4">
-            <legend className="text-lg font-semibold text-slate-800">Product Details</legend>
+            <legend className="text-sm font-black text-white uppercase tracking-wider text-cyan-400">Product Details</legend>
             <input
               required
               placeholder="Product Name * (e.g. Flood Relief Hoodie)"
               value={productForm.name}
               onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+              className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
             />
             <div className="grid sm:grid-cols-2 gap-4">
               <select
                 value={productForm.category}
                 onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
               >
                 <option value="Apparel">Apparel (Shirt/Hoodie/Cap)</option>
                 <option value="Drinkware">Drinkware (Mug/Flask)</option>
@@ -263,7 +265,7 @@ export default function CreateCampaign() {
                 placeholder="Price (PKR) *"
                 value={productForm.price}
                 onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
               />
             </div>
             <textarea
@@ -272,12 +274,12 @@ export default function CreateCampaign() {
               placeholder="Short Description of the merchandise *"
               value={productForm.description}
               onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none resize-none"
+              className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 resize-none"
             />
           </fieldset>
 
           <fieldset className="space-y-4">
-            <legend className="text-lg font-semibold text-slate-800">Inventory & Styling</legend>
+            <legend className="text-sm font-black text-white uppercase tracking-wider text-cyan-400">Inventory & Styling</legend>
             <div className="grid sm:grid-cols-2 gap-4">
               <input
                 required
@@ -286,26 +288,26 @@ export default function CreateCampaign() {
                 placeholder="Stock Quantity *"
                 value={productForm.stock}
                 onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
               />
               <input
                 placeholder="Colors (Comma-separated, e.g. Black, White, Navy)"
                 value={productForm.colors}
                 onChange={(e) => setProductForm({ ...productForm, colors: e.target.value })}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
               />
             </div>
 
             <div>
-              <span className="block text-sm font-medium text-slate-700 mb-2">Available Sizes</span>
+              <span className="block text-xs font-bold text-slate-400 uppercase mb-2">Available Sizes</span>
               <div className="flex flex-wrap gap-4">
                 {['S', 'M', 'L', 'XL', 'XXL'].map((size) => (
-                  <label key={size} className="flex items-center gap-2 cursor-pointer text-sm text-slate-600 font-medium">
+                  <label key={size} className="flex items-center gap-2 cursor-pointer text-xs text-slate-300 font-medium">
                     <input
                       type="checkbox"
                       checked={productForm.sizes.includes(size)}
                       onChange={() => handleSizeChange(size)}
-                      className="w-4 h-4 text-primary-600 border-slate-300 rounded focus:ring-primary-500"
+                      className="w-4 h-4 accent-cyan-500 rounded"
                     />
                     {size}
                   </label>
@@ -314,36 +316,36 @@ export default function CreateCampaign() {
             </div>
           </fieldset>
 
-          <fieldset className="space-y-4">
-            <legend className="text-sm font-bold text-slate-700 uppercase">
-              Mockup Image URL <span className="text-slate-400 font-normal lowercase">(optional - defaults automatically)</span>
+          <fieldset className="space-y-3">
+            <legend className="text-xs font-bold text-slate-400 uppercase">
+              Mockup Image URL <span className="text-slate-500 font-normal lowercase">(optional - defaults automatically)</span>
             </legend>
             <input
               type="url"
               placeholder="Optional (e.g. https://... or leave empty for auto mockup)"
               value={productForm.image}
               onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+              className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
             />
           </fieldset>
 
-          {productError && <p className="text-sm text-red-600 p-3 bg-red-50 border border-red-200 rounded-lg">{productError}</p>}
-          {productSuccess && <p className="text-sm text-emerald-600 font-semibold p-3 bg-emerald-50 border border-emerald-200 rounded-lg">{productSuccess}</p>}
+          {productError && <p className="text-xs text-red-300 p-3 bg-red-950/50 border border-red-800 rounded-xl">{productError}</p>}
+          {productSuccess && <p className="text-xs text-emerald-300 font-semibold p-3 bg-emerald-950/50 border border-emerald-800 rounded-xl">{productSuccess}</p>}
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-800">
             <button
               type="button"
               onClick={() => { setProductError(''); setStep(1); }}
-              className="flex-1 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors cursor-pointer text-center"
+              className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold rounded-xl text-xs transition-colors cursor-pointer text-center"
             >
               ← Back to Campaign Details
             </button>
             <button
               type="submit"
               disabled={productLoading}
-              className="flex-1 py-3 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
+              className="flex-1 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs rounded-xl transition-all shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
-              <Plus size={18} /> {productLoading ? 'Creating Campaign & Product...' : 'Create Campaign with Merchandise'}
+              <Plus size={16} /> {productLoading ? 'Creating Campaign & Product...' : 'Create Campaign with Merchandise'}
             </button>
           </div>
         </form>
@@ -353,34 +355,34 @@ export default function CreateCampaign() {
 
   // Step 1: Campaign Details Form
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-50 text-primary-700 border border-primary-200 rounded-full text-xs font-bold mb-3">
+    <div className="max-w-3xl mx-auto px-4 py-10 pb-20 space-y-6">
+      <div>
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-full text-xs font-bold mb-3">
           Step 1 of 2
         </div>
-        <h1 className="text-3xl font-bold text-slate-800 mb-2">Start a Campaign</h1>
-        <p className="text-slate-600">
-          Fill in your campaign details. In Step 2, you will configure your mandatory linked merchandise before the campaign is created.
+        <h1 className="text-3xl font-black text-white tracking-tight">Start a Campaign</h1>
+        <p className="text-slate-400 text-xs mt-1">
+          Fill in your campaign details. In Step 2, you will configure your linked merchandise before submission.
         </p>
       </div>
 
-      <form onSubmit={handleNextToMerchandise} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 space-y-6">
+      <form onSubmit={handleNextToMerchandise} className="bg-slate-900/90 backdrop-blur-md rounded-3xl shadow-2xl border border-slate-800 p-6 sm:p-8 space-y-6">
         <fieldset className="space-y-4">
-          <legend className="text-lg font-semibold text-slate-800">Basic Information</legend>
+          <legend className="text-sm font-black text-white uppercase tracking-wider text-cyan-400">Basic Information</legend>
           <input
             name="title"
             placeholder="Campaign Title *"
             value={form.title}
             onChange={handleChange}
             required
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+            className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
           />
           <select
             name="category"
             value={form.category}
             onChange={handleChange}
             required
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+            className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
           >
             <option value="">Select Category *</option>
             {categories.map((cat) => (
@@ -393,7 +395,7 @@ export default function CreateCampaign() {
             value={form.location}
             onChange={handleChange}
             required
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+            className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
           />
           <textarea
             name="shortDescription"
@@ -403,12 +405,12 @@ export default function CreateCampaign() {
             required
             maxLength={300}
             rows={3}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none resize-none"
+            className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 resize-none"
           />
         </fieldset>
 
         <fieldset className="space-y-4">
-          <legend className="text-lg font-semibold text-slate-800">Funding Information</legend>
+          <legend className="text-sm font-black text-white uppercase tracking-wider text-cyan-400">Funding Information</legend>
           <input
             name="fundingGoal"
             type="number"
@@ -417,7 +419,7 @@ export default function CreateCampaign() {
             onChange={handleChange}
             required
             min="1"
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+            className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
           />
           <textarea
             name="purposeOfFunds"
@@ -426,28 +428,28 @@ export default function CreateCampaign() {
             onChange={handleChange}
             required
             rows={3}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none resize-none"
+            className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 resize-none"
           />
         </fieldset>
 
-        <fieldset className="space-y-4 bg-slate-50 p-5 rounded-2xl border border-slate-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+        <fieldset className="space-y-4 bg-slate-950/80 p-5 rounded-2xl border border-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
             <div>
-              <legend className="text-base font-bold text-slate-800">Campaign Schedule & Duration *</legend>
-              <p className="text-xs text-slate-500 mt-0.5">Select your Starting Date and Finish Date (must be 7 to 90 days total).</p>
+              <legend className="text-sm font-bold text-white uppercase tracking-wider">Campaign Schedule & Duration *</legend>
+              <p className="text-xs text-slate-400 mt-0.5">Select Starting Date and Finish Date (must be 7 to 90 days total).</p>
             </div>
             {(() => {
               const days = calculateDurationDays(form.startDate, form.endDate);
               if (days === null) return null;
               if (days >= 7 && days <= 90) {
                 return (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                     <CheckCircle size={14} /> Total Duration: {days} Days (Valid)
                   </span>
                 );
               }
               return (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                   ⚠ Duration: {days} Days (Must be 7–90 days)
                 </span>
               );
@@ -456,18 +458,18 @@ export default function CreateCampaign() {
 
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Starting Date *</label>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Starting Date *</label>
               <input
                 name="startDate"
                 type="date"
                 value={form.startDate}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none bg-white text-sm"
+                className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Finish Date *</label>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Finish Date *</label>
               <input
                 name="endDate"
                 type="date"
@@ -475,13 +477,13 @@ export default function CreateCampaign() {
                 value={form.endDate}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none bg-white text-sm"
+                className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
               />
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            <span className="text-xs font-semibold text-slate-500">Quick Duration:</span>
+            <span className="text-xs font-bold text-slate-400">Quick Duration:</span>
             {[
               { label: '+15 Days', days: 15 },
               { label: '+30 Days (Recommended)', days: 30 },
@@ -493,7 +495,7 @@ export default function CreateCampaign() {
                 key={preset.days}
                 type="button"
                 onClick={() => setQuickDurationDays(preset.days)}
-                className="px-2.5 py-1 text-xs font-semibold rounded-md bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 cursor-pointer transition-colors shadow-2xs"
+                className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:border-slate-600 cursor-pointer transition-colors"
               >
                 {preset.label}
               </button>
@@ -501,32 +503,32 @@ export default function CreateCampaign() {
           </div>
         </fieldset>
 
-        {/* Emergency / Urgent Campaign Toggle */}
-        <div className={`p-4 sm:p-5 rounded-2xl border transition-all ${form.isEmergency ? 'bg-rose-50 border-rose-300 ring-2 ring-rose-200' : 'bg-slate-50 border-slate-200'}`}>
+        {/* Emergency Campaign Toggle */}
+        <div className={`p-4 sm:p-5 rounded-2xl border transition-all ${form.isEmergency ? 'bg-red-950/40 border-red-800' : 'bg-slate-950/60 border-slate-800'}`}>
           <label className="flex items-start gap-3 cursor-pointer select-none">
             <input
               type="checkbox"
               name="isEmergency"
               checked={form.isEmergency}
               onChange={handleChange}
-              className="mt-1 w-5 h-5 text-rose-600 rounded border-slate-300 focus:ring-rose-500 cursor-pointer"
+              className="mt-1 w-4 h-4 accent-red-500 rounded"
             />
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-900 text-sm sm:text-base">Mark as Emergency Campaign</span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide bg-rose-100 text-rose-700 border border-rose-200">
-                  Urgent / Priority
+                <span className="font-bold text-white text-xs sm:text-sm">Mark as Emergency Campaign</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide bg-red-500/20 text-red-400 border border-red-500/30">
+                  Urgent Priority
                 </span>
               </div>
-              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                Check this if this campaign is time-critical (e.g. ICU patient, immediate life-saving surgery, acute disaster relief). Emergency campaigns receive a prominent emergency badge and prioritized visibility for donors.
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                Check this if this campaign is time-critical (e.g. ICU patient, immediate life-saving surgery, acute disaster relief).
               </p>
             </div>
           </label>
         </div>
 
         <fieldset className="space-y-4">
-          <legend className="text-lg font-semibold text-slate-800">Campaign Story</legend>
+          <legend className="text-sm font-black text-white uppercase tracking-wider text-cyan-400">Campaign Story</legend>
           {['background', 'currentSituation', 'fundingNeed', 'expectedImpact', 'supportingEvidence'].map(
             (key) => (
               <textarea
@@ -537,18 +539,18 @@ export default function CreateCampaign() {
                 onChange={handleChange}
                 required
                 rows={3}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none resize-none"
+                className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 resize-none"
               />
             )
           )}
         </fieldset>
 
         {form.category && (
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-sm font-medium text-amber-800 mb-2">
+          <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-1 text-xs">
+            <p className="font-bold text-cyan-400">
               Required documentation for {form.category}:
             </p>
-            <ul className="text-sm text-amber-700 list-disc list-inside">
+            <ul className="text-slate-400 list-disc list-inside space-y-0.5">
               {docTypes.map((doc) => (
                 <li key={doc}>{doc}</li>
               ))}
@@ -556,14 +558,14 @@ export default function CreateCampaign() {
           </div>
         )}
 
-        {error && <p className="text-sm text-red-600 p-3 bg-red-50 border border-red-200 rounded-lg">{error}</p>}
+        {error && <p className="text-xs text-red-400 p-3 bg-red-950/50 border border-red-800 rounded-xl">{error}</p>}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 disabled:opacity-50 cursor-pointer shadow-md transition-all flex items-center justify-center gap-2"
+          className="w-full py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-cyan-500/25 cursor-pointer transition-all flex items-center justify-center gap-2"
         >
-          Next: Add Linked Merchandise (Required) <ArrowRight size={18} />
+          Next: Add Linked Merchandise (Required) <ArrowRight size={16} />
         </button>
       </form>
     </div>
