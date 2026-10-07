@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import Campaign from '../models/Campaign.js';
+import Product from '../models/Product.js';
+import Order from '../models/Order.js';
 import { VERIFICATION_STATUS, LIFECYCLE_STATUS } from '../constants/index.js';
 import { generateSlug } from '../utils/generateToken.js';
 import {
@@ -8,7 +10,7 @@ import {
   buildSortQuery,
 } from '../utils/campaignLifecycle.js';
 import { isDatabaseConnected } from '../utils/demoAuth.js';
-import { inMemoryDB } from '../utils/inMemoryDB.js';
+import { inMemoryDB, mockCampaigns, mockProducts, mockOrders } from '../utils/inMemoryDB.js';
 
 const publicFilter = {
   lifecycleStatus: { $in: [LIFECYCLE_STATUS.ACTIVE, LIFECYCLE_STATUS.GOAL_ACHIEVED] },
@@ -285,12 +287,31 @@ export const deleteCampaign = async (req, res) => {
     const { id } = req.params;
 
     if (!isDatabaseConnected(mongoose)) {
-      const index = mockCampaigns.findIndex(c => c._id === id);
+      const index = mockCampaigns.findIndex((c) => c._id === id);
       if (index === -1) {
         return res.status(404).json({ message: 'Campaign not found' });
       }
       mockCampaigns.splice(index, 1);
-      return res.json({ message: 'Campaign deleted' });
+
+      // 1. Delete linked products
+      for (let i = mockProducts.length - 1; i >= 0; i--) {
+        const p = mockProducts[i];
+        const cId = p.campaignId?._id || p.campaignId || p.campaign?._id || p.campaign;
+        if (cId === id) {
+          mockProducts.splice(i, 1);
+        }
+      }
+
+      // 2. Delete linked orders from both buyer & fundraiser records
+      for (let i = mockOrders.length - 1; i >= 0; i--) {
+        const o = mockOrders[i];
+        const cId = o.campaignId?._id || o.campaignId;
+        if (cId === id) {
+          mockOrders.splice(i, 1);
+        }
+      }
+
+      return res.json({ message: 'Campaign, linked merchandise, and all associated orders deleted successfully' });
     }
 
     const campaign = await Campaign.findById(id);
@@ -306,8 +327,18 @@ export const deleteCampaign = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
+    // 1. Delete all associated orders so they are wiped from both buyer and fundraiser portals
+    await Order.deleteMany({ campaignId: id });
+
+    // 2. Delete linked merchandise products
+    await Product.deleteMany({
+      $or: [{ campaignId: id }, { campaign: id }],
+    });
+
+    // 3. Delete the campaign itself
     await campaign.deleteOne();
-    res.json({ message: 'Campaign deleted' });
+
+    res.json({ message: 'Campaign, linked merchandise, and all associated orders deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

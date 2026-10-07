@@ -52,6 +52,7 @@ import {
   Copy,
   ExternalLink,
   CheckCircle2,
+  Layers,
 } from 'lucide-react';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -161,8 +162,10 @@ export default function Dashboard() {
     sizes: ['M', 'L'],
     colors: 'Black, White',
   });
+  const [portalMerchList, setPortalMerchList] = useState([]);
   const [createdCampaignInfo, setCreatedCampaignInfo] = useState(null);
   const [createdMerchInfo, setCreatedMerchInfo] = useState(null);
+  const [createdMerchList, setCreatedMerchList] = useState([]);
   const [merchError, setMerchError] = useState('');
   const [isSubmittingCampaign, setIsSubmittingCampaign] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
@@ -195,6 +198,7 @@ export default function Dashboard() {
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
   // Online Store States
+  const [store, setStore] = useState(null);
   const [storeProducts, setStoreProducts] = useState([]);
   const [productForm, setProductForm] = useState({
     name: '',
@@ -693,6 +697,50 @@ export default function Dashboard() {
     });
   };
 
+  const handleAddMerchToPortalList = () => {
+    setMerchError('');
+    if (!linkedMerchForm.name?.trim()) {
+      setMerchError('Merchandise Name is required.');
+      return;
+    }
+    if (!linkedMerchForm.price || Number(linkedMerchForm.price) <= 0) {
+      setMerchError('A valid Merchandise Price in PKR (> 0) is required.');
+      return;
+    }
+    if (!linkedMerchForm.description?.trim()) {
+      setMerchError('Merchandise Description is required.');
+      return;
+    }
+
+    const newItem = {
+      name: linkedMerchForm.name.trim(),
+      description: linkedMerchForm.description.trim(),
+      category: linkedMerchForm.category,
+      price: parseFloat(linkedMerchForm.price),
+      stock: parseInt(linkedMerchForm.stock) || 100,
+      image: linkedMerchForm.image?.trim() || `https://picsum.photos/seed/${encodeURIComponent(linkedMerchForm.name)}/400/400`,
+      sizes: linkedMerchForm.sizes?.length > 0 ? linkedMerchForm.sizes : ['Standard'],
+      colors: linkedMerchForm.colors ? linkedMerchForm.colors.split(',').map(c => c.trim()).filter(Boolean) : ['Classic'],
+      branding: 'campaign',
+    };
+
+    setPortalMerchList(prev => [...prev, newItem]);
+    setLinkedMerchForm({
+      name: '',
+      category: 'Apparel',
+      price: '',
+      stock: 100,
+      description: '',
+      image: '',
+      sizes: ['M', 'L'],
+      colors: 'Black, White',
+    });
+  };
+
+  const handleRemoveMerchFromPortalList = (index) => {
+    setPortalMerchList(prev => prev.filter((_, i) => i !== index));
+  };
+
   const calculateDurationDays = (start, end) => {
     if (!start || !end) return null;
     const s = new Date(start);
@@ -782,28 +830,53 @@ export default function Dashboard() {
     setCampaignStep(2);
   };
 
-  // Step 2: Validate merchandise details and create both Campaign & Product atomically
+  // Step 2: Validate merchandise details and create both Campaign & Products atomically
   const handleFinalCampaignWithMerch = async (e) => {
     e.preventDefault();
     setMerchError('');
     setCampaignError('');
     setCampaignSuccess('');
 
-    if (!linkedMerchForm.name?.trim()) {
-      setMerchError('Merchandise Name is required.');
-      return;
-    }
-    if (!linkedMerchForm.price || Number(linkedMerchForm.price) <= 0) {
-      setMerchError('A valid Merchandise Price in PKR (> 0) is required.');
-      return;
-    }
-    if (!linkedMerchForm.stock || Number(linkedMerchForm.stock) < 1) {
-      setMerchError('Stock quantity must be at least 1.');
-      return;
-    }
-    if (!linkedMerchForm.description?.trim()) {
-      setMerchError('Merchandise Description is required.');
-      return;
+    let finalMerchItems = [...portalMerchList];
+
+    // If no items in list yet, or if current form has inputs, check validation
+    if (finalMerchItems.length === 0) {
+      if (!linkedMerchForm.name?.trim()) {
+        setMerchError('Please add at least one merchandise product (Name, Price > 0, and Description required).');
+        return;
+      }
+      if (!linkedMerchForm.price || Number(linkedMerchForm.price) <= 0) {
+        setMerchError('A valid Merchandise Price in PKR (> 0) is required.');
+        return;
+      }
+      if (!linkedMerchForm.description?.trim()) {
+        setMerchError('Merchandise Description is required.');
+        return;
+      }
+      finalMerchItems.push({
+        name: linkedMerchForm.name.trim(),
+        description: linkedMerchForm.description.trim(),
+        category: linkedMerchForm.category,
+        price: parseFloat(linkedMerchForm.price),
+        stock: parseInt(linkedMerchForm.stock) || 100,
+        image: linkedMerchForm.image?.trim() || `https://picsum.photos/seed/${encodeURIComponent(linkedMerchForm.name)}/400/400`,
+        sizes: linkedMerchForm.sizes?.length > 0 ? linkedMerchForm.sizes : ['Standard'],
+        colors: linkedMerchForm.colors ? linkedMerchForm.colors.split(',').map(c => c.trim()).filter(Boolean) : ['Classic'],
+        branding: 'campaign',
+      });
+    } else if (linkedMerchForm.name?.trim() && linkedMerchForm.price && Number(linkedMerchForm.price) > 0 && linkedMerchForm.description?.trim()) {
+      // Also include current form if filled before clicking submit
+      finalMerchItems.push({
+        name: linkedMerchForm.name.trim(),
+        description: linkedMerchForm.description.trim(),
+        category: linkedMerchForm.category,
+        price: parseFloat(linkedMerchForm.price),
+        stock: parseInt(linkedMerchForm.stock) || 100,
+        image: linkedMerchForm.image?.trim() || `https://picsum.photos/seed/${encodeURIComponent(linkedMerchForm.name)}/400/400`,
+        sizes: linkedMerchForm.sizes?.length > 0 ? linkedMerchForm.sizes : ['Standard'],
+        colors: linkedMerchForm.colors ? linkedMerchForm.colors.split(',').map(c => c.trim()).filter(Boolean) : ['Classic'],
+        branding: 'campaign',
+      });
     }
 
     setIsSubmittingCampaign(true);
@@ -832,26 +905,24 @@ export default function Dashboard() {
 
       const newCampaign = resCamp.data;
 
-      // 2. Immediately create linked product with newCampaign._id
-      const resProd = await api.post('/products', {
-        name: linkedMerchForm.name.trim(),
-        description: linkedMerchForm.description.trim(),
-        category: linkedMerchForm.category,
-        price: parseFloat(linkedMerchForm.price),
-        stock: parseInt(linkedMerchForm.stock),
-        image: linkedMerchForm.image?.trim() || `https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=400`,
-        sizes: linkedMerchForm.sizes?.length > 0 ? linkedMerchForm.sizes : ['Standard'],
-        colors: linkedMerchForm.colors ? linkedMerchForm.colors.split(',').map(c => c.trim()).filter(Boolean) : ['Classic'],
-        branding: 'campaign',
-        campaignId: newCampaign._id,
-        campaign: newCampaign._id,
-      });
+      // 2. Immediately create all linked products with newCampaign._id
+      const productPromises = finalMerchItems.map(item =>
+        api.post('/products', {
+          ...item,
+          campaignId: newCampaign._id,
+          campaign: newCampaign._id,
+        })
+      );
+
+      const prodResponses = await Promise.all(productPromises);
+      const createdProds = prodResponses.map(r => r.data);
 
       setCampaigns(prev => [newCampaign, ...prev]);
-      setStoreProducts(prev => [resProd.data, ...prev]);
+      setStoreProducts(prev => [...createdProds, ...prev]);
       setCreatedCampaignInfo(newCampaign);
-      setCreatedMerchInfo(resProd.data);
-      setCampaignSuccess('Campaign and linked merchandise submitted successfully! Pending verification by admin.');
+      setCreatedMerchList(createdProds);
+      setCreatedMerchInfo(createdProds[0] || null);
+      setCampaignSuccess(`Campaign and ${createdProds.length} linked merchandise product(s) submitted successfully! Pending verification by admin.`);
       setCampaignStep(3);
 
       // Reset forms
@@ -882,6 +953,7 @@ export default function Dashboard() {
         sizes: ['M', 'L'],
         colors: 'Black, White',
       });
+      setPortalMerchList([]);
       localStorage.removeItem('sayrab_campaign_draft');
     } catch (err) {
       setMerchError(err.response?.data?.message || 'Failed to create campaign and linked merchandise. Please try again.');
@@ -984,6 +1056,52 @@ export default function Dashboard() {
     }
   };
 
+  const handleDeleteCampaign = async () => {
+    if (!editingCampaign) return;
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete "${editingCampaign.title}"?\n\nThis will remove the campaign, its linked merchandise, and all associated buyer & fundraiser orders.`
+    );
+    if (!confirmed) return;
+
+    setIsSubmittingEdit(true);
+    setEditError('');
+    try {
+      await api.delete(`/campaigns/${editingCampaign._id}`);
+
+      // 1. Remove from campaigns list and recalculate stats
+      setCampaigns((prev) => {
+        const remaining = prev.filter((c) => c._id !== editingCampaign._id);
+        const total = remaining.reduce((sum, c) => sum + (c.amountRaised || 0), 0);
+        const active = remaining.filter((c) => c.lifecycleStatus === 'active').length;
+        setStats((s) => ({ ...s, totalRaised: total, activeCampaigns: active }));
+        return remaining;
+      });
+
+      // 2. Remove any orders placed for this campaign from fundraiser orders view
+      setCampaignOrders((prev) =>
+        prev.filter((o) => {
+          const cId = o.campaignId?._id ? o.campaignId._id.toString() : (o.campaignId ? o.campaignId.toString() : '');
+          return cId !== editingCampaign._id.toString();
+        })
+      );
+
+      // 3. Remove from buyer orders state as well
+      setBuyerOrders((prev) =>
+        prev.filter((o) => {
+          const cId = o.campaignId?._id ? o.campaignId._id.toString() : (o.campaignId ? o.campaignId.toString() : '');
+          return cId !== editingCampaign._id.toString();
+        })
+      );
+
+      setShowEditModal(false);
+      setEditingCampaign(null);
+    } catch (err) {
+      setEditError(err.response?.data?.message || 'Failed to delete campaign');
+    } finally {
+      setIsSubmittingEdit(false);
+    }
+  };
+
   const handleSaveDraft = (e) => {
     e?.preventDefault?.();
     localStorage.setItem('sayrab_campaign_draft', JSON.stringify({ campaignForm, linkedMerchForm }));
@@ -1014,6 +1132,8 @@ export default function Dashboard() {
     setCampaignStep(1);
     setCreatedCampaignInfo(null);
     setCreatedMerchInfo(null);
+    setCreatedMerchList([]);
+    setPortalMerchList([]);
     setCampaignError('');
     setMerchError('');
     setCampaignSuccess('');
@@ -2465,21 +2585,31 @@ export default function Dashboard() {
                       />
                     </div>
 
-                    <div className="flex gap-3 pt-3 border-t border-slate-800">
+                    <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-800">
                       <button
                         type="button"
-                        onClick={() => setShowEditModal(false)}
-                        className="flex-1 py-2.5 border border-slate-700 text-slate-300 font-semibold rounded-xl hover:bg-slate-800 cursor-pointer text-sm"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
+                        onClick={handleDeleteCampaign}
                         disabled={isSubmittingEdit}
-                        className="flex-[2] py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-xl cursor-pointer text-sm shadow-lg shadow-cyan-500/20 disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
+                        className="py-2.5 px-4 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold rounded-xl cursor-pointer text-xs flex items-center justify-center gap-1.5 transition-all"
                       >
-                        {isSubmittingEdit ? 'Saving Changes...' : 'Save Campaign Changes'}
+                        <Trash2 size={15} /> Delete Campaign
                       </button>
+                      <div className="flex-1 flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setShowEditModal(false)}
+                          className="flex-1 py-2.5 border border-slate-700 text-slate-300 font-semibold rounded-xl hover:bg-slate-800 cursor-pointer text-xs"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isSubmittingEdit}
+                          className="flex-[2] py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold rounded-xl cursor-pointer text-xs shadow-lg shadow-cyan-500/20 disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
+                        >
+                          {isSubmittingEdit ? 'Saving Changes...' : 'Save Campaign Changes'}
+                        </button>
+                      </div>
                     </div>
                   </form>
                 </div>
@@ -2535,7 +2665,35 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {createdMerchInfo && (
+                {createdMerchList?.length > 0 ? (
+                  <div className="p-5 bg-slate-950/60 border border-slate-800 rounded-2xl space-y-3">
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <ShoppingBag size={18} className="text-cyan-400" /> Linked Campaign Merchandise ({createdMerchList.length})
+                    </h4>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {createdMerchList.map((p, idx) => (
+                        <div key={p._id || idx} className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={p.image || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=200'}
+                              alt={p.name}
+                              className="w-14 h-14 rounded-lg object-cover bg-slate-800 border border-slate-700 shrink-0"
+                            />
+                            <div>
+                              <p className="font-bold text-white text-sm">{p.name}</p>
+                              <p className="text-xs text-slate-400 mt-0.5">
+                                PKR {p.price?.toLocaleString()} · Stock: {p.stock} units
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-xs font-bold text-cyan-300 bg-cyan-500/20 border border-cyan-500/30 px-3 py-1 rounded-full shrink-0">
+                            Linked Active
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : createdMerchInfo && (
                   <div className="p-5 bg-slate-950/60 border border-slate-800 rounded-2xl space-y-3">
                     <h4 className="text-sm font-bold text-white flex items-center gap-2">
                       <ShoppingBag size={18} className="text-cyan-400" /> Linked Campaign Merchandise
@@ -2916,7 +3074,7 @@ export default function Dashboard() {
                 <div>
                   <h3 className="text-xl font-bold text-white">Add Linked Campaign Merchandise</h3>
                   <p className="text-slate-400 text-xs mt-1">
-                    Every campaign must have at least one merchandise product linked to it. If merchandise is not provided, the campaign will not be created.
+                    Every campaign must have at least one merchandise product linked to it. You can link <strong>one or multiple products</strong>. <strong>50% of revenue</strong> generated from your linked merchandise goes directly to fund this campaign goal.
                   </p>
                 </div>
 
@@ -2927,6 +3085,55 @@ export default function Dashboard() {
                   </div>
                 </div>
 
+                {/* Staged Merchandise Products List */}
+                {portalMerchList.length > 0 && (
+                  <div className="bg-slate-950 border border-cyan-500/30 rounded-2xl p-4 shadow-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-black text-white uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+                        <Layers size={16} /> Products Ready to Link ({portalMerchList.length})
+                      </h4>
+                      <span className="text-[11px] font-bold text-slate-400">
+                        Will be created with campaign
+                      </span>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {portalMerchList.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-start justify-between gap-3 relative group hover:border-cyan-500/40 transition-all"
+                        >
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-12 h-12 rounded-lg object-cover bg-slate-800 border border-slate-700 shrink-0"
+                            />
+                            <div>
+                              <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">
+                                {item.category}
+                              </span>
+                              <p className="font-bold text-white text-xs line-clamp-1">{item.name}</p>
+                              <p className="text-[11px] text-slate-400 mt-0.5">
+                                PKR {Number(item.price).toLocaleString()} · {item.stock} in stock
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMerchFromPortalList(idx)}
+                            className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="Remove product"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {merchError && (
                   <div className="p-4 bg-rose-500/20 border border-rose-500/30 text-rose-300 rounded-xl text-sm">
                     {merchError}
@@ -2934,12 +3141,22 @@ export default function Dashboard() {
                 )}
 
                 <form onSubmit={handleFinalCampaignWithMerch} className="space-y-6">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span className="text-xs font-black text-white uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+                      <ShoppingBag size={16} /> {portalMerchList.length === 0 ? 'Primary Merchandise Product' : `Add Another Product (#${portalMerchList.length + 1})`}
+                    </span>
+                    {portalMerchList.length > 0 && (
+                      <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                        ✓ {portalMerchList.length} in list
+                      </span>
+                    )}
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Merchandise Name *</label>
                       <input
                         type="text"
-                        required
                         value={linkedMerchForm.name}
                         onChange={(e) => setLinkedMerchForm({ ...linkedMerchForm, name: e.target.value })}
                         className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none text-sm"
@@ -2968,7 +3185,6 @@ export default function Dashboard() {
                       <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Price in PKR *</label>
                       <input
                         type="number"
-                        required
                         min={1}
                         value={linkedMerchForm.price}
                         onChange={(e) => setLinkedMerchForm({ ...linkedMerchForm, price: e.target.value })}
@@ -2980,7 +3196,6 @@ export default function Dashboard() {
                       <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Available Stock Units *</label>
                       <input
                         type="number"
-                        required
                         min={1}
                         value={linkedMerchForm.stock}
                         onChange={(e) => setLinkedMerchForm({ ...linkedMerchForm, stock: e.target.value })}
@@ -3038,13 +3253,26 @@ export default function Dashboard() {
                   <div>
                     <label className="block text-xs font-bold text-slate-300 uppercase mb-1">Merchandise Description *</label>
                     <textarea
-                      required
                       rows={3}
                       value={linkedMerchForm.description}
                       onChange={(e) => setLinkedMerchForm({ ...linkedMerchForm, description: e.target.value })}
                       className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none resize-none text-sm"
                       placeholder="Describe the merchandise item, material quality, design purpose, and cause connection..."
                     />
+                  </div>
+
+                  {/* Button to stage current product and add more */}
+                  <div className="p-3.5 bg-slate-950/70 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="text-xs text-slate-300">
+                      Want to link multiple merchandise items? Add this item to the list and configure another!
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAddMerchToPortalList}
+                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/60 font-bold rounded-xl text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                    >
+                      <Plus size={14} /> + Add Another Product
+                    </button>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-slate-800">
@@ -3066,7 +3294,9 @@ export default function Dashboard() {
                           <span>Submitting Campaign & Merchandise...</span>
                         </>
                       ) : (
-                        <span>Submit Campaign & Linked Merchandise</span>
+                        <span>
+                          Submit Campaign & Linked Merchandise ({Math.max(1, portalMerchList.length + (linkedMerchForm.name?.trim() && linkedMerchForm.price ? 1 : 0))} product{(portalMerchList.length + (linkedMerchForm.name?.trim() && linkedMerchForm.price ? 1 : 0)) > 1 ? 's' : ''})
+                        </span>
                       )}
                     </button>
                   </div>
