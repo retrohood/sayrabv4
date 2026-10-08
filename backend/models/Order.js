@@ -16,7 +16,13 @@ const orderItemSchema = new mongoose.Schema(
 const orderSchema = new mongoose.Schema(
   {
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    campaignId: { type: mongoose.Schema.Types.ObjectId, ref: 'Campaign', required: true },
+    fundraiserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    campaignId: { type: mongoose.Schema.Types.ObjectId, ref: 'Campaign' },
+    quotationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Quotation' },
+    orderType: { type: String, enum: ['sample', 'bulk'], default: 'bulk' },
+    techPackImage: { type: String, default: '' },
+    designSpec: { type: mongoose.Schema.Types.Mixed, default: null },
+    quotationProposal: { type: mongoose.Schema.Types.Mixed, default: null },
     products: { type: [orderItemSchema], default: [] },
     total: { type: Number, required: true, min: 0 },
     paymentStatus: {
@@ -42,7 +48,7 @@ const orderSchema = new mongoose.Schema(
     productionStatus: {
       type: String,
       enum: PRODUCTION_STATUSES,
-      default: 'waiting',
+      default: 'pending_start',
     },
     assignedManufacturer: { type: mongoose.Schema.Types.ObjectId, ref: 'Manufacturer' },
     assignedDate: { type: Date, default: Date.now },

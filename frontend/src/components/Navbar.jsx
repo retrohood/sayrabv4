@@ -22,7 +22,10 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-xl shadow-cyan-950/20">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          <Link to="/" className="flex items-center gap-2 shrink-0 group">
+          <Link
+            to={user?.role === 'manufacturer' ? '/manufacturer' : user?.role === 'admin' ? '/admin' : '/'}
+            className="flex items-center gap-2 shrink-0 group"
+          >
             <img src="/sayrab.png" alt="Sayrab" className="h-14 w-auto group-hover:scale-105 transition-transform" />
             <span className="font-black text-xl text-white hidden sm:block tracking-tight">
               Sayrab<span className="text-cyan-400">.</span>
@@ -58,8 +61,16 @@ export default function Navbar() {
                     Admin Portal
                   </Link>
                 )}
+                {user.role === 'manufacturer' && (
+                  <Link
+                    to="/manufacturer"
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold text-cyan-300 bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/30 transition-all shadow-xs"
+                  >
+                    Manufacturer Portal
+                  </Link>
+                )}
                 <Link
-                  to="/dashboard"
+                  to={user.role === 'manufacturer' ? '/manufacturer' : user.role === 'admin' ? '/admin' : '/dashboard'}
                   className="px-4 py-2 text-sm font-bold text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700 rounded-xl transition-all flex items-center gap-2"
                 >
                   <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
@@ -119,8 +130,17 @@ export default function Navbar() {
                       ★ Admin Portal
                     </Link>
                   )}
+                  {user.role === 'manufacturer' && (
+                    <Link
+                      to="/manufacturer"
+                      onClick={() => setOpen(false)}
+                      className="block px-4 py-2 text-sm font-bold text-cyan-400"
+                    >
+                      ⚙ Manufacturer Portal
+                    </Link>
+                  )}
                   <Link
-                    to="/dashboard"
+                    to={user.role === 'manufacturer' ? '/manufacturer' : user.role === 'admin' ? '/admin' : '/dashboard'}
                     onClick={() => setOpen(false)}
                     className="block px-4 py-2 text-sm font-semibold text-white"
                   >

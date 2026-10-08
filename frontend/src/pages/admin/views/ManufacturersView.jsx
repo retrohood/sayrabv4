@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Factory,
   Search,
@@ -17,8 +17,16 @@ import {
   X,
   FileText,
   Send,
+  Calculator,
+  Ban,
+  UserCheck,
+  Maximize2,
+  Ruler,
+  MessageSquare,
 } from 'lucide-react';
-import { formatDate } from '../../../utils/format';
+import api from '../../../api/client';
+import { formatDate, formatCurrency } from '../../../utils/format';
+import QuotationChatModal from '../../../components/QuotationChatModal';
 
 export default function ManufacturersView({
   subFilter,
@@ -38,6 +46,90 @@ export default function ManufacturersView({
   const [revisionNotes, setRevisionNotes] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
   const [newManModal, setNewManModal] = useState(false);
+  
+  // Quotation Assignment & Management State
+  const [adminQuotations, setAdminQuotations] = useState([]);
+  const [loadingQuotations, setLoadingQuotations] = useState(false);
+  const [quoteFilterStatus, setQuoteFilterStatus] = useState('all');
+  const [assignQuoteModal, setAssignQuoteModal] = useState(null); // quotation object
+  const [targetManufacturerId, setTargetManufacturerId] = useState('');
+  const [assignAdminNotes, setAssignAdminNotes] = useState('');
+  const [cancelQuoteModal, setCancelQuoteModal] = useState(null); // quotation object
+  const [cancelReason, setCancelReason] = useState('');
+  const [selectedQuoteDetail, setSelectedQuoteDetail] = useState(null);
+  const [updatingQuote, setUpdatingQuote] = useState(false);
+  const [adminChatQuotation, setAdminChatQuotation] = useState(null);
+
+  const fetchAdminQuotations = async () => {
+    try {
+      setLoadingQuotations(true);
+      const res = await api.get('/quotations/admin/all');
+      setAdminQuotations(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error('Failed to load admin quotations:', err);
+    } finally {
+      setLoadingQuotations(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdminQuotations();
+  }, []);
+
+  const handleAssignQuotation = async () => {
+    if (!assignQuoteModal || !targetManufacturerId) {
+      alert('Please select a manufacturing partner to assign this quotation.');
+      return;
+    }
+    try {
+      setUpdatingQuote(true);
+      await api.post(`/quotations/${assignQuoteModal._id}/assign-manufacturer`, {
+        manufacturerId: targetManufacturerId,
+        adminNotes: assignAdminNotes,
+      });
+      setAssignQuoteModal(null);
+      setTargetManufacturerId('');
+      setAssignAdminNotes('');
+      fetchAdminQuotations();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to assign quotation to manufacturer');
+    } finally {
+      setUpdatingQuote(false);
+    }
+  };
+
+  const handleCancelQuotation = async () => {
+    if (!cancelQuoteModal) return;
+    try {
+      setUpdatingQuote(true);
+      await api.post(`/quotations/${cancelQuoteModal._id}/cancel`, {
+        reason: cancelReason || 'Cancelled / Struck by Administrator before production',
+      });
+      setCancelQuoteModal(null);
+      setCancelReason('');
+      fetchAdminQuotations();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to cancel quotation');
+    } finally {
+      setUpdatingQuote(false);
+    }
+  };
+
+  const handleStartProduction = async (quoteId) => {
+    try {
+      setUpdatingQuote(true);
+      await api.post(`/quotations/${quoteId}/start-production`);
+      if (selectedQuoteDetail?._id === quoteId) {
+        setSelectedQuoteDetail((prev) => ({ ...prev, status: 'production_started' }));
+      }
+      fetchAdminQuotations();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to start production');
+    } finally {
+      setUpdatingQuote(false);
+    }
+  };
+
   const [newManForm, setNewManForm] = useState({
     name: '',
     companyName: '',
@@ -181,6 +273,25 @@ export default function ManufacturersView({
           >
             <Truck size={15} />
             <span>Shipping & Dispatch</span>
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('quotations');
+              setSubFilter('quotations');
+            }}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+              currentTab === 'quotations'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Calculator size={15} />
+            <span>Quotation Assignments</span>
+            {adminQuotations?.filter((q) => ['submitted_to_admin', 'submitted_for_review'].includes(q.status)).length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
+                {adminQuotations.filter((q) => ['submitted_to_admin', 'submitted_for_review'].includes(q.status)).length}
+              </span>
+            )}
           </button>
         </div>
 
@@ -706,6 +817,532 @@ export default function ManufacturersView({
             </div>
           </form>
         </div>
+      )}
+
+      {/* ============================================================= */}
+      {/* 5. QUOTATION ASSIGNMENTS (ADMIN CONTROLLED - NO OPEN RFQ) */}
+      {/* ============================================================= */}
+      {currentTab === 'quotations' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {/* Top Informative Banner */}
+          <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-500 shrink-0">
+                <Calculator className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Admin Quotation Assignment Workflow (No Open RFQ Bidding)
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-3xl">
+                  Fundraisers submit draft quotations for review. As Admin, evaluate the extracted tech pack specs, select exactly <strong>one</strong> qualified manufacturer partner, or cancel/strike the request prior to production.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={fetchAdminQuotations}
+                className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>Refresh Quotes</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Status Bar */}
+          <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
+            {[
+              { id: 'all', label: 'All Quotations' },
+              { id: 'submitted_to_admin', label: 'Pending Assignment' },
+              { id: 'assigned_to_manufacturer', label: 'Assigned' },
+              { id: 'manufacturer_reviewing', label: 'In Review' },
+              { id: 'manufacturer_proposal_sent', label: 'Proposal Sent' },
+              { id: 'accepted_by_fundraiser', label: 'Accepted' },
+              { id: 'production_started', label: 'In Production' },
+              { id: 'cancelled', label: 'Cancelled' },
+            ].map((st) => (
+              <button
+                key={st.id}
+                onClick={() => setQuoteFilterStatus(st.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                  quoteFilterStatus === st.id
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold shadow-xs'
+                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {st.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Quotations List */}
+          {loadingQuotations ? (
+            <div className="p-12 text-center text-xs text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+              Loading quotation requests...
+            </div>
+          ) : adminQuotations.length === 0 ? (
+            <div className="p-12 text-center text-xs text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+              No quotation requests found in database.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {adminQuotations
+                .filter((q) => {
+                  if (quoteFilterStatus === 'all') return true;
+                  if (quoteFilterStatus === 'submitted_to_admin') {
+                    return q.status === 'submitted_to_admin' || q.status === 'submitted_for_review';
+                  }
+                  return q.status === quoteFilterStatus;
+                })
+                .map((quote) => (
+                  <div
+                    key={quote._id}
+                    className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between space-y-4"
+                  >
+                    <div className="space-y-3">
+                      {/* Header */}
+                      <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span
+                              className={`text-[10px] font-black uppercase px-2 py-0.5 rounded font-mono ${
+                                quote.status === 'submitted_to_admin' || quote.status === 'submitted_for_review'
+                                  ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30'
+                                  : quote.status === 'assigned_to_manufacturer'
+                                  ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30'
+                                  : quote.status === 'production_started'
+                                  ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30'
+                                  : quote.status === 'cancelled'
+                                  ? 'bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30'
+                                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                              }`}
+                            >
+                              Status: {quote.status?.replace(/_/g, ' ')}
+                            </span>
+                            <span className="text-xs text-slate-500 font-mono">
+                              {quote.orderType === 'sample' ? 'Sample' : 'Bulk'} • {quote.quantity || 1} units
+                            </span>
+                          </div>
+                          <h4 className="font-bold text-slate-900 dark:text-white text-base">
+                            {quote.projectName || quote.designSpec?.garment?.style || 'Custom Apparel Quote'}
+                          </h4>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Fundraiser: <strong className="text-slate-700 dark:text-slate-300">{quote.owner?.fullName || quote.owner?.email || 'Fundraiser User'}</strong>
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-[10px] text-slate-400 block uppercase">Draft Total</span>
+                          <span className="text-sm font-black font-mono text-emerald-600 dark:text-emerald-400">
+                            ${((Number(quote.calculation?.totals?.landedUnitUsd) || 45) * (quote.quantity || 1)).toFixed(2)} USD
+                          </span>
+                          <span className="text-[10px] text-slate-400 block">
+                            ${quote.calculation?.totals?.landedUnitUsd || '45.00'}/unit
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Attached Techpack Mockup + Summary */}
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="col-span-1 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-center min-h-[90px] relative">
+                          {quote.techPackImage ? (
+                            <img
+                              src={quote.techPackImage}
+                              alt="Attached Tech Pack"
+                              className="w-full h-24 object-contain p-1"
+                            />
+                          ) : (
+                            <div className="p-2 text-center text-slate-400 text-[10px]">
+                              <FileText className="w-6 h-6 mx-auto mb-1 text-slate-400" />
+                              <span>Tech Pack</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="col-span-2 space-y-1 text-xs">
+                          <p className="text-slate-600 dark:text-slate-300">
+                            <strong className="text-slate-800 dark:text-white">Fabric:</strong> {quote.designSpec?.fabrics?.[0]?.name || 'Double Knit Fabric'} ({quote.designSpec?.fabrics?.[0]?.gsm || 300} GSM)
+                          </p>
+                          <p className="text-slate-600 dark:text-slate-300">
+                            <strong className="text-slate-800 dark:text-white">Decorations:</strong> {quote.designSpec?.decorations?.length || 0} logos detected
+                          </p>
+                          <p className="text-slate-600 dark:text-slate-300 truncate">
+                            <strong className="text-slate-800 dark:text-white">Ship To:</strong> {quote.shippingAddress?.city || 'Lahore'}, {quote.shippingAddress?.country || 'Pakistan'}
+                          </p>
+                          <div className="pt-1">
+                            <span className="text-[10px] text-slate-400 uppercase font-bold block">Assigned Manufacturer:</span>
+                            {quote.assignedManufacturer ? (
+                              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                                <UserCheck className="w-3.5 h-3.5" />
+                                {quote.assignedManufacturer.name || quote.assignedManufacturer.companyName || 'Assigned Factory'}
+                              </span>
+                            ) : (
+                              <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                                ⚠ Unassigned (Awaiting Admin Selection)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {quote.cancelledReason && (
+                        <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-700 dark:text-rose-300">
+                          <strong>Cancellation Reason:</strong> {quote.cancelledReason}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedQuoteDetail(quote)}
+                          className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> Specs
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setAdminChatQuotation(quote)}
+                          className="px-3 py-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-100 text-cyan-700 dark:text-cyan-300 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                          title="Admin Chat Oversight"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 text-cyan-500" /> Chat
+                        </button>
+
+                        {quote.status !== 'cancelled' && quote.status !== 'production_started' && quote.status !== 'completed' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCancelQuoteModal(quote);
+                              setCancelReason('');
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-600 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <Ban className="w-3.5 h-3.5" /> Strike / Cancel
+                          </button>
+                        )}
+                      </div>
+
+                      {quote.status !== 'cancelled' && quote.status !== 'production_started' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAssignQuoteModal(quote);
+                            setTargetManufacturerId(quote.assignedManufacturer?._id || '');
+                            setAssignAdminNotes(quote.adminNotes || '');
+                          }}
+                          className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold inline-flex items-center gap-1.5 shadow-xs cursor-pointer"
+                        >
+                          <UserCheck className="w-3.5 h-3.5" />
+                          <span>{quote.assignedManufacturer ? 'Re-assign Factory' : 'Assign Manufacturer'}</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Admin Assign Manufacturer Modal */}
+      {assignQuoteModal && (
+        <div className="fixed inset-0 z-60 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-indigo-500" />
+                  Assign Quotation to Manufacturer
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Direct assignment. No open RFQ. Only the selected manufacturer will view this quotation.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAssignQuoteModal(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                <span className="font-bold text-slate-900 dark:text-white block">
+                  {assignQuoteModal.projectName || 'Quotation Request'}
+                </span>
+                <span className="text-slate-500 block mt-0.5">
+                  Order: {assignQuoteModal.quantity || 1} units ({assignQuoteModal.orderType || 'bulk'}) • Fundraiser: {assignQuoteModal.owner?.fullName || 'Fundraiser'}
+                </span>
+              </div>
+
+              <div>
+                <label className="font-bold block text-slate-900 dark:text-white mb-1.5">
+                  Select Qualified Manufacturing Partner *
+                </label>
+                <select
+                  value={targetManufacturerId}
+                  onChange={(e) => setTargetManufacturerId(e.target.value)}
+                  className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-medium"
+                >
+                  <option value="">-- Choose Manufacturer --</option>
+                  {manufacturers.map((m) => (
+                    <option key={m._id} value={m._id}>
+                      {m.name} ({m.specialties?.join(', ') || 'Apparel'}) • {m.companyName || m.contactPerson}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="font-bold block text-slate-900 dark:text-white mb-1.5">
+                  Admin Internal Instructions / Notes for Manufacturer
+                </label>
+                <textarea
+                  rows={3}
+                  value={assignAdminNotes}
+                  onChange={(e) => setAssignAdminNotes(e.target.value)}
+                  placeholder="e.g., Fast-track sample timeline, check stitch count on chenille logo..."
+                  className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setAssignQuoteModal(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAssignQuotation}
+                disabled={updatingQuote || !targetManufacturerId}
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white shadow-xs"
+              >
+                {updatingQuote ? 'Assigning...' : 'Confirm Assignment'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Cancel / Strike Quotation Modal */}
+      {cancelQuoteModal && (
+        <div className="fixed inset-0 z-60 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-base font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2">
+                <Ban className="w-5 h-5" /> Cancel / Strike Quotation
+              </h3>
+              <button
+                type="button"
+                onClick={() => setCancelQuoteModal(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <p className="text-slate-600 dark:text-slate-400">
+                Are you sure you want to cancel this quotation request before production starts? The fundraiser and manufacturer will be notified.
+              </p>
+
+              <div>
+                <label className="font-bold block text-slate-900 dark:text-white mb-1">
+                  Reason for Cancellation *
+                </label>
+                <textarea
+                  rows={3}
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="e.g., Unclear artwork dimensions, duplicate request, fabric out of season..."
+                  className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setCancelQuoteModal(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelQuotation}
+                disabled={updatingQuote}
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-xs"
+              >
+                {updatingQuote ? 'Cancelling...' : 'Confirm Strike / Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full Quotation Detail & Techpack Inspection Modal */}
+      {selectedQuoteDetail && (
+        <div className="fixed inset-0 z-60 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  {selectedQuoteDetail.projectName || 'Quotation Technical Spec Sheet'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Fundraiser: {selectedQuoteDetail.owner?.fullName || 'Fundraiser User'} • Status: {selectedQuoteDetail.status}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedQuoteDetail(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-4 text-xs">
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 text-center">
+                <span className="text-[10px] text-slate-400 uppercase font-bold block mb-2">Attached Tech Pack Drawing</span>
+                {selectedQuoteDetail.techPackImage ? (
+                  <img
+                    src={selectedQuoteDetail.techPackImage}
+                    alt="Attached Techpack"
+                    className="max-h-56 mx-auto object-contain rounded-xl"
+                  />
+                ) : (
+                  <div className="p-8 text-slate-400">Attached Tech Pack Drawing</div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Fabric</span>
+                  <p className="font-bold text-slate-900 dark:text-white mt-0.5">
+                    {selectedQuoteDetail.designSpec?.fabrics?.[0]?.name || 'Double Knit'} ({selectedQuoteDetail.designSpec?.fabrics?.[0]?.gsm || 300} GSM)
+                  </p>
+                  <p className="text-slate-500 mt-0.5">{selectedQuoteDetail.designSpec?.fabrics?.[0]?.composition}</p>
+                </div>
+
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Order Type & Quantity</span>
+                  <p className="font-bold text-slate-900 dark:text-white mt-0.5">
+                    {selectedQuoteDetail.quantity || 1} units ({selectedQuoteDetail.orderType || 'bulk'})
+                  </p>
+                  <p className="text-slate-500 mt-0.5">FOB Sialkot + Courier Delivery</p>
+                </div>
+              </div>
+
+              {selectedQuoteDetail.designSpec?.decorations?.length > 0 && (
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block mb-2">Decorations / Logos</span>
+                  <div className="space-y-1">
+                    {selectedQuoteDetail.designSpec.decorations.map((d, idx) => (
+                      <div key={idx} className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-700">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">{d.name || d.type} ({d.placement})</span>
+                        <span className="font-mono text-emerald-600 dark:text-emerald-400">{d.techniqueLabel || d.type} • {d.width_in || 12}"×{d.height_in || 4.5}"</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Manufacturer Proposal Breakdown (If Submitted) */}
+              {selectedQuoteDetail.manufacturerProposal && (
+                <div className="p-4 rounded-2xl bg-cyan-50 dark:bg-slate-950 border border-cyan-200 dark:border-cyan-500/30 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-cyan-100 dark:border-slate-800">
+                    <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Calculator className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                      Manufacturer Quotation Proposal & Margin Breakdown
+                    </h4>
+                    <span className="px-2.5 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300 font-bold font-mono">
+                      {selectedQuoteDetail.manufacturerProposal.marginPercent}% Gross Margin
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Unit Landed Price</span>
+                      <strong className="text-emerald-600 font-mono text-sm font-black">
+                        ${selectedQuoteDetail.manufacturerProposal.landedUnitUsd} USD
+                      </strong>
+                    </div>
+                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Factory Margin Amount</span>
+                      <strong className="text-cyan-600 font-mono text-sm font-black">
+                        PKR {formatCurrency(selectedQuoteDetail.manufacturerProposal.marginAmountPkr)}
+                      </strong>
+                    </div>
+                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] text-slate-400 block">Batch Landed Total</span>
+                      <strong className="text-slate-900 dark:text-white font-mono text-sm font-black">
+                        ${selectedQuoteDetail.manufacturerProposal.totalPriceUsd} USD
+                      </strong>
+                    </div>
+                  </div>
+
+                  {selectedQuoteDetail.manufacturerProposal.customNotes && (
+                    <p className="text-slate-600 dark:text-slate-300 text-[11px] italic bg-white/60 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                      "{selectedQuoteDetail.manufacturerProposal.customNotes}"
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                {selectedQuoteDetail.status === 'production_started' ? (
+                  <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                    <CheckCircle2 className="w-4 h-4" /> Production Active
+                  </span>
+                ) : selectedQuoteDetail.status === 'accepted_by_fundraiser' || selectedQuoteDetail.status === 'manufacturer_proposal_sent' ? (
+                  <button
+                    type="button"
+                    onClick={() => handleStartProduction(selectedQuoteDetail._id)}
+                    disabled={updatingQuote}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Launch Production Run</span>
+                  </button>
+                ) : null}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedQuoteDetail(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Chat Oversight Modal */}
+      {adminChatQuotation && (
+        <QuotationChatModal
+          quotation={adminChatQuotation}
+          onClose={() => setAdminChatQuotation(null)}
+        />
       )}
     </div>
   );

@@ -1,7 +1,20 @@
 import { createContext, useCallback, useContext, useState, useEffect } from 'react';
 import api from '../api/client';
 
-const AuthContext = createContext(null);
+const defaultAuthContext = {
+  user: null,
+  loading: true,
+  login: async () => {},
+  registerDonor: async () => {},
+  registerFundraiser: async () => {},
+  registerManufacturer: async () => {},
+  registerAdmin: async () => {},
+  completeOAuthLogin: async () => {},
+  logout: () => {},
+  setUser: () => {},
+};
+
+const AuthContext = createContext(defaultAuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -58,6 +71,26 @@ export const AuthProvider = ({ children }) => {
     return res.data;
   };
 
+  const registerManufacturer = async (data) => {
+    const res = await api.post('/auth/register/manufacturer', data);
+    localStorage.setItem('sayrab_token', res.data.token);
+    if (res.data.user?._id) {
+      localStorage.setItem('sayrab_current_user_id', res.data.user._id);
+    }
+    setUser(res.data.user);
+    return res.data;
+  };
+
+  const registerAdmin = async (data) => {
+    const res = await api.post('/auth/register/admin', data);
+    localStorage.setItem('sayrab_token', res.data.token);
+    if (res.data.user?._id) {
+      localStorage.setItem('sayrab_current_user_id', res.data.user._id);
+    }
+    setUser(res.data.user);
+    return res.data;
+  };
+
   const completeOAuthLogin = useCallback(async (token) => {
     localStorage.setItem('sayrab_token', token);
     const res = await api.get('/auth/me');
@@ -76,11 +109,22 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, registerDonor, registerFundraiser, completeOAuthLogin, logout, setUser }}
+      value={{
+        user,
+        loading,
+        login,
+        registerDonor,
+        registerFundraiser,
+        registerManufacturer,
+        registerAdmin,
+        completeOAuthLogin,
+        logout,
+        setUser,
+      }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => useContext(AuthContext) || defaultAuthContext;

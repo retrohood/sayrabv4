@@ -9,6 +9,8 @@ const adminNotificationSchema = new mongoose.Schema(
         'payout_request',
         'failed_payment',
         'techpack_approval',
+        'quotation_review',
+        'quotation_assignment',
         'campaign_report',
         'manufacturer_update',
         'suspicious_transaction',

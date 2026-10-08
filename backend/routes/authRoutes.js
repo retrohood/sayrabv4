@@ -3,6 +3,8 @@ import {
   register,
   registerDonor,
   registerFundraiser,
+  registerManufacturer,
+  registerAdmin,
   login,
   getProfile,
   updateReferralPrivacy,
@@ -19,6 +21,8 @@ const router = express.Router();
 
 router.post('/register/donor', registerDonor);
 router.post('/register/fundraiser', registerFundraiser);
+router.post('/register/manufacturer', registerManufacturer);
+router.post('/register/admin', registerAdmin);
 router.post('/register', register);
 router.post('/login', login);
 router.get('/google', startGoogleAuth);

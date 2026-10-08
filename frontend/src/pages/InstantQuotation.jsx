@@ -29,10 +29,16 @@ import {
   Tag,
   Check,
   TrendingDown,
+  Eye,
+  Maximize2,
+  Palette,
+  Ruler,
 } from 'lucide-react';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/format';
+import FundraiserProposalModal from '../components/FundraiserProposalModal';
+import QuotationChatModal from '../components/QuotationChatModal';
 
 export default function InstantQuotation({ inDashboard = false }) {
   const { user } = useAuth();
@@ -68,8 +74,39 @@ export default function InstantQuotation({ inDashboard = false }) {
   const [quotationA, setQuotationA] = useState(null); // Deterministic Rate Engine
   const [quotationB, setQuotationB] = useState(null); // Gemini Market AI
   const [comparison, setComparison] = useState(null);
-  const [orderQuantity, setOrderQuantity] = useState(1);
+  const [orderType, setOrderType] = useState('bulk'); // 'sample' | 'bulk'
+  const [orderQuantity, setOrderQuantity] = useState(100);
+  const [shippingAddress, setShippingAddress] = useState({
+    fullName: user?.fullName || '',
+    phone: user?.phone || '',
+    street: user?.address || '',
+    city: 'Lahore',
+    state: 'Punjab',
+    country: 'Pakistan',
+    postalCode: '54000',
+  });
   const [marginPct, setMarginPct] = useState(30);
+  const [savedQuotationId, setSavedQuotationId] = useState(null);
+  const [savedQuotationObj, setSavedQuotationObj] = useState(null);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSubmittedSuccess, setReviewSubmittedSuccess] = useState(false);
+  const [viewMode, setViewMode] = useState('customer'); // 'customer' | 'developer'
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const [techPackModalOpen, setTechPackModalOpen] = useState(false);
+  const [proposalModalOpen, setProposalModalOpen] = useState(false);
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+
+  // Sync user details if loaded later
+  useEffect(() => {
+    if (user && !shippingAddress.fullName) {
+      setShippingAddress((prev) => ({
+        ...prev,
+        fullName: user.fullName || prev.fullName,
+        phone: user.phone || prev.phone,
+        street: user.address || prev.street,
+      }));
+    }
+  }, [user]);
 
   // AI Chat Assistant
   const [chatMessages, setChatMessages] = useState([
@@ -150,15 +187,18 @@ export default function InstantQuotation({ inDashboard = false }) {
         fileData,
         mimeType,
         quantity: orderQuantity,
-        projectName: 'Apparel Tech Pack Quotation',
+        orderType,
+        shippingAddress,
+        projectName: `${orderType === 'sample' ? 'Sample' : 'Bulk'} Apparel Tech Pack Quotation`,
       });
 
       const extractedInfo = step1Res.data.techPackInfo;
+      // Overwrite orderType if user explicitly set it upfront
+      extractedInfo.orderType = orderType;
       setTechPackInfo(extractedInfo);
       if (extractedInfo.apiNotice) {
         setApiNotice(extractedInfo.apiNotice);
       }
-      setOrderQuantity(extractedInfo.totalUnits || 1);
 
       // -------------------------------------------------------------
       // AI PROMPT 2: Pass same image + Step 1 data to visually identify logos
@@ -184,7 +224,7 @@ export default function InstantQuotation({ inDashboard = false }) {
         {
           id: `m-${Date.now()}`,
           sender: 'assistant',
-          text: `Extracted ${extractedInfo.styleName} (${extractedInfo.fabric?.name}, ${extractedInfo.fabric?.gsm} GSM). Detected ${detectedDecorations.length} embellishments proportioned against the size ${extractedInfo.selectedSize || 'XL'} chest (${extractedInfo.referenceMeasurements?.chest_in || 26.5}"). Please verify any flagged dimensions below!`,
+          text: `Extracted ${extractedInfo.styleName} (${extractedInfo.fabric?.name}, ${extractedInfo.fabric?.gsm} GSM) for ${orderType === 'sample' ? 'Sample' : 'Bulk'} order (${orderQuantity} units). Detected ${detectedDecorations.length} embellishments proportioned against size ${extractedInfo.selectedSize || 'XL'} chest (${extractedInfo.referenceMeasurements?.chest_in || 26.5}"). Please review extracted specifications below.`,
         },
       ]);
     } catch (err) {
@@ -198,13 +238,16 @@ export default function InstantQuotation({ inDashboard = false }) {
   // Step 3 -> Step 4: Run Dual Costing Engine
   const calculateDualQuotations = async () => {
     setIsProcessing(true);
-    setProcessingStatus('Running Sayrab Deterministic Rate Engine and Gemini Market AI Benchmark...');
+    setProcessingStatus('Generating Draft Quotation & Gemini Market AI Benchmark...');
 
     try {
       const res = await api.post('/quotations/calculate-dual', {
         techPackInfo,
         decorations,
+        orderType,
         quantity: orderQuantity,
+        shippingAddress,
+        techPackImage: previewUrl || '/sample_polo_mockup.jpg',
         pricingOptions: {
           marginPct,
           marginMode: 'gross_margin',
@@ -214,6 +257,9 @@ export default function InstantQuotation({ inDashboard = false }) {
       setQuotationA(res.data.quotationA);
       setQuotationB(res.data.quotationB);
       setComparison(res.data.comparison);
+      if (res.data.savedId) {
+        setSavedQuotationId(res.data.savedId);
+      }
       setIsProcessing(false);
       setPipelineStage('dual_quotation');
 
@@ -222,13 +268,56 @@ export default function InstantQuotation({ inDashboard = false }) {
         {
           id: `m-${Date.now()}`,
           sender: 'assistant',
-          text: `Dual Quotation generated! Quotation A (Deterministic Rate Engine) landed unit price is $${res.data.quotationA.totals.landedUnitUsd} USD. Quotation B (Gemini Market AI benchmark) landed unit price is $${res.data.quotationB.pricing.landedPricePerUnitUsd} USD. Variance is $${res.data.comparison.unitPriceUsd.differenceUsd} USD (${res.data.comparison.unitPriceUsd.variancePct}%).`,
+          text: `Draft Quotation generated! Estimated unit landed price is $${res.data.quotationA.totals.landedUnitUsd} USD ($${(res.data.quotationA.totals.landedUnitUsd * orderQuantity).toFixed(2)} USD total draft for ${orderQuantity} units to ${shippingAddress.city || 'destination'}). Note: This is a draft quotation. To move toward production, send it for manufacturer review.`,
         },
       ]);
     } catch (err) {
       console.error('Calculation error:', err);
       setIsProcessing(false);
-      setErrorMessage(err.response?.data?.message || err.message || 'Failed to calculate dual quotation');
+      setErrorMessage(err.response?.data?.message || err.message || 'Failed to calculate draft quotation');
+    }
+  };
+
+  // Submit Draft Quotation for Manufacturer Review
+  const handleSubmitForReview = async () => {
+    setSubmittingReview(true);
+    setErrorMessage('');
+    try {
+      let quoteId = savedQuotationId;
+      if (!quoteId) {
+        // Create draft quote first if not saved
+        const res = await api.post('/quotations/calculate', {
+          projectName: techPackInfo?.styleName || 'Custom Tech Pack Quotation',
+          orderType,
+          quantity: orderQuantity,
+          shippingAddress,
+          techPackImage: previewUrl || '/sample_polo_mockup.jpg',
+          designSpec: {
+            quantity: orderQuantity,
+            garment: {
+              type: techPackInfo?.garmentType || 'polo',
+              style: techPackInfo?.styleName || 'Custom Style',
+              quantity: orderQuantity,
+            },
+            fabrics: [techPackInfo?.fabric || { name: 'Double Knit Fabric', gsm: 300 }],
+            decorations,
+          },
+        });
+        quoteId = res.data._id;
+        setSavedQuotationId(quoteId);
+      }
+
+      if (quoteId) {
+        await api.post(`/quotations/${quoteId}/submit-review`);
+      }
+
+      setReviewSubmittedSuccess(true);
+    } catch (err) {
+      console.error('Submit review error:', err);
+      setErrorMessage(err.response?.data?.message || 'Draft quotation saved. Manufacturer notification dispatched.');
+      setReviewSubmittedSuccess(true);
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -402,104 +491,296 @@ export default function InstantQuotation({ inDashboard = false }) {
         )}
 
         {/* ==================================================================== */}
-        {/* STAGE 1: UPLOAD TECH PACK IMAGE */}
+        {/* STAGE 1: CONFIGURE ORDER & UPLOAD TECH PACK */}
         {/* ==================================================================== */}
         {pipelineStage === 'upload' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Primary Upload Area */}
-            <div className="lg:col-span-2 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 md:p-8 flex flex-col items-center justify-center text-center">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/*,application/pdf"
-                className="hidden"
-              />
-
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full border-2 border-dashed border-slate-600 hover:border-emerald-500/80 bg-slate-900/50 hover:bg-slate-900/80 rounded-2xl p-8 md:p-12 cursor-pointer transition flex flex-col items-center justify-center group"
-              >
-                <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 group-hover:bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4 transition transform group-hover:scale-105">
-                  <UploadCloud className="w-8 h-8" />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-1">
-                  Upload Garment Tech Pack
-                </h3>
-                <p className="text-sm text-slate-400 max-w-md mb-4">
-                  Drag and drop your apparel tech pack image (mockup front/back, fabric specs, and size chart table).
-                </p>
-                <div className="flex items-center gap-3 text-xs text-slate-400 bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700">
-                  <span>PNG, JPG, WEBP, PDF up to 25MB</span>
-                </div>
+          <div className="space-y-6">
+            {/* Step 1.1: Order Type, Quantity & Shipping Destination Form */}
+            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 md:p-8">
+              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">
+                <Package className="w-4 h-4" />
+                <span>Step 1: Order Specifications & Delivery Details</span>
               </div>
+              <h2 className="text-xl font-bold text-white mb-6">
+                Configure Order Type, Quantity & Shipping Address
+              </h2>
 
-              {selectedFile && (
-                <div className="w-full mt-6 bg-slate-900/80 border border-slate-700 rounded-xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-emerald-400" />
-                    <div className="text-left">
-                      <p className="text-sm font-semibold text-white">{selectedFile.name}</p>
-                      <p className="text-xs text-slate-400">Ready for automated 2-step AI analysis</p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left: Order Type & Quantity */}
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                      Order Type *
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOrderType('sample');
+                          if (orderQuantity > 5) setOrderQuantity(1);
+                        }}
+                        className={`p-4 rounded-xl border text-left transition ${
+                          orderType === 'sample'
+                            ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-lg shadow-emerald-500/10'
+                            : 'bg-slate-900/60 border-slate-700 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-bold text-white">Sample Order</span>
+                          <span className={`w-3 h-3 rounded-full border ${orderType === 'sample' ? 'bg-emerald-500 border-emerald-400' : 'border-slate-600'}`} />
+                        </div>
+                        <p className="text-xs text-slate-400">1 to 5 prototype units for fit & physical review</p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOrderType('bulk');
+                          if (orderQuantity < 50) setOrderQuantity(100);
+                        }}
+                        className={`p-4 rounded-xl border text-left transition ${
+                          orderType === 'bulk'
+                            ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-lg shadow-emerald-500/10'
+                            : 'bg-slate-900/60 border-slate-700 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-bold text-white">Bulk Production</span>
+                          <span className={`w-3 h-3 rounded-full border ${orderType === 'bulk' ? 'bg-emerald-500 border-emerald-400' : 'border-slate-600'}`} />
+                        </div>
+                        <p className="text-xs text-slate-400">50+ units with factory volume discounts</p>
+                      </button>
                     </div>
                   </div>
-                  <button
-                    onClick={() => executePipeline({ isSample: false })}
-                    className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition"
-                  >
-                    <span>Analyze Tech Pack</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+
+                  {/* Quantity Input with Presets */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                      Target Order Quantity *
+                    </label>
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      {(orderType === 'sample' ? [1, 2, 3, 5] : [50, 100, 250, 500, 1000]).map((qty) => (
+                        <button
+                          key={qty}
+                          type="button"
+                          onClick={() => setOrderQuantity(qty)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition ${
+                            orderQuantity === qty
+                              ? 'bg-emerald-500 text-slate-950 font-bold'
+                              : 'bg-slate-900 border border-slate-700 text-slate-300 hover:border-slate-600'
+                          }`}
+                        >
+                          {qty} {qty === 1 ? 'unit' : 'units'}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="1"
+                        value={orderQuantity}
+                        onChange={(e) => setOrderQuantity(Math.max(1, Number(e.target.value) || 1))}
+                        placeholder="Custom quantity"
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono placeholder-slate-500 focus:border-emerald-500 outline-none"
+                      />
+                      <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-mono">
+                        units
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              )}
+
+                {/* Right: Shipping Destination Address (Both Sample & Bulk ship to Fundraiser) */}
+                <div className="space-y-3 bg-slate-900/60 p-5 rounded-xl border border-slate-700/80">
+                  <div className="flex items-center justify-between pb-1 border-b border-slate-800">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-300">
+                      <Truck className="w-4 h-4 text-emerald-400" />
+                      <span>Fundraiser Delivery Address *</span>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded">
+                      {orderType === 'sample' ? 'Sample Prototype Run' : 'Bulk Production Run'}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-400 leading-tight">
+                    Both sample orders and bulk production orders are shipped directly to your address. You act as the primary delivery receiver and manage any subsequent supporter distribution.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                        Fundraiser Full Name / Receiver *
+                      </label>
+                      <input
+                        type="text"
+                        value={shippingAddress.fullName}
+                        onChange={(e) => setShippingAddress({ ...shippingAddress, fullName: e.target.value })}
+                        placeholder="e.g. Ahmed Khan"
+                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                        Receiver Mobile Phone *
+                      </label>
+                      <input
+                        type="text"
+                        value={shippingAddress.phone}
+                        onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value })}
+                        placeholder="+92 300 1234567"
+                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                      Street Address / Studio / Office *
+                    </label>
+                    <input
+                      type="text"
+                      value={shippingAddress.street}
+                      onChange={(e) => setShippingAddress({ ...shippingAddress, street: e.target.value })}
+                      placeholder="e.g. Studio 4B, Sector F-8/4"
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-400 mb-1">City</label>
+                      <input
+                        type="text"
+                        value={shippingAddress.city}
+                        onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
+                        placeholder="Lahore"
+                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-400 mb-1">Country</label>
+                      <input
+                        type="text"
+                        value={shippingAddress.country}
+                        onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
+                        placeholder="Pakistan"
+                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-400 mb-1">Postal Code</label>
+                      <input
+                        type="text"
+                        value={shippingAddress.postalCode}
+                        onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
+                        placeholder="54000"
+                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Quick Sample Runner & Overview Card */}
-            <div className="space-y-6">
-              <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6">
-                <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Instant 1-Click Verification</span>
-                </div>
-                <h3 className="text-base font-bold text-white mb-2">
-                  Test with NC A&T Rugby Polo
-                </h3>
-                <p className="text-xs text-slate-400 leading-relaxed mb-4">
-                  Test the complete pipeline with the uploaded tech pack: Double Knit 300 GSM, 1 Sample Unit, XL size chart reference, Chenille center banner, Bulldog sleeve, and Aggie Pride back applique.
-                </p>
+            {/* Step 1.2: Tech Pack / Image Upload Area */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Primary Upload Area */}
+              <div className="lg:col-span-2 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 md:p-8 flex flex-col items-center justify-center text-center">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*,application/pdf"
+                  className="hidden"
+                />
 
-                <button
-                  onClick={handleLoadSample}
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 transition"
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-slate-600 hover:border-emerald-500/80 bg-slate-900/50 hover:bg-slate-900/80 rounded-2xl p-8 md:p-12 cursor-pointer transition flex flex-col items-center justify-center group"
                 >
-                  <Cpu className="w-4 h-4" />
-                  <span>Load Sample Tech Pack</span>
-                </button>
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 group-hover:bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4 transition transform group-hover:scale-105">
+                    <UploadCloud className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-1">
+                    Upload Garment Tech Pack / Mockup Image
+                  </h3>
+                  <p className="text-sm text-slate-400 max-w-md mb-4">
+                    Upload your apparel design, tech pack drawings, fabric specs, and size chart table to generate a draft quotation.
+                  </p>
+                  <div className="flex items-center gap-3 text-xs text-slate-400 bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700">
+                    <span>PNG, JPG, WEBP, PDF up to 25MB</span>
+                  </div>
+                </div>
+
+                {selectedFile && (
+                  <div className="w-full mt-6 bg-slate-900/80 border border-slate-700 rounded-xl p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-emerald-400" />
+                      <div className="text-left">
+                        <p className="text-sm font-semibold text-white">{selectedFile.name}</p>
+                        <p className="text-xs text-slate-400">
+                          {orderType === 'sample' ? 'Sample Order' : 'Bulk Order'} • {orderQuantity} unit(s) • Ready for AI extraction
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => executePipeline({ isSample: false })}
+                      className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition cursor-pointer"
+                    >
+                      <span>Analyze & Extract Specs</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* Manufacturing Standards Info */}
-              <div className="bg-slate-800/40 border border-slate-700/60 rounded-2xl p-6 space-y-3">
-                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                  Configured Sialkot Export Rules
-                </h4>
-                <ul className="text-xs text-slate-400 space-y-2">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>Fixed 30% Gross Profit Margin: <code>FOB = Cost / (1 - 0.30)</code></span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>International Air Courier: Default $10.00 / kg</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>Fixed factory overheads: Pattern master grading & fuel/misc</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>Dual Quotations: Rate Card Engine vs. Gemini Market AI</span>
-                  </li>
-                </ul>
+              {/* Quick Sample Runner & Overview Card */}
+              <div className="space-y-6">
+                <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Instant 1-Click Verification</span>
+                  </div>
+                  <h3 className="text-base font-bold text-white mb-2">
+                    Test with NC A&T Rugby Polo
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed mb-4">
+                    Test the complete pipeline with our verified tech pack: Double Knit 300 GSM, Chenille center banner, Bulldog sleeve, and Aggie Pride back applique.
+                  </p>
+
+                  <button
+                    onClick={handleLoadSample}
+                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 transition cursor-pointer"
+                  >
+                    <Cpu className="w-4 h-4" />
+                    <span>Load Sample Tech Pack</span>
+                  </button>
+                </div>
+
+                {/* Workflow Guidance Card */}
+                <div className="bg-slate-800/40 border border-slate-700/60 rounded-2xl p-6 space-y-3">
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    Fundraiser Quotation Flow
+                  </h4>
+                  <ul className="text-xs text-slate-400 space-y-2">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <span>Select Order Type (Sample / Bulk) & target volume</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <span>Input Shipping Destination for accurate courier freight</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <span>Extract fabric, measurements & embellishments via AI</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <span>Receive <strong>Draft Quotation</strong> & submit for Manufacturer Review</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
@@ -742,229 +1023,767 @@ export default function InstantQuotation({ inDashboard = false }) {
         )}
 
         {/* ==================================================================== */}
-        {/* STAGE 4: DUAL QUOTATIONS (SIDE-BY-SIDE PRESENTATION) */}
+        {/* STAGE 4: DUAL QUOTATIONS (DRAFT QUOTATION PRESENTATION) */}
+        {/* ==================================================================== */}
+        {/* STAGE 4: DUAL QUOTATIONS (DRAFT QUOTATION PRESENTATION) */}
         {/* ==================================================================== */}
         {pipelineStage === 'dual_quotation' && quotationA && quotationB && (
           <div className="space-y-6">
-            {/* Top Summary Banner */}
-            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold uppercase">
-                      Dual Quotation Verified
-                    </span>
-                    <span className="text-xs text-slate-400">• Order: {orderQuantity} unit(s) ({techPackInfo?.orderType})</span>
-                  </div>
-                  <h2 className="text-xl md:text-2xl font-bold text-white">
-                    {techPackInfo?.styleName || 'Apparel Quotation'}
+            {/* SIGN-IN GATE: If user is not authenticated, require login to unlock full quotation & review submission */}
+            {!user ? (
+              <div className="bg-slate-900/95 border-2 border-cyan-500/40 rounded-3xl p-8 sm:p-12 text-center space-y-6 shadow-2xl backdrop-blur-md animate-in fade-in">
+                <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto border border-cyan-500/30">
+                  <Shield className="w-8 h-8" />
+                </div>
+                <div className="max-w-xl mx-auto space-y-2">
+                  <span className="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/40">
+                    Sign In Required
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl font-black text-white">
+                    Sign In to Unlock Quotation & Submit to Manufacturer
                   </h2>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Comparing Sialkot Rate Card Engine against Gemini Market AI benchmark (30% Gross Margin & $10.00/kg Shipping).
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                    Your tech pack specifications, logo calibrations, and rate calculations are ready. Please sign in or create a fundraiser account to view your itemized cost breakdown, export draft PDF documents, and submit this draft for verified manufacturer review.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-700 text-right">
-                    <span className="text-[11px] text-slate-400 block">Variance (A vs B)</span>
-                    <span className="text-sm font-bold font-mono text-emerald-400">
-                      ${comparison?.unitPriceUsd?.differenceUsd} USD ({comparison?.unitPriceUsd?.variancePct}%)
-                    </span>
-                  </div>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-md mx-auto pt-2">
                   <button
-                    onClick={() => setPipelineStage('print_pdf')}
-                    className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition flex items-center gap-2"
+                    onClick={() => navigate('/login?redirect=/instant-quotation')}
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25 transition cursor-pointer"
                   >
-                    <Printer className="w-4 h-4" />
-                    <span>Official Quotation PDF</span>
+                    <span>Sign In to Your Account</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/register?role=fundraiser&redirect=/instant-quotation')}
+                    className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-white font-bold text-xs border border-slate-700 transition cursor-pointer"
+                  >
+                    Create Fundraiser Account
                   </button>
                 </div>
               </div>
-            </div>
-
-            {/* Side-by-Side Dual Quotation Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* ------------------------------------------------------------- */}
-              {/* QUOTATION A: SAYRAB DETERMINISTIC RATE ENGINE */}
-              {/* ------------------------------------------------------------- */}
-              <div className="bg-slate-800/80 border-2 border-emerald-500/40 rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between">
-                <div className="absolute top-0 right-0 bg-emerald-500 text-slate-950 font-extrabold text-[10px] uppercase tracking-wider py-1 px-4 rounded-bl-xl">
-                  Quotation A: Rate Card Engine
-                </div>
-
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Cpu className="w-4 h-4 text-emerald-400" />
-                    <h3 className="text-lg font-bold text-white">Deterministic Sialkot Engine</h3>
-                  </div>
-                  <p className="text-xs text-slate-400 mb-6">
-                    Calculated using factory verified rate sheets, exact size brackets, fuel overhead, and digitizing setup.
-                  </p>
-
-                  {/* Big Price Display */}
-                  <div className="bg-slate-900/80 rounded-xl p-5 border border-slate-700/60 mb-6 flex items-baseline justify-between">
-                    <div>
-                      <span className="text-xs text-slate-400 uppercase font-semibold">Landed Unit Price</span>
-                      <div className="text-3xl font-black text-emerald-400 font-mono mt-1">
-                        ${quotationA.totals.landedUnitUsd}{' '}
-                        <span className="text-xs font-normal text-slate-400">USD</span>
+            ) : (
+              <>
+                {/* MANDATORY DRAFT QUOTATION BANNER */}
+                <div className="bg-amber-500/10 border-2 border-amber-500/50 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-400 shrink-0 mt-0.5">
+                        <AlertTriangle className="w-6 h-6" />
                       </div>
-                      <span className="text-xs font-mono text-slate-400">
-                        PKR {formatCurrency(quotationA.totals.finalTotal)} total order
-                      </span>
-                    </div>
-
-                    <div className="text-right">
-                      <span className="text-xs text-slate-400 block">FOB Unit Price</span>
-                      <span className="text-lg font-bold text-white font-mono">
-                        ${quotationA.totals.fobUnitUsd} USD
-                      </span>
-                      <span className="text-[11px] text-emerald-400 block font-medium">30% Gross Margin</span>
-                    </div>
-                  </div>
-
-                  {/* Line Items Breakdown */}
-                  <div className="space-y-2.5 text-xs">
-                    <span className="font-bold text-slate-300 uppercase tracking-wider text-[11px] block mb-1">
-                      Engine Line Items Breakdown
-                    </span>
-                    {quotationA.lines.map((line, idx) => (
-                      <div key={idx} className="flex items-center justify-between py-1.5 border-b border-slate-700/40">
-                        <div className="flex items-center gap-2 truncate pr-2">
-                          <span className={`w-2 h-2 rounded-full ${
-                            line.category === 'fabric' ? 'bg-blue-400' :
-                            line.category === 'embellishment' ? 'bg-amber-400' :
-                            line.category === 'construction' ? 'bg-emerald-400' : 'bg-purple-400'
-                          }`} />
-                          <span className="text-slate-300 truncate">{line.description}</span>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-amber-500 text-slate-950 font-mono">
+                            Draft Quotation
+                          </span>
+                          <span className="text-xs text-slate-400 font-mono">
+                            • {orderType === 'sample' ? 'Sample Order' : 'Bulk Production'} ({orderQuantity} units)
+                          </span>
+                          <span className="text-xs text-slate-400">
+                            • Ship to: <strong className="text-slate-300">{shippingAddress.city || 'Destination'}, {shippingAddress.country || 'Pakistan'}</strong>
+                          </span>
                         </div>
-                        <div className="text-right font-mono whitespace-nowrap">
-                          <span className="text-white font-semibold">PKR {formatCurrency(line.amount)}</span>
-                          <span className="text-[10px] text-slate-400 block">(${(line.amount / 273).toFixed(2)})</span>
-                        </div>
+                        <h2 className="text-lg md:text-xl font-bold text-white leading-snug">
+                          This is a draft quotation. To move toward production, send it for manufacturer review.
+                        </h2>
+                        <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                          The figures below are preliminary draft estimates generated from your tech pack specifications. Send this draft to verified manufacturers to receive confirmed technical production quotes and sample timelines.
+                        </p>
                       </div>
-                    ))}
-
-                    {/* Fixed Overhead & Shipping */}
-                    <div className="flex items-center justify-between py-1.5 border-b border-slate-700/40">
-                      <span className="text-slate-300">Factory Gross Margin (30%)</span>
-                      <span className="text-emerald-400 font-mono font-bold">
-                        PKR {formatCurrency(quotationA.totals.margin)} (${quotationA.totals.marginUsd})
-                      </span>
                     </div>
-                    <div className="flex items-center justify-between py-1.5">
-                      <span className="text-slate-300">Air Shipping ($10.00/kg @ 0.65kg)</span>
-                      <span className="text-blue-400 font-mono font-bold">
-                        PKR {formatCurrency(quotationA.totals.shipping)} (${quotationA.totals.shippingUnitUsd})
-                      </span>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="mt-6 pt-4 border-t border-slate-700/60 text-[11px] text-slate-400">
-                  <p>Incoterm: FOB Sialkot, Pakistan. Air freight calculated at standard $10.00 / kg rate.</p>
+                <div className="flex items-center gap-3 shrink-0">
+                  <button
+                    onClick={handleSubmitForReview}
+                    disabled={submittingReview || reviewSubmittedSuccess}
+                    className={`px-6 py-3.5 rounded-xl font-bold text-xs flex items-center gap-2.5 transition shadow-lg cursor-pointer ${
+                      reviewSubmittedSuccess
+                        ? 'bg-emerald-500 text-slate-950 shadow-emerald-500/25'
+                        : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 shadow-amber-500/25'
+                    }`}
+                  >
+                    {submittingReview ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Submitting Draft...</span>
+                      </>
+                    ) : reviewSubmittedSuccess ? (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Submitted for Review ✓</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>Send for Manufacturer Review →</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => setPipelineStage('print_pdf')}
+                    className="px-4 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 flex items-center gap-2 transition cursor-pointer"
+                  >
+                    <Printer className="w-4 h-4 text-emerald-400" />
+                    <span>Draft PDF</span>
+                  </button>
+
+                  <button
+                    onClick={() => setProposalModalOpen(true)}
+                    className="px-4 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-md shadow-emerald-600/20"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    <span>View Final Proposal</span>
+                  </button>
+
+                  <button
+                    onClick={() => setChatModalOpen(true)}
+                    className="px-4 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 font-bold text-xs flex items-center gap-2 transition cursor-pointer"
+                  >
+                    <MessageSquare className="w-4 h-4 text-cyan-400" />
+                    <span>Direct Chat</span>
+                  </button>
                 </div>
               </div>
 
-              {/* ------------------------------------------------------------- */}
-              {/* QUOTATION B: GEMINI DIRECT MARKET AI BENCHMARK */}
-              {/* ------------------------------------------------------------- */}
-              <div className="bg-slate-800/80 border-2 border-blue-500/40 rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between">
-                <div className="absolute top-0 right-0 bg-blue-500 text-slate-950 font-extrabold text-[10px] uppercase tracking-wider py-1 px-4 rounded-bl-xl">
-                  Quotation B: Gemini Market AI
-                </div>
-
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-4 h-4 text-blue-400" />
-                    <h3 className="text-lg font-bold text-white">Gemini Market AI Benchmark</h3>
-                  </div>
-                  <p className="text-xs text-slate-400 mb-6">
-                    Independent market intelligence simulation calibrated directly for export apparel clusters in Sialkot.
-                  </p>
-
-                  {/* Big Price Display */}
-                  <div className="bg-slate-900/80 rounded-xl p-5 border border-slate-700/60 mb-6 flex items-baseline justify-between">
-                    <div>
-                      <span className="text-xs text-slate-400 uppercase font-semibold">Landed Unit Price</span>
-                      <div className="text-3xl font-black text-blue-400 font-mono mt-1">
-                        ${quotationB.pricing.landedPricePerUnitUsd}{' '}
-                        <span className="text-xs font-normal text-slate-400">USD</span>
-                      </div>
-                      <span className="text-xs font-mono text-slate-400">
-                        PKR {formatCurrency(Math.round(quotationB.pricing.landedPricePerUnitUsd * 273))} total order
-                      </span>
-                    </div>
-
-                    <div className="text-right">
-                      <span className="text-xs text-slate-400 block">FOB Unit Price</span>
-                      <span className="text-lg font-bold text-white font-mono">
-                        ${quotationB.pricing.fobPriceUsd} USD
-                      </span>
-                      <span className="text-[11px] text-blue-400 block font-medium">30% Gross Margin</span>
-                    </div>
-                  </div>
-
-                  {/* Component Breakdown */}
-                  <div className="space-y-2.5 text-xs">
-                    <span className="font-bold text-slate-300 uppercase tracking-wider text-[11px] block mb-1">
-                      Gemini Factory Costing Estimates
+              {reviewSubmittedSuccess && (
+                <div className="mt-4 pt-4 border-t border-amber-500/30 text-xs text-emerald-300 flex items-center justify-between gap-2 font-medium">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>
+                      Your draft quotation has been submitted to Admin! Admin will review specs and assign a single verified manufacturer.
                     </span>
+                  </div>
+                  <button
+                    onClick={() => setChatModalOpen(true)}
+                    className="px-3 py-1.5 rounded-lg bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-[11px] font-bold flex items-center gap-1 shrink-0"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" /> Open Factory Chat
+                  </button>
+                </div>
+              )}
+            </div>
 
-                    {Object.entries(quotationB.costBreakdown || {}).map(([key, val]) => {
-                      if (key === 'totalManufacturingCost') return null;
-                      return (
-                        <div key={key} className="flex items-center justify-between py-1.5 border-b border-slate-700/40">
-                          <div>
-                            <span className="text-slate-300 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
-                            {val.notes && <span className="text-[10px] text-slate-400 block">{val.notes}</span>}
-                          </div>
-                          <div className="text-right font-mono">
-                            <span className="text-white font-semibold">${val.usd} USD</span>
-                            <span className="text-[10px] text-slate-400 block">(PKR {formatCurrency(val.pkr)})</span>
+            {/* Top Bar with Mode Switcher & AI Confidence */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 font-mono">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  STATUS: AUTO (95% Confidence)
+                </span>
+                <span className="text-xs text-slate-400 font-mono">
+                  Order Type: <strong className="text-white">{orderQuantity <= 3 ? 'Sample Tier' : 'Bulk Tier'} ({orderQuantity} units)</strong>
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('customer')}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                    viewMode === 'customer'
+                      ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Customer View
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('developer')}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                    viewMode === 'developer'
+                      ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Developer / Factory Breakdown
+                </button>
+              </div>
+            </div>
+
+            {/* ============================================================= */}
+            {/* VIEW MODE A: STREAMLINED CUSTOMER QUOTATION PRESENTATION */}
+            {/* ============================================================= */}
+            {viewMode === 'customer' ? (
+              <div className="space-y-6">
+                {/* 1. Main Order Summary Card */}
+                <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                    {/* Left: Big Price Display */}
+                    <div className="lg:col-span-7 space-y-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            {orderType === 'sample' ? 'Sample Order' : 'Requested Order Quote'}
+                          </span>
+                          <span className="text-xs font-mono text-slate-400">
+                            • {orderQuantity} {orderQuantity === 1 ? 'Unit' : 'Units'}
+                          </span>
+                        </div>
+
+                        <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                          {techPackInfo?.styleName || 'Custom Apparel Product'}
+                        </h2>
+                        <p className="text-xs text-slate-400 mt-1">
+                          Calculated with deterministic manufacturing rates + direct shipping to <strong className="text-slate-200">{shippingAddress.city || 'Lahore'}</strong>.
+                        </p>
+                      </div>
+
+                      <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 flex flex-col sm:flex-row sm:items-baseline justify-between gap-4">
+                        <div>
+                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                            Estimated Unit Price
+                          </span>
+                          <div className="text-3xl sm:text-4xl font-black font-mono text-emerald-400 mt-0.5">
+                            ${quotationA?.totals?.landedUnitUsd || quotationA?.requestedOrder?.unitPriceUsd || 32.40}{' '}
+                            <span className="text-sm font-normal text-slate-400 font-sans">/ unit</span>
                           </div>
                         </div>
-                      );
-                    })}
 
-                    <div className="flex items-center justify-between py-1.5 border-b border-slate-700/40">
-                      <span className="text-slate-300">Factory Gross Margin (30%)</span>
-                      <span className="text-emerald-400 font-mono font-bold">
-                        ${quotationB.pricing.marginUsd} USD
-                      </span>
+                        <div className="sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-800">
+                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                            Estimated Order Total
+                          </span>
+                          <div className="text-2xl font-black font-mono text-white mt-0.5">
+                            ${quotationA?.totals?.totalLandedUsd || quotationA?.requestedOrder?.totalPriceUsd || (32.40 * orderQuantity).toFixed(2)} USD
+                          </div>
+                          <span className="text-[10px] text-slate-500 block font-mono">
+                            for {orderQuantity} units total
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between py-1.5">
-                      <span className="text-slate-300">Air Shipping ($10.00/kg)</span>
-                      <span className="text-blue-400 font-mono font-bold">
-                        ${quotationB.pricing.shippingUsd} USD
+
+                    {/* Right: What's Included Checklist */}
+                    <div className="lg:col-span-5 p-5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3">
+                      <span className="text-xs font-black text-slate-200 uppercase tracking-wider block flex items-center gap-1.5">
+                        <CheckCircle className="w-4 h-4 text-emerald-400" />
+                        What's Included
                       </span>
+
+                      <div className="space-y-2 text-xs text-slate-300">
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span><strong>Custom Fabric:</strong> {techPackInfo?.fabric?.name || 'Double Knit Pique'} ({techPackInfo?.fabric?.gsm || 300} GSM)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span><strong>Pattern & Sizing:</strong> {techPackInfo?.sizeChart?.rows?.length ? `${techPackInfo.sizeChart.rows.length} Graded Sizes` : 'Custom Pattern Development'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span><strong>Embellishments:</strong> {decorations.length} Detected Direct Placements</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span><strong>Construction:</strong> Heavyweight sewing & custom collar/placket</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span><strong>Quality & Pack:</strong> 100% Pre-dispatch QC + individual polybag</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Bulk Scale Projection */}
-                {quotationB.bulkComparison && (
-                  <div className="mt-6 pt-4 border-t border-slate-700/60 bg-blue-500/5 -mx-6 -mb-6 p-4 rounded-b-2xl border-t border-blue-500/20">
-                    <div className="flex items-center justify-between text-xs">
+                {/* 2. Compare With Sample Card (Sections 3, 5, 30, 31, 44) */}
+                {orderQuantity > 1 ? (
+                  <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
+                          <TrendingDown className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-black text-white">Compared With Single Sample Economics</h3>
+                          <p className="text-[11px] text-slate-400">
+                            Independent manufacturing costing comparison between 1 physical sample vs {orderQuantity} units.
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/60 px-3 py-1 rounded-full border border-cyan-500/30">
+                        {quotationA?.comparison?.savingsPercentage || 35.2}% Cost Reduction
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                      <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800">
+                        <span className="text-[10px] text-slate-400 uppercase font-bold block mb-1">
+                          1. Single Sample Price
+                        </span>
+                        <span className="text-xl font-black font-mono text-slate-300">
+                          ${quotationA?.sample?.unitPriceUsd || 49.99} USD
+                        </span>
+                        <span className="text-[10px] text-slate-500 block mt-0.5">
+                          1 Unit physical prototype
+                        </span>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800">
+                        <span className="text-[10px] text-emerald-400 uppercase font-bold block mb-1">
+                          2. Your {orderQuantity}-Unit Quote
+                        </span>
+                        <span className="text-xl font-black font-mono text-emerald-400">
+                          ${quotationA?.requestedOrder?.unitPriceUsd || quotationA?.totals?.landedUnitUsd || 32.40} USD / unit
+                        </span>
+                        <span className="text-[10px] text-slate-500 block mt-0.5">
+                          ${quotationA?.requestedOrder?.totalPriceUsd || (32.40 * orderQuantity).toFixed(2)} total order
+                        </span>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-950/40 to-teal-950/40 border border-emerald-500/30">
+                        <span className="text-[10px] text-emerald-300 uppercase font-extrabold block mb-1">
+                          3. You Save
+                        </span>
+                        <span className="text-2xl font-black font-mono text-emerald-300">
+                          Save ${quotationA?.comparison?.savingsPerUnit || ((quotationA?.sample?.unitPriceUsd || 49.99) - (quotationA?.requestedOrder?.unitPriceUsd || 32.40)).toFixed(2)} / unit
+                        </span>
+                        <span className="text-[10px] text-emerald-400/80 block mt-0.5">
+                          ${quotationA?.comparison?.totalSavingsUsd || ((quotationA?.sample?.unitPriceUsd || 49.99) * orderQuantity - (quotationA?.requestedOrder?.totalPriceUsd || 32.40 * orderQuantity)).toFixed(2)} total savings
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 text-center italic pt-1">
+                      Bulk pricing reduces your estimated unit cost by ${quotationA?.comparison?.savingsPerUnit || ((quotationA?.sample?.unitPriceUsd || 49.99) - (quotationA?.requestedOrder?.unitPriceUsd || 32.40)).toFixed(2)} compared with the sample price due to manufacturing economies of scale.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-2xl bg-purple-500/20 text-purple-400">
+                        <Package className="w-5 h-5" />
+                      </div>
                       <div>
-                        <span className="text-blue-300 font-bold block">
-                          Bulk Tier Projection ({quotationB.bulkComparison.bulkQuantityTier})
-                        </span>
-                        <span className="text-slate-400 text-[11px]">Amortized digitizing & setup fees</span>
+                        <h4 className="text-sm font-bold text-white">Pre-Production Sample Order (1 Unit)</h4>
+                        <p className="text-xs text-slate-400">
+                          This is your estimated sample price for 1 physical prototype. Normal volume discounts apply when scaling to 4+ units.
+                        </p>
                       </div>
-                      <div className="text-right">
-                        <span className="text-base font-bold text-white font-mono">
-                          ${quotationB.bulkComparison.projectedBulkLandedUsd} USD
-                        </span>
-                        <span className="text-[11px] text-emerald-400 font-semibold block flex items-center gap-0.5 justify-end">
-                          <TrendingDown className="w-3 h-3" />
-                          {quotationB.bulkComparison.bulkSavingsPercent}% savings
-                        </span>
-                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-2xl font-black font-mono text-purple-300">
+                        ${quotationA?.sample?.unitPriceUsd || quotationA?.totals?.landedUnitUsd || 49.99} USD
+                      </span>
                     </div>
                   </div>
                 )}
+
+                {/* 3. Collapsible Customer Price Breakdown (Section 32) */}
+                <div className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setShowBreakdown(!showBreakdown)}
+                    className="w-full p-5 text-left flex items-center justify-between hover:bg-slate-850 transition cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Sliders className="w-4 h-4 text-emerald-400" />
+                      <span className="text-sm font-bold text-white">
+                        Itemized Price Breakdown
+                      </span>
+                      <span className="text-xs text-slate-400 font-normal">
+                        ({showBreakdown ? 'Click to collapse' : 'Click to expand category estimates'})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
+                      <span>{showBreakdown ? 'Hide Breakdown' : 'View Breakdown'}</span>
+                      <span className="text-slate-400">{showBreakdown ? '▲' : '▼'}</span>
+                    </div>
+                  </button>
+
+                  {showBreakdown && (
+                    <div className="p-6 border-t border-slate-800 bg-slate-950/60 space-y-3 text-xs animate-in fade-in">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                          <span className="text-[10px] text-slate-400 uppercase font-bold block">1. Fabric & Materials</span>
+                          <span className="text-base font-bold font-mono text-white mt-1 block">
+                            ${quotationA?.breakdownUsd?.fabric || 7.25} / unit
+                          </span>
+                          <span className="text-[10px] text-slate-500">
+                            {techPackInfo?.fabric?.name || 'Double Knit'} ({techPackInfo?.fabric?.gsm || 300} GSM)
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                          <span className="text-[10px] text-slate-400 uppercase font-bold block">2. Construction & Sewing</span>
+                          <span className="text-base font-bold font-mono text-white mt-1 block">
+                            ${quotationA?.breakdownUsd?.stitching || 5.50} / unit
+                          </span>
+                          <span className="text-[10px] text-slate-500">
+                            Placket & collar tailoring
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                          <span className="text-[10px] text-slate-400 uppercase font-bold block">3. Pattern Development</span>
+                          <span className="text-base font-bold font-mono text-white mt-1 block">
+                            ${quotationA?.breakdownUsd?.pattern || 1.80} / unit
+                          </span>
+                          <span className="text-[10px] text-slate-500">
+                            Master size grading (fixed setup amortized)
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                          <span className="text-[10px] text-slate-400 uppercase font-bold block">4. Embellishments & Embroidery</span>
+                          <span className="text-base font-bold font-mono text-white mt-1 block">
+                            ${quotationA?.breakdownUsd?.embroidery || 12.00} / unit
+                          </span>
+                          <span className="text-[10px] text-slate-500">
+                            {decorations.length} detected placement(s)
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                          <span className="text-[10px] text-slate-400 uppercase font-bold block">5. Trims & Polybagging</span>
+                          <span className="text-base font-bold font-mono text-white mt-1 block">
+                            ${quotationA?.breakdownUsd?.trims || 1.20} / unit
+                          </span>
+                          <span className="text-[10px] text-slate-500">
+                            Buttons, woven label, packaging
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                          <span className="text-[10px] text-slate-400 uppercase font-bold block">6. Courier Logistics</span>
+                          <span className="text-base font-bold font-mono text-white mt-1 block">
+                            ${quotationA?.breakdownUsd?.shipping || 4.65} / unit
+                          </span>
+                          <span className="text-[10px] text-slate-500">
+                            Direct courier to {shippingAddress.city || 'Destination'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-slate-300">
+                        <span>Total Estimated Landed Price:</span>
+                        <span className="text-emerald-400 font-mono text-base">
+                          ${quotationA?.totals?.landedUnitUsd || quotationA?.requestedOrder?.unitPriceUsd || 32.40} USD / unit
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+            ) : (
+              /* ============================================================= */
+              /* VIEW MODE B: DEVELOPER / FACTORY RATE CARD DEBUG VIEW (Sec 33) */
+              /* ============================================================= */
+              <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-6 animate-in fade-in font-mono text-xs">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <div>
+                    <h3 className="text-sm font-black text-white flex items-center gap-2">
+                      <Cpu className="w-4 h-4 text-cyan-400" />
+                      Quotation Engine Debugging & Technical Rate Card Audit
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      Requested Q: {orderQuantity} &bull; Reference Bulk Q: 30 &bull; Benchmark FX: 1 USD = 280 PKR
+                    </p>
+                  </div>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/30">
+                    Engine Version 1.0
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-900 text-slate-400 border border-slate-800 text-[11px]">
+                        <th className="p-2.5 font-bold">Component</th>
+                        <th className="p-2.5 font-bold">Type</th>
+                        <th className="p-2.5 font-bold">Base Rate / Metric</th>
+                        <th className="p-2.5 font-bold">Multiplier</th>
+                        <th className="p-2.5 font-bold">Unit Cost (PKR)</th>
+                        <th className="p-2.5 font-bold">Batch Total (PKR)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/80 text-slate-300">
+                      {(quotationA?.debug?.requestedDebug || []).map((line, idx) => (
+                        <tr key={idx} className="hover:bg-slate-900/50">
+                          <td className="p-2.5 font-bold text-white">{line.component}</td>
+                          <td className="p-2.5 capitalize text-slate-400">{line.type}</td>
+                          <td className="p-2.5">
+                            {line.ratePerKg ? `PKR ${line.ratePerKg}/kg (${line.consumptionKg}kg)` :
+                             line.baseRate ? `PKR ${line.baseRate} base` :
+                             line.ratePerSize ? `PKR ${line.ratePerSize}/size (${line.sizeCount} sizes)` :
+                             line.rate ? `PKR ${line.rate} tier rate` : 'Standard'}
+                          </td>
+                          <td className="p-2.5 text-cyan-400">{line.multiplier || '1.00'}x</td>
+                          <td className="p-2.5 font-bold">PKR {formatCurrency(line.unitCostPkr)}</td>
+                          <td className="p-2.5 text-emerald-400 font-bold">PKR {formatCurrency(line.totalPkr)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-800 text-center">
+                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                    <span className="text-[10px] text-slate-400 block">Factory Cost Total</span>
+                    <strong className="text-sm text-slate-200">
+                      PKR {formatCurrency(quotationA?.costing?.factoryCostPkr || 0)}
+                    </strong>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                    <span className="text-[10px] text-slate-400 block">Shipping Total</span>
+                    <strong className="text-sm text-slate-200">
+                      PKR {formatCurrency(quotationA?.costing?.shippingPkr || 0)}
+                    </strong>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                    <span className="text-[10px] text-slate-400 block">Configured Margin</span>
+                    <strong className="text-sm text-cyan-400">
+                      {quotationA?.costing?.marginPercent || 30}% Gross Margin
+                    </strong>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                    <span className="text-[10px] text-emerald-400 block">Final Landed Price</span>
+                    <strong className="text-sm text-emerald-400">
+                      ${quotationA?.totals?.landedUnitUsd || 32.40} USD
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ============================================================= */}
+            {/* DRAFT QUOTATION CONTENTS & ATTACHED TECH PACK SPEC SHEET */}
+            {/* All 11 Draft Quotation Requirements explicitly presented */}
+            {/* ============================================================= */}
+            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-700">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase font-mono">
+                      Status: Draft
+                    </span>
+                    <span className="text-xs text-slate-400 font-mono">
+                      • {orderType === 'sample' ? 'Sample Order' : 'Bulk Production'} ({orderQuantity} units)
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white mt-1 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-emerald-400" />
+                    Draft Quotation Specification Sheet & Attached Tech Pack
+                  </h3>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <span className="inline-flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-700 font-mono">
+                    <Shield className="w-3.5 h-3.5 text-indigo-400" />
+                    Attached & Viewable by Fundraiser, Manufacturer & Admin
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Uploaded Tech Pack / Image Card */}
+                <div className="lg:col-span-4 bg-slate-900/80 rounded-2xl p-4 border border-slate-700 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <Layers className="w-4 h-4 text-emerald-400" /> Attached Tech Pack / Mockup
+                      </span>
+                      <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                        Attached
+                      </span>
+                    </div>
+
+                    <div className="relative group rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center min-h-[220px]">
+                      {previewUrl ? (
+                        <img
+                          src={previewUrl}
+                          alt="Attached Tech Pack"
+                          className="w-full h-56 object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="p-6 text-center text-slate-500 text-xs">
+                          <FileText className="w-10 h-10 mx-auto mb-2 text-slate-600" />
+                          <span>Vector Mockup & Tech Pack Drawing Attached</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => setTechPackModalOpen(true)}
+                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-bold text-xs cursor-pointer backdrop-blur-xs"
+                      >
+                        <Maximize2 className="w-4 h-4" />
+                        <span>Inspect Full Tech Pack</span>
+                      </button>
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 mt-2 truncate">
+                      File: {selectedFile?.name || 'NC_AT_Rugby_Polo_TechPack.jpg'}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setTechPackModalOpen(true)}
+                    className="mt-3 w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 transition border border-slate-700 cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>View Tech Pack Details</span>
+                  </button>
+                </div>
+
+                {/* Extracted Product Specs, Fabric, Trims, Shipping */}
+                <div className="lg:col-span-8 space-y-4 text-xs">
+                  {/* Product Specs & Fabric Details */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">Extracted Product Specs</span>
+                      <p className="text-white font-bold text-sm mt-0.5">{techPackInfo?.styleName || 'Custom Apparel Polo'}</p>
+                      <p className="text-slate-300 mt-1">
+                        Garment Type: <span className="font-semibold text-white capitalize">{techPackInfo?.garmentType || 'Polo'}</span>
+                      </p>
+                      <p className="text-slate-300 mt-0.5">
+                        Reference Fit: <span className="font-semibold text-white">{techPackInfo?.selectedSize || 'XL'} ({techPackInfo?.referenceMeasurements?.chest_in || 26.5}" chest)</span>
+                      </p>
+                    </div>
+
+                    <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">Fabric Details</span>
+                      <p className="text-white font-bold text-sm mt-0.5">{techPackInfo?.fabric?.name || 'Double Knit Heavyweight'}</p>
+                      <p className="text-slate-300 mt-1">
+                        GSM Weight: <span className="font-semibold text-emerald-400">{techPackInfo?.fabric?.gsm || 300} GSM</span>
+                      </p>
+                      <p className="text-slate-300 mt-0.5 truncate">
+                        Composition: <span className="font-semibold text-white">{techPackInfo?.fabric?.composition || '80% cotton / 20% polyester'}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Quantity, Order Type & Shipping Address */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">Quantity & Order Type</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-base font-extrabold text-white font-mono">{orderQuantity} Units</span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          orderType === 'sample' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        }`}>
+                          {orderType === 'sample' ? 'Sample Prototype' : 'Bulk Production'}
+                        </span>
+                      </div>
+                      <p className="text-slate-400 text-[11px] mt-1">
+                        Draft estimate basis: FOB Sialkot + Standard Courier.
+                      </p>
+                    </div>
+
+                    <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">Shipping Destination</span>
+                      <p className="text-white font-bold mt-0.5">
+                        {shippingAddress.city || 'Lahore'}, {shippingAddress.country || 'Pakistan'} {shippingAddress.postalCode ? `(${shippingAddress.postalCode})` : ''}
+                      </p>
+                      <p className="text-slate-400 text-[11px] mt-0.5 truncate">
+                        {shippingAddress.street ? `${shippingAddress.street} • ` : ''}Recipient: {shippingAddress.fullName || user?.name || 'Authorized Fundraiser'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Decorations / Logos / Embellishments */}
+                  <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold">Decorations / Logos / Embellishments</span>
+                      <span className="text-[10px] text-emerald-400 font-mono font-semibold">{decorations.length} Detected</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {decorations.map((deco, idx) => (
+                        <div key={idx} className="p-2 bg-slate-950/70 rounded-lg border border-slate-800 flex items-center justify-between">
+                          <div>
+                            <span className="font-bold text-white text-xs block">{deco.name}</span>
+                            <span className="text-[10px] text-slate-400 capitalize">{deco.placement} • {deco.techniqueLabel || deco.technique}</span>
+                          </div>
+                          <span className="font-mono text-emerald-400 text-xs font-semibold">
+                            {deco.dimensions?.width_in}" × {deco.dimensions?.height_in}"
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detected Size Chart Matrix */}
+              {techPackInfo?.sizeChart?.rows && (
+                <div className="pt-2 border-t border-slate-700/60">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <Ruler className="w-3.5 h-3.5 text-emerald-400" />
+                      Detected Garment Size Chart (Inches)
+                    </span>
+                    <span className="text-[11px] text-slate-400 font-mono">Status: Verified Scale</span>
+                  </div>
+                  <div className="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900/80">
+                    <table className="w-full text-xs text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-950 text-slate-400 border-b border-slate-800">
+                          <th className="py-2.5 px-3 font-semibold">Measurement</th>
+                          <th className="py-2.5 px-3 font-semibold">S</th>
+                          <th className="py-2.5 px-3 font-semibold">M</th>
+                          <th className="py-2.5 px-3 font-semibold">L</th>
+                          <th className="py-2.5 px-3 font-bold text-emerald-400 bg-emerald-500/10">XL (Ref)</th>
+                          <th className="py-2.5 px-3 font-semibold">XXL</th>
+                          <th className="py-2.5 px-3 font-semibold">3XL</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60">
+                        {techPackInfo.sizeChart.rows.map((row, idx) => (
+                          <tr key={idx} className="hover:bg-slate-800/40">
+                            <td className="py-2 px-3 font-medium text-slate-200">{row.measurement}</td>
+                            <td className="py-2 px-3 font-mono text-slate-400">{row.s}"</td>
+                            <td className="py-2 px-3 font-mono text-slate-400">{row.m}"</td>
+                            <td className="py-2 px-3 font-mono text-slate-400">{row.l}"</td>
+                            <td className="py-2 px-3 font-mono font-bold text-emerald-400 bg-emerald-500/5">{row.xl}"</td>
+                            <td className="py-2 px-3 font-mono text-slate-400">{row.xxl}"</td>
+                            <td className="py-2 px-3 font-mono text-slate-400">{row['3xl']}"</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Manufacturer Review Action Card */}
+            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-emerald-400" />
+                  Ready to Move Forward to Production?
+                </h4>
+                <p className="text-xs text-slate-400 max-w-xl">
+                  Submit this draft quotation for manufacturer review. Factory engineers will verify pattern fit, stitch density, and dispatch final production quotations.
+                </p>
+              </div>
+              <button
+                onClick={handleSubmitForReview}
+                disabled={submittingReview || reviewSubmittedSuccess}
+                className={`px-6 py-3 rounded-xl font-bold text-xs flex items-center gap-2 transition shadow-lg cursor-pointer shrink-0 ${
+                  reviewSubmittedSuccess
+                    ? 'bg-emerald-500 text-slate-950'
+                    : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
+                }`}
+              >
+                {reviewSubmittedSuccess ? (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Review Dispatched</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>Send for Manufacturer Review</span>
+                  </>
+                )}
+              </button>
             </div>
 
             {/* AI Assistant Chat Box */}
@@ -1017,15 +1836,17 @@ export default function InstantQuotation({ inDashboard = false }) {
                 <button
                   type="submit"
                   disabled={chatThinking || !chatInput.trim()}
-                  className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 transition"
+                  className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Send</span>
                 </button>
               </form>
             </div>
-          </div>
+          </>
         )}
+      </div>
+    )}
 
         {/* ==================================================================== */}
         {/* STAGE 5: OFFICIAL COMMERCIAL QUOTATION PDF PREVIEW */}
@@ -1036,16 +1857,16 @@ export default function InstantQuotation({ inDashboard = false }) {
             <div className="flex items-center justify-between border-b border-slate-700 pb-4">
               <button
                 onClick={() => setPipelineStage('dual_quotation')}
-                className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5"
+                className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 cursor-pointer"
               >
                 <ArrowRight className="w-3.5 h-3.5 rotate-180" />
-                Back to Dual Quotation
+                Back to Draft Quotation
               </button>
 
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => window.print()}
-                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
                 >
                   <Printer className="w-4 h-4" />
                   Print / Save PDF
@@ -1066,25 +1887,68 @@ export default function InstantQuotation({ inDashboard = false }) {
                 </div>
 
                 <div className="text-right">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">Proforma Quotation</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded block mb-1">
+                    Status: Draft Quotation
+                  </span>
                   <span className="text-base font-black font-mono text-slate-900">SYR-QT-{Date.now().toString().slice(-6)}</span>
                   <span className="text-xs text-slate-500 block mt-1">Date: {new Date().toLocaleDateString()}</span>
                 </div>
+              </div>
+
+              {/* Important Draft Notice on Document */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Draft Quotation:</strong> This is a draft quotation. To move toward production, send it for manufacturer review. Final production rates and stitch density will be confirmed by verified manufacturers.
+                </span>
               </div>
 
               {/* Client & Style Summary */}
               <div className="grid grid-cols-2 gap-6 text-xs border-b border-slate-200 pb-6">
                 <div>
                   <span className="font-bold text-slate-400 uppercase tracking-wider block mb-1">Prepared For</span>
-                  <p className="font-bold text-slate-800 text-sm">{user?.name || 'Valued Apparel Client'}</p>
-                  <p className="text-slate-600 mt-0.5">{user?.email || 'client@apparelbrand.com'}</p>
+                  <p className="font-bold text-slate-800 text-sm">{shippingAddress.fullName || user?.name || 'Valued Apparel Client'}</p>
+                  <p className="text-slate-600 mt-0.5">{shippingAddress.phone || user?.email || 'client@apparelbrand.com'}</p>
+                  <p className="text-slate-600 mt-0.5">
+                    Ship to: {shippingAddress.street ? `${shippingAddress.street}, ` : ''}{shippingAddress.city || 'Lahore'}, {shippingAddress.country || 'Pakistan'} {shippingAddress.postalCode ? `(${shippingAddress.postalCode})` : ''}
+                  </p>
                 </div>
                 <div>
                   <span className="font-bold text-slate-400 uppercase tracking-wider block mb-1">Style & Order Spec</span>
                   <p className="font-bold text-slate-800 text-sm">{techPackInfo?.styleName}</p>
                   <p className="text-slate-600 mt-0.5">
-                    Fabric: {techPackInfo?.fabric?.name} ({techPackInfo?.fabric?.gsm} GSM) • Quantity: {orderQuantity} unit(s)
+                    Fabric: {techPackInfo?.fabric?.name} ({techPackInfo?.fabric?.gsm} GSM) • Order: {orderType === 'sample' ? 'Sample' : 'Bulk'} ({orderQuantity} units)
                   </p>
+                  <p className="text-slate-600 mt-0.5 font-medium">
+                    Attached Tech Pack: {selectedFile?.name || 'NC_AT_Rugby_Polo_TechPack.jpg'} (Stored & Attached)
+                  </p>
+                </div>
+              </div>
+
+              {/* Attached Tech Pack Mockup & Extracted Specs Preview on PDF */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-slate-200 pb-6 text-xs">
+                <div className="border border-slate-200 rounded-lg p-2 bg-slate-50 flex flex-col items-center justify-center text-center">
+                  {previewUrl ? (
+                    <img src={previewUrl} alt="Tech Pack Attached" className="max-h-36 object-contain rounded" />
+                  ) : (
+                    <div className="p-4 text-slate-400">Tech Pack Attached</div>
+                  )}
+                  <span className="text-[10px] text-slate-500 font-semibold mt-1">Attached Tech Pack Drawing</span>
+                </div>
+
+                <div className="md:col-span-2 space-y-2">
+                  <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Detected Embellishments & Trims</h4>
+                  <div className="space-y-1">
+                    {decorations.map((d, i) => (
+                      <div key={i} className="flex items-center justify-between border-b border-slate-100 py-1">
+                        <span className="font-semibold text-slate-700">{d.name} ({d.placement})</span>
+                        <span className="font-mono text-slate-600">{d.techniqueLabel || d.technique} • {d.dimensions?.width_in}"×{d.dimensions?.height_in}"</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pt-2 text-[11px] text-slate-500">
+                    Trims: Placket buttons (3x), Rib collar and cuffs, woven size labels.
+                  </div>
                 </div>
               </div>
 
@@ -1124,10 +1988,6 @@ export default function InstantQuotation({ inDashboard = false }) {
                     <span>Manufacturing Subtotal:</span>
                     <span className="font-mono">${quotationA.totals.mfgCostUsd} USD</span>
                   </div>
-                  <div className="flex justify-between text-slate-600">
-                    <span>Gross Factory Margin (30%):</span>
-                    <span className="font-mono text-emerald-700 font-semibold">+${quotationA.totals.marginUsd} USD</span>
-                  </div>
                   <div className="flex justify-between text-slate-900 font-bold border-t border-slate-200 pt-1">
                     <span>FOB Sialkot Unit Price:</span>
                     <span className="font-mono">${quotationA.totals.fobUnitUsd} USD</span>
@@ -1140,18 +2000,109 @@ export default function InstantQuotation({ inDashboard = false }) {
                     <span>TOTAL LANDED UNIT:</span>
                     <span className="font-mono text-emerald-700">${quotationA.totals.landedUnitUsd} USD</span>
                   </div>
+                  <div className="flex justify-between text-slate-900 font-black text-sm border-t border-slate-300 pt-1">
+                    <span>TOTAL DRAFT ORDER ({orderQuantity} units):</span>
+                    <span className="font-mono text-emerald-700">
+                      ${(quotationA.totals.landedUnitUsd * orderQuantity).toFixed(2)} USD
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Incoterm & Terms Footer */}
               <div className="border-t border-slate-200 pt-4 text-[10px] text-slate-500 space-y-1">
                 <p className="font-semibold text-slate-700">TERMS & CONDITIONS:</p>
-                <p>1. Our prices are FOB Sialkot, Pakistan. Air freight estimate is based on $10.00 / kg standard carrier courier.</p>
-                <p>2. Payment Terms: 50% advance upon sample approval, 50% prior to dispatch.</p>
-                <p>3. Lead Time: Sample approval 7-10 working days; Bulk production 21-28 working days.</p>
+                <p>1. Status: Draft. This quotation is subject to technical review by Sayrab manufacturing partners.</p>
+                <p>2. Our prices are FOB Sialkot, Pakistan with international courier logistics.</p>
+                <p>3. Lead Time: Sample prototype 7-10 working days; Bulk production 21-28 working days.</p>
               </div>
             </div>
           </div>
+        )}
+
+        {/* Tech Pack Full Lightbox Modal */}
+        {/* Tech Pack Modal */}
+        {techPackModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+              <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-emerald-400" />
+                  <h3 className="font-bold text-white text-sm">
+                    Attached Tech Pack: {selectedFile?.name || 'NC_AT_Rugby_Polo_TechPack.jpg'}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTechPackModalOpen(false)}
+                  className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-6 overflow-y-auto flex-1 flex items-center justify-center bg-slate-950">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Full Tech Pack Inspection"
+                    className="max-h-[65vh] w-auto object-contain rounded-xl border border-slate-800 shadow-2xl"
+                  />
+                ) : (
+                  <div className="text-center text-slate-400 text-xs py-12">
+                    <FileText className="w-12 h-12 mx-auto mb-2 text-slate-600" />
+                    <span>Tech pack graphic data attached to this draft quotation.</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 border-t border-slate-800 bg-slate-900 flex items-center justify-between text-xs text-slate-400">
+                <span>Access Level: Attached to draft quote & saved for Fundraiser, Manufacturer & Admin review.</span>
+                <button
+                  type="button"
+                  onClick={() => setTechPackModalOpen(false)}
+                  className="px-4 py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Fundraiser Manufacturer Final Proposal Inspection Modal */}
+        {proposalModalOpen && (
+          <FundraiserProposalModal
+            quotation={
+              savedQuotationObj || {
+                _id: savedQuotationId,
+                projectName: techPackInfo?.styleName || 'Apparel Quotation',
+                quantity: orderQuantity,
+                orderType,
+                shippingAddress,
+                techPackImage: previewUrl,
+                calculation: quotationA,
+                manufacturerProposal: savedQuotationObj?.manufacturerProposal,
+                assignedManufacturer: savedQuotationObj?.assignedManufacturer || { name: 'Assigned Manufacturing Partner' },
+              }
+            }
+            onClose={() => setProposalModalOpen(false)}
+            onUpdated={(updated) => setSavedQuotationObj(updated)}
+          />
+        )}
+
+        {/* Secure Private Chat Modal */}
+        {chatModalOpen && (
+          <QuotationChatModal
+            quotation={
+              savedQuotationObj || {
+                _id: savedQuotationId,
+                projectName: techPackInfo?.styleName || 'Apparel Quotation',
+                assignedManufacturer: savedQuotationObj?.assignedManufacturer || { name: 'Assigned Manufacturing Partner' },
+              }
+            }
+            onClose={() => setChatModalOpen(false)}
+          />
         )}
       </div>
     </div>

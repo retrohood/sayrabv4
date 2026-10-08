@@ -65,3 +65,10 @@ export const requireFundraiser = (req, res, next) => {
   }
   next();
 };
+
+export const requireAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== USER_ROLES.ADMIN) {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+  next();
+};

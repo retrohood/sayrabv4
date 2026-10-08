@@ -1,3 +1,8 @@
+import dns from 'dns';
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (_) {}
+
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 const stripJsonFence = (value) =>
@@ -33,9 +38,10 @@ const callGeminiDirect = async ({ prompt, fileData, mimeType, temperature = 0.1 
     throw new Error('GEMINI_API_KEY is not configured');
   }
 
-  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-  const parts = [{ text: prompt }];
+  const primaryModel = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+  const candidateModels = Array.from(new Set([primaryModel, 'gemini-3.5-flash-lite', 'gemini-3.8-flash']));
 
+  const parts = [{ text: prompt }];
   if (fileData && mimeType) {
     parts.push({
       inline_data: {
@@ -45,29 +51,39 @@ const callGeminiDirect = async ({ prompt, fileData, mimeType, temperature = 0.1 
     });
   }
 
-  const response = await fetch(`${GEMINI_ENDPOINT}/${model}:generateContent`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': apiKey,
-    },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts }],
-      generationConfig: {
-        temperature,
-        responseMimeType: 'application/json',
-      },
-    }),
-  });
+  let lastError = null;
+  for (const model of candidateModels) {
+    try {
+      const response = await fetch(`${GEMINI_ENDPOINT}/${model}:generateContent`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
+        },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts }],
+          generationConfig: {
+            temperature,
+            responseMimeType: 'application/json',
+          },
+        }),
+      });
 
-  const payload = await response.json();
-  if (!response.ok) {
-    const message = payload?.error?.message || 'Gemini API call failed';
-    throw new Error(message);
+      const payload = await response.json();
+      if (!response.ok) {
+        const message = payload?.error?.message || `Model ${model} returned status ${response.status}`;
+        lastError = new Error(message);
+        continue;
+      }
+
+      const textResponse = getTextFromGeminiResponse(payload);
+      return parseJsonResponse(textResponse);
+    } catch (err) {
+      lastError = err;
+    }
   }
 
-  const textResponse = getTextFromGeminiResponse(payload);
-  return parseJsonResponse(textResponse);
+  throw lastError || new Error('All Gemini models failed');
 };
 
 // ============================================================================

@@ -122,6 +122,7 @@ export const ORDER_PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded'];
 export const ORDER_STATUSES = ['placed', 'paid', 'production', 'shipped', 'delivered', 'cancelled', 'refunded'];
 export const DESIGN_STATUSES = ['draft', 'generated', 'approved', 'rejected'];
 export const PRODUCTION_STATUSES = [
+  'pending_start',
   'waiting',
   'queued',
   'in_production',
@@ -129,6 +130,7 @@ export const PRODUCTION_STATUSES = [
   'ready_to_ship',
   'shipped',
   'delivered',
+  'completed',
   'cancelled',
 ];
 

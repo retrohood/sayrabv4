@@ -1,9 +1,14 @@
 import mongoose from 'mongoose';
 import Quotation from '../models/Quotation.js';
+import Manufacturer from '../models/Manufacturer.js';
+import Order from '../models/Order.js';
+import QuotationMessage from '../models/QuotationMessage.js';
+import AdminNotification from '../models/AdminNotification.js';
 import { isDatabaseConnected } from '../utils/demoAuth.js';
 import { inMemoryDB } from '../utils/inMemoryDB.js';
 import { sampleExtractions } from '../services/quotationData.js';
 import { calculateQuotation } from '../services/quotationEngine.js';
+import { generateQuotation, calculateSingleQuote } from '../services/pricingEngine.js';
 import {
   extractTechPackInfo,
   identifyLogosAndEmbellishments,
@@ -129,7 +134,7 @@ export const calculateDualQuotation = async (req, res) => {
   try {
     const { techPackInfo, decorations, quantity = 1, pricingOptions = {} } = req.body;
 
-    // Build complete DesignSpec for Sayrab Rate Engine
+    // Build complete Structured Garment Specification
     const designSpec = {
       id: `TECHPACK-${Date.now()}`,
       quantity: Number(quantity || techPackInfo?.totalUnits || 1),
@@ -139,8 +144,16 @@ export const calculateDualQuotation = async (req, res) => {
         quantity: Number(quantity || techPackInfo?.totalUnits || 1),
         size_reference: techPackInfo?.selectedSize || 'XL',
       },
+      garment_type: techPackInfo?.garmentType || 'polo',
+      sizes: techPackInfo?.sizeChart?.rows ? ['S', 'M', 'L', 'XL', 'XXL'] : ['XL'],
       measurements: techPackInfo?.referenceMeasurements || { chest_in: 26.5, length_in: 29.0 },
       sizeChart: techPackInfo?.sizeChart || null,
+      fabric: techPackInfo?.fabric || {
+        name: 'cotton_poly_pique',
+        composition: '80% cotton / 20% polyester',
+        gsm: 300,
+        consumption_kg: 0.42,
+      },
       fabrics: [
         techPackInfo?.fabric || {
           name: 'Double Knit Fabric',
@@ -150,6 +163,7 @@ export const calculateDualQuotation = async (req, res) => {
         },
       ],
       decorations: decorations || [],
+      embroidery: decorations || [],
       trims: techPackInfo?.trims || [
         { type: 'button', name: 'Placket Buttons', quantity_per_garment: 3 },
         { type: 'rib', name: 'Rib Collar & Cuffs', quantity_per_garment: 1 },
@@ -157,8 +171,27 @@ export const calculateDualQuotation = async (req, res) => {
       ],
     };
 
-    // 1. Calculate Quotation A: Deterministic Sialkot Rate Card Engine
-    const quotationA = calculateQuotation(designSpec, pricingOptions);
+    // 1. Calculate Deterministic Version 1.0 Quotation (Independent Sample Q=1 and Requested Q)
+    const deterministicQuote = generateQuotation(designSpec, designSpec.quantity, pricingOptions);
+
+    // Quotation A object formatted with backward compatibility
+    const quotationA = {
+      totals: {
+        landedUnitUsd: deterministicQuote.requestedOrder.unitPriceUsd,
+        totalLandedUsd: deterministicQuote.requestedOrder.totalPriceUsd,
+        fobUnitUsd: deterministicQuote.requestedOrder.costing.factoryUnitUsd,
+        shippingUnitUsd: deterministicQuote.requestedOrder.costing.shippingUnitUsd,
+      },
+      sample: deterministicQuote.sample,
+      requestedOrder: deterministicQuote.requestedOrder,
+      comparison: deterministicQuote.comparison,
+      breakdownUsd: deterministicQuote.requestedOrder.breakdownUsd,
+      costing: deterministicQuote.requestedOrder.costing,
+      status: deterministicQuote.status,
+      confidence: deterministicQuote.confidence,
+      debug: deterministicQuote.debug,
+      lines: calculateQuotation(designSpec, pricingOptions)?.lines || [],
+    };
 
     // 2. Calculate Quotation B: Gemini Direct Market AI Benchmark
     const geminiQuoteResult = await generateGeminiMarketQuotation({
@@ -182,6 +215,8 @@ export const calculateDualQuotation = async (req, res) => {
 
     // 3. Compute Side-by-Side Comparison
     const comparison = {
+      sampleVsRequested: deterministicQuote.comparison,
+      isSampleOnly: deterministicQuote.isSampleOnly,
       unitPriceUsd: {
         quotationA_engine: quotationA.totals.landedUnitUsd,
         quotationB_gemini: qbLanded,
@@ -242,6 +277,10 @@ export const calculateDualQuotation = async (req, res) => {
         owner: userId,
         projectName: req.body.projectName || techPackInfo?.styleName || 'Custom Tech Pack Quotation',
         clientName: req.body.clientName || 'Apparel Client',
+        orderType: req.body.orderType || (designSpec.quantity <= 3 ? 'sample' : 'bulk'),
+        quantity: designSpec.quantity,
+        shippingAddress: req.body.shippingAddress || null,
+        techPackImage: req.body.techPackImage || req.body.fileData || techPackInfo?.techPackImage || '',
         notes: req.body.notes || '',
         designSpec,
         calculation: quotationA,
@@ -256,12 +295,485 @@ export const calculateDualQuotation = async (req, res) => {
     }
 
     res.json({
+      deterministicQuote,
       quotationA,
       quotationB,
       comparison,
       designSpec,
       savedId: savedQuotation?._id || null,
     });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// Helper to get manufacturer ID for logged-in manufacturer user
+const getManufacturerContext = async (req) => {
+  if (req.user && req.user.manufacturerId) {
+    return req.user.manufacturerId;
+  }
+  if (req.user && (req.user.role === 'manufacturer' || req.user.email?.includes('manufacturer'))) {
+    const m = await Manufacturer.findOne({ email: req.user.email });
+    if (m) return m._id;
+    const firstM = await Manufacturer.findOne();
+    if (firstM) return firstM._id;
+  }
+  return null;
+};
+
+// 1. Fundraiser Submits Draft Quote to Admin for Assignment
+export const submitForReview = async (req, res) => {
+  try {
+    let current;
+    if (!isDatabaseConnected(mongoose)) {
+      current = inMemoryDB.quotations.findOne({ _id: req.params.id });
+    } else {
+      current = await Quotation.findById(req.params.id);
+    }
+
+    const serialized = serializeQuotation(current);
+    if (!serialized) return res.status(404).json({ message: 'Quotation not found' });
+    if (req.user && serialized.owner && serialized.owner.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const updates = { status: 'submitted_to_admin' };
+    if (!isDatabaseConnected(mongoose)) {
+      return res.json(inMemoryDB.quotations.update(req.params.id, updates));
+    }
+
+    const quotation = await Quotation.findByIdAndUpdate(req.params.id, updates, { new: true })
+      .populate('owner', 'fullName email phone')
+      .populate('assignedManufacturer', 'name companyName email phone');
+
+    // Create persistent Admin Notification
+    try {
+      await AdminNotification.create({
+        type: 'quotation_review',
+        title: 'New Quotation Request for Manufacturer Assignment',
+        message: `Fundraiser ${req.user?.fullName || quotation.owner?.fullName || 'User'} submitted quotation "${quotation.projectName || 'Garment Quotation'}" (${quotation.quantity} units, order type: ${quotation.orderType}) for manufacturer assignment.`,
+        link: '/admin/manufacturers?tab=quotations',
+        severity: 'info',
+        metadata: {
+          quotationId: quotation._id,
+          orderType: quotation.orderType,
+          quantity: quotation.quantity,
+          projectName: quotation.projectName,
+        },
+      });
+    } catch (notifErr) {
+      console.warn('Failed to create AdminNotification:', notifErr.message);
+    }
+
+    res.json(quotation);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// 2. Admin Assigns Quotation to Exactly ONE Manufacturer (No Open RFQ)
+export const assignToManufacturer = async (req, res) => {
+  try {
+    const { manufacturerId, adminNotes } = req.body;
+    if (!manufacturerId) {
+      return res.status(400).json({ message: 'Manufacturer ID is required for assignment' });
+    }
+
+    let quotation;
+    if (!isDatabaseConnected(mongoose)) {
+      quotation = inMemoryDB.quotations.findOne({ _id: req.params.id });
+    } else {
+      quotation = await Quotation.findById(req.params.id);
+    }
+
+    if (!quotation) return res.status(404).json({ message: 'Quotation not found' });
+    if (quotation.status === 'cancelled') {
+      return res.status(400).json({ message: 'Cannot assign a cancelled quotation' });
+    }
+
+    const updates = {
+      assignedManufacturer: manufacturerId,
+      adminNotes: adminNotes || quotation.adminNotes || '',
+      status: 'assigned_to_manufacturer',
+    };
+
+    if (!isDatabaseConnected(mongoose)) {
+      return res.json(inMemoryDB.quotations.update(req.params.id, updates));
+    }
+
+    const updated = await Quotation.findByIdAndUpdate(req.params.id, updates, { new: true })
+      .populate('owner', 'fullName email phone')
+      .populate('assignedManufacturer', 'name companyName email phone');
+
+    // Create Admin Notification record of the assignment
+    try {
+      const mfgDoc = await Manufacturer.findById(manufacturerId);
+      await AdminNotification.create({
+        type: 'quotation_assignment',
+        title: 'Quotation Assigned to Manufacturer',
+        message: `Quotation "${updated.projectName || 'Garment Quotation'}" assigned to ${mfgDoc?.name || mfgDoc?.companyName || 'Manufacturer'}.`,
+        link: '/admin/manufacturers?tab=quotations',
+        severity: 'success',
+        metadata: {
+          quotationId: updated._id,
+          manufacturerId,
+          manufacturerName: mfgDoc?.name,
+        },
+      });
+    } catch (notifErr) {
+      console.warn('Failed to create AdminNotification for assignment:', notifErr.message);
+    }
+
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// 3. Admin Cancels / Strikes a Quotation Request (Before Production Starts)
+export const cancelQuotation = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    let quotation;
+    if (!isDatabaseConnected(mongoose)) {
+      quotation = inMemoryDB.quotations.findOne({ _id: req.params.id });
+    } else {
+      quotation = await Quotation.findById(req.params.id);
+    }
+
+    if (!quotation) return res.status(404).json({ message: 'Quotation not found' });
+
+    if (quotation.status === 'production_started' || quotation.status === 'completed') {
+      return res.status(400).json({ message: 'Cannot cancel quotation after production has started' });
+    }
+
+    const updates = {
+      status: 'cancelled',
+      cancelledReason: reason || 'Cancelled by admin',
+      cancelledBy: req.user?._id || null,
+    };
+
+    if (!isDatabaseConnected(mongoose)) {
+      return res.json(inMemoryDB.quotations.update(req.params.id, updates));
+    }
+
+    const updated = await Quotation.findByIdAndUpdate(req.params.id, updates, { new: true })
+      .populate('owner', 'fullName email phone')
+      .populate('assignedManufacturer', 'name companyName email phone');
+
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// 4. Manufacturer Responds (Reviewing, Proposal Sent, Accept)
+export const respondManufacturerProposal = async (req, res) => {
+  try {
+    const { action, notes, proposal } = req.body;
+    let quotation;
+    if (!isDatabaseConnected(mongoose)) {
+      quotation = inMemoryDB.quotations.findOne({ _id: req.params.id });
+    } else {
+      quotation = await Quotation.findById(req.params.id);
+    }
+
+    if (!quotation) return res.status(404).json({ message: 'Quotation not found' });
+
+    let status = quotation.status;
+    if (action === 'review') status = 'manufacturer_reviewing';
+    else if (action === 'proposal') status = 'manufacturer_proposal_sent';
+    else if (action === 'accept') status = 'accepted_by_fundraiser';
+
+    const updates = {
+      status,
+      manufacturerNotes: notes || quotation.manufacturerNotes || '',
+      ...(proposal ? { manufacturerProposal: proposal } : {}),
+    };
+
+    if (!isDatabaseConnected(mongoose)) {
+      return res.json(inMemoryDB.quotations.update(req.params.id, updates));
+    }
+
+    const updated = await Quotation.findByIdAndUpdate(req.params.id, updates, { new: true })
+      .populate('owner', 'fullName email phone')
+      .populate('assignedManufacturer', 'name companyName email phone');
+
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// 5. Start Production
+export const startProduction = async (req, res) => {
+  try {
+    let quotation;
+    if (!isDatabaseConnected(mongoose)) {
+      quotation = inMemoryDB.quotations.findOne({ _id: req.params.id });
+    } else {
+      quotation = await Quotation.findById(req.params.id);
+    }
+
+    if (!quotation) return res.status(404).json({ message: 'Quotation not found' });
+    if (quotation.status === 'cancelled') {
+      return res.status(400).json({ message: 'Cannot start production on a cancelled quotation' });
+    }
+
+    const updates = { status: 'production_started' };
+    if (!isDatabaseConnected(mongoose)) {
+      return res.json(inMemoryDB.quotations.update(req.params.id, updates));
+    }
+
+    const updated = await Quotation.findByIdAndUpdate(req.params.id, updates, { new: true })
+      .populate('owner', 'fullName email phone')
+      .populate('assignedManufacturer', 'name companyName email phone');
+
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// 6. Fundraiser Accepts Manufacturer Proposal -> Starts Production & Creates Order
+export const acceptProposal = async (req, res) => {
+  try {
+    let quotation;
+    if (!isDatabaseConnected(mongoose)) {
+      quotation = inMemoryDB.quotations.findOne({ _id: req.params.id });
+    } else {
+      quotation = await Quotation.findById(req.params.id)
+        .populate('owner', 'fullName email phone')
+        .populate('assignedManufacturer', 'name companyName email phone');
+    }
+
+    if (!quotation) return res.status(404).json({ message: 'Quotation not found' });
+
+    // Verify user is owner or admin
+    const isOwner = req.user && (quotation.owner?._id || quotation.owner).toString() === req.user._id.toString();
+    const isAdmin = req.user && req.user.role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: 'Only the quotation owner can accept this proposal' });
+    }
+
+    const updates = { status: 'production_started' };
+    let updatedQuotation;
+    if (!isDatabaseConnected(mongoose)) {
+      updatedQuotation = inMemoryDB.quotations.update(req.params.id, updates);
+    } else {
+      updatedQuotation = await Quotation.findByIdAndUpdate(req.params.id, updates, { new: true })
+        .populate('owner', 'fullName email phone')
+        .populate('assignedManufacturer', 'name companyName email phone');
+    }
+
+    // Automatically create / link active Order
+    const unitPrice =
+      Number(quotation.manufacturerProposal?.landedUnitUsd) ||
+      Number(quotation.calculation?.totals?.landedUnitUsd) ||
+      45;
+    const qty = Number(quotation.quantity) || 1;
+    const totalUsd = +(unitPrice * qty).toFixed(2);
+
+    let createdOrder = null;
+    if (isDatabaseConnected(mongoose)) {
+      createdOrder = await Order.create({
+        customerId: quotation.owner?._id || quotation.owner,
+        fundraiserId: quotation.owner?._id || quotation.owner,
+        campaignId: quotation.campaign || undefined,
+        quotationId: quotation._id,
+        orderType: quotation.orderType || (qty <= 5 ? 'sample' : 'bulk'),
+        techPackImage: quotation.techPackImage || '',
+        designSpec: quotation.designSpec,
+        quotationProposal: quotation.manufacturerProposal,
+        products: [
+          {
+            name: quotation.projectName || quotation.designSpec?.garment?.style || 'Custom Apparel Run',
+            quantity: qty,
+            price: unitPrice,
+            size: quotation.designSpec?.garment?.size_reference || 'Standard',
+            color: quotation.designSpec?.fabrics?.[0]?.name || 'Standard Milled',
+          },
+        ],
+        total: totalUsd,
+        paymentStatus: 'paid',
+        orderStatus: 'production',
+        productionStatus: 'pending_start',
+        assignedManufacturer: quotation.assignedManufacturer?._id || quotation.assignedManufacturer,
+        assignedDate: new Date(),
+        shippingAddress: quotation.shippingAddress || {
+          fullName: quotation.owner?.fullName || 'Fundraiser Recipient',
+          city: 'Lahore',
+          country: 'Pakistan',
+        },
+        invoiceNumber: `INV-PROD-${Date.now().toString().slice(-6)}`,
+        carrier: 'TCS Express Logistics',
+        estimatedDelivery: new Date(Date.now() + (Number(quotation.manufacturerProposal?.estimatedLeadDays) || 14) * 24 * 3600 * 1000),
+        manufacturerNotes: quotation.manufacturerProposal?.customNotes || quotation.manufacturerNotes || 'Production triggered upon proposal acceptance.',
+      });
+    }
+
+    res.json({
+      quotation: updatedQuotation,
+      order: createdOrder,
+      message: 'Proposal accepted! Production order initiated and assigned to manufacturer.',
+    });
+  } catch (error) {
+    console.error('Accept proposal error:', error);
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// 7. Fundraiser Requests Revision
+export const requestRevision = async (req, res) => {
+  try {
+    const { revisionNotes } = req.body;
+    let quotation;
+    if (!isDatabaseConnected(mongoose)) {
+      quotation = inMemoryDB.quotations.findOne({ _id: req.params.id });
+    } else {
+      quotation = await Quotation.findById(req.params.id);
+    }
+
+    if (!quotation) return res.status(404).json({ message: 'Quotation not found' });
+
+    const isOwner = req.user && (quotation.owner?._id || quotation.owner).toString() === req.user._id.toString();
+    const isAdmin = req.user && req.user.role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: 'Only the quotation owner can request revisions' });
+    }
+
+    const updates = {
+      status: 'manufacturer_reviewing',
+      notes: revisionNotes ? `${quotation.notes ? quotation.notes + ' | ' : ''}Revision Requested: ${revisionNotes}` : quotation.notes,
+    };
+
+    if (!isDatabaseConnected(mongoose)) {
+      return res.json(inMemoryDB.quotations.update(req.params.id, updates));
+    }
+
+    const updated = await Quotation.findByIdAndUpdate(req.params.id, updates, { new: true })
+      .populate('owner', 'fullName email phone')
+      .populate('assignedManufacturer', 'name companyName email phone');
+
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// 8. SECURE CHAT: Get Messages for Quotation (Backend Access Control Enforced)
+export const getQuotationMessages = async (req, res) => {
+  try {
+    let quotation;
+    if (!isDatabaseConnected(mongoose)) {
+      quotation = inMemoryDB.quotations.findOne({ _id: req.params.id });
+    } else {
+      quotation = await Quotation.findById(req.params.id);
+    }
+
+    if (!quotation) return res.status(404).json({ message: 'Quotation not found' });
+
+    const ownerId = (quotation.owner?._id || quotation.owner)?.toString();
+    const manId = (quotation.assignedManufacturer?._id || quotation.assignedManufacturer)?.toString();
+    const userId = req.user?._id?.toString();
+    const userRole = req.user?.role;
+    const userManId = req.user?.manufacturerId?.toString();
+
+    // Strict Backend Access Control: Owner, Assigned Manufacturer, or Admin
+    const isOwner = userId === ownerId;
+    const isAdmin = userRole === 'admin';
+    const isAssignedManufacturer =
+      (userRole === 'manufacturer' && (userManId === manId || (await getManufacturerContext(req))?.toString() === manId));
+
+    if (!isOwner && !isAdmin && !isAssignedManufacturer) {
+      return res.status(403).json({
+        message: 'Access denied: You are not authorized to view messages for this private quotation.',
+      });
+    }
+
+    if (!isDatabaseConnected(mongoose)) {
+      return res.json([]);
+    }
+
+    const messages = await QuotationMessage.find({ quotation: req.params.id }).sort({ createdAt: 1 });
+
+    // Auto-mark unread messages from other party as read
+    await QuotationMessage.updateMany(
+      { quotation: req.params.id, senderId: { $ne: req.user._id }, isRead: false },
+      { isRead: true, readAt: new Date() }
+    );
+
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// 9. SECURE CHAT: Send Message for Quotation (Backend Access Control Enforced)
+export const sendQuotationMessage = async (req, res) => {
+  try {
+    const { message, attachmentUrl } = req.body;
+    if (!message || !message.trim()) {
+      return res.status(400).json({ message: 'Message text is required' });
+    }
+
+    let quotation;
+    if (!isDatabaseConnected(mongoose)) {
+      quotation = inMemoryDB.quotations.findOne({ _id: req.params.id });
+    } else {
+      quotation = await Quotation.findById(req.params.id);
+    }
+
+    if (!quotation) return res.status(404).json({ message: 'Quotation not found' });
+
+    const ownerId = (quotation.owner?._id || quotation.owner)?.toString();
+    const manId = (quotation.assignedManufacturer?._id || quotation.assignedManufacturer)?.toString();
+    const userId = req.user?._id?.toString();
+    const userRole = req.user?.role;
+    const userManId = req.user?.manufacturerId?.toString();
+
+    const isOwner = userId === ownerId;
+    const isAdmin = userRole === 'admin';
+    const isAssignedManufacturer =
+      (userRole === 'manufacturer' && (userManId === manId || (await getManufacturerContext(req))?.toString() === manId));
+
+    if (!isOwner && !isAdmin && !isAssignedManufacturer) {
+      return res.status(403).json({
+        message: 'Access denied: You cannot send messages in this private quotation.',
+      });
+    }
+
+    const senderRole = isAdmin ? 'admin' : isAssignedManufacturer ? 'manufacturer' : 'fundraiser';
+
+    if (!isDatabaseConnected(mongoose)) {
+      return res.status(201).json({
+        _id: `msg-${Date.now()}`,
+        quotation: req.params.id,
+        fundraiser: ownerId,
+        manufacturer: manId,
+        senderId: req.user._id,
+        senderName: req.user.fullName || req.user.name || 'User',
+        senderRole,
+        message: message.trim(),
+        attachmentUrl: attachmentUrl || '',
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    const newMessage = await QuotationMessage.create({
+      quotation: req.params.id,
+      fundraiser: ownerId,
+      manufacturer: manId,
+      senderId: req.user._id,
+      senderName: req.user.fullName || req.user.name || (isAdmin ? 'Admin' : senderRole),
+      senderRole,
+      message: message.trim(),
+      attachmentUrl: attachmentUrl || '',
+      isRead: false,
+    });
+
+    res.status(201).json(newMessage);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -293,12 +805,16 @@ export const calculateAndSaveQuotation = async (req, res) => {
       campaign: req.body.campaignId || undefined,
       projectName: req.body.projectName || designSpec.garment?.style || 'Untitled quotation',
       clientName: req.body.clientName || '',
+      orderType: req.body.orderType || (designSpec.quantity <= 5 ? 'sample' : 'bulk'),
+      quantity: designSpec.quantity || 1,
+      shippingAddress: req.body.shippingAddress || null,
+      techPackImage: req.body.techPackImage || req.body.fileData || '',
       notes: req.body.notes || '',
       quoteContext: req.body.quoteContext || null,
       designSpec,
       calculation,
       versions: req.body.versions || [],
-      status: calculation.status,
+      status: req.body.status || 'draft',
     };
 
     if (!isDatabaseConnected(mongoose)) {
@@ -320,7 +836,64 @@ export const getMyQuotations = async (req, res) => {
       return res.json(inMemoryDB.quotations.find({ owner: req.user._id }));
     }
 
-    const quotations = await Quotation.find({ owner: req.user._id }).sort({ createdAt: -1 });
+    const quotations = await Quotation.find({ owner: req.user._id })
+      .populate('assignedManufacturer', 'name companyName email phone')
+      .sort({ createdAt: -1 });
+    res.json(quotations);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Manufacturer sees ONLY quotations explicitly assigned to them by Admin
+export const getManufacturerQuotations = async (req, res) => {
+  try {
+    if (!isDatabaseConnected(mongoose)) {
+      return res.json(inMemoryDB.quotations.find({}));
+    }
+
+    const manufacturerId = await getManufacturerContext(req);
+
+    // If logged in as admin, show all assigned
+    const filter = {
+      status: {
+        $in: [
+          'assigned_to_manufacturer',
+          'manufacturer_reviewing',
+          'manufacturer_proposal_sent',
+          'accepted_by_fundraiser',
+          'production_started',
+          'completed',
+          'submitted_for_review',
+        ],
+      },
+    };
+
+    if (req.user?.role !== 'admin' && manufacturerId) {
+      filter.assignedManufacturer = manufacturerId;
+    }
+
+    const quotations = await Quotation.find(filter)
+      .populate('owner', 'fullName email phone')
+      .populate('assignedManufacturer', 'name companyName email phone')
+      .sort({ createdAt: -1 });
+
+    res.json(quotations);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Admin sees all quotations with owner & manufacturer details
+export const getAllAdminQuotations = async (req, res) => {
+  try {
+    if (!isDatabaseConnected(mongoose)) {
+      return res.json(inMemoryDB.quotations.find({}));
+    }
+    const quotations = await Quotation.find({})
+      .populate('owner', 'fullName email phone')
+      .populate('assignedManufacturer', 'name companyName email phone')
+      .sort({ createdAt: -1 });
     res.json(quotations);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -333,12 +906,20 @@ export const getQuotationById = async (req, res) => {
     if (!isDatabaseConnected(mongoose)) {
       quotation = inMemoryDB.quotations.findOne({ _id: req.params.id });
     } else {
-      quotation = await Quotation.findById(req.params.id);
+      quotation = await Quotation.findById(req.params.id)
+        .populate('owner', 'fullName email phone')
+        .populate('assignedManufacturer', 'name companyName email phone');
     }
 
     const serialized = serializeQuotation(quotation);
     if (!serialized) return res.status(404).json({ message: 'Quotation not found' });
-    if (req.user && serialized.owner && serialized.owner.toString() !== req.user._id.toString()) {
+    
+    // Permitted to Owner, Assigned Manufacturer, and Admins
+    const isOwner = req.user && serialized.owner && (serialized.owner._id || serialized.owner).toString() === req.user._id.toString();
+    const isAdmin = req.user && req.user.role === 'admin';
+    const isManufacturer = req.user && req.user.role === 'manufacturer';
+
+    if (req.user && !isOwner && !isManufacturer && !isAdmin) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 

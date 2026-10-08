@@ -1,4 +1,10 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+// Ensure DNS resolvers reliably resolve MongoDB Atlas SRV records
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (_) {}
 
 mongoose.set('bufferCommands', false);
 

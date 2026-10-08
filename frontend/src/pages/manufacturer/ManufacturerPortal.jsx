@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import api from '../../api/client';
 import ManufacturerSidebar from './components/ManufacturerSidebar';
 import ManufacturerHeader from './components/ManufacturerHeader';
@@ -14,7 +14,8 @@ import PaymentsView from './views/PaymentsView';
 import NotificationsView from './views/NotificationsView';
 import ReportsView from './views/ReportsView';
 import ProfileView from './views/ProfileView';
-import { Factory, Lock, RefreshCw, LogIn } from 'lucide-react';
+import QuotationsView from './views/QuotationsView';
+import { Factory, Lock, RefreshCw, LogIn, Menu, X } from 'lucide-react';
 
 export default function ManufacturerPortal() {
   const { user, login } = useAuth();
@@ -23,11 +24,13 @@ export default function ManufacturerPortal() {
   // Navigation State
   const [activeTab, setActiveTab] = useState('dashboard');
   const [search, setSearch] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Data Store
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [overview, setOverview] = useState(null);
+  const [quotations, setQuotations] = useState([]);
   const [orders, setOrders] = useState([]);
   const [techpacks, setTechpacks] = useState([]);
   const [samples, setSamples] = useState([]);
@@ -47,6 +50,7 @@ export default function ManufacturerPortal() {
 
       const [
         overviewRes,
+        quotesRes,
         ordersRes,
         techpacksRes,
         samplesRes,
@@ -57,6 +61,7 @@ export default function ManufacturerPortal() {
         profileRes,
       ] = await Promise.all([
         api.get('/api/manufacturer/overview').catch(() => ({ data: { success: false } })),
+        api.get('/quotations/manufacturer-review').catch(() => ({ data: [] })),
         api.get('/api/manufacturer/orders').catch(() => ({ data: { success: false } })),
         api.get('/api/manufacturer/techpacks').catch(() => ({ data: { success: false } })),
         api.get('/api/manufacturer/samples').catch(() => ({ data: { success: false } })),
@@ -68,6 +73,7 @@ export default function ManufacturerPortal() {
       ]);
 
       if (overviewRes.data?.success) setOverview(overviewRes.data.data);
+      if (Array.isArray(quotesRes.data)) setQuotations(quotesRes.data);
       if (ordersRes.data?.success) setOrders(ordersRes.data.data);
       if (techpacksRes.data?.success) setTechpacks(techpacksRes.data.data);
       if (samplesRes.data?.success) setSamples(samplesRes.data.data);
@@ -105,52 +111,11 @@ export default function ManufacturerPortal() {
     user && (user.role === 'manufacturer' || user.role === 'admin' || user.email === 'manufacturer@sayrab.com');
 
   if (!isManufacturerAuthorized) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full text-center space-y-6 shadow-2xl">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mx-auto">
-            <Factory className="w-8 h-8" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-white">Manufacturer Portal Access Required</h2>
-            <p className="text-xs text-slate-400 mt-2">
-              Sign in with a verified Manufacturer Partner account to view assigned production orders, techpacks, and 45% revenue payouts.
-            </p>
-          </div>
-
-          <div className="p-4 bg-slate-800/60 rounded-2xl border border-slate-700/50 text-left text-xs space-y-1">
-            <div className="text-slate-300 font-semibold">Demo Credentials:</div>
-            <div className="text-slate-400">Email: <strong className="text-white">manufacturer@sayrab.com</strong></div>
-            <div className="text-slate-400">Password: <strong className="text-white">password123</strong></div>
-          </div>
-
-          <div className="space-y-2">
-            <button
-              onClick={handleManufacturerDemoLogin}
-              disabled={switching}
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm transition-all shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2"
-            >
-              {switching ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                <LogIn className="w-4 h-4" />
-              )}
-              <span>1-Click Manufacturer Login</span>
-            </button>
-
-            <button
-              onClick={() => navigate('/')}
-              className="w-full py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors"
-            >
-              Back to Home
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <Navigate to="/" replace />;
   }
 
   const counts = {
+    pendingQuotations: quotations.filter((q) => ['assigned_to_manufacturer', 'manufacturer_reviewing'].includes(q.status)).length,
     activeOrders: orders.filter((o) => ['pending', 'accepted', 'in_production', 'quality_check'].includes(o.status)).length,
     pendingTechpacks: techpacks.filter((t) => ['pending_review', 'approved'].includes(t.status)).length,
     readyToShip: shippingQueue.filter((s) => s.shippingStatus === 'ready_to_ship').length,
@@ -158,9 +123,34 @@ export default function ManufacturerPortal() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex font-sans antialiased selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row font-sans antialiased selection:bg-cyan-500 selection:text-white">
+      {/* Mobile Header */}
+      <div className="md:hidden p-4 flex items-center justify-between bg-slate-900 border-b border-slate-800 text-white shadow-xl">
+        <Link to="/manufacturer" className="flex items-center gap-2 hover:opacity-90">
+          <img src="/sayrab.png" alt="Sayrab" className="h-10 w-auto object-contain" />
+          <div>
+            <span className="font-bold text-white block leading-tight">Sayrab</span>
+            <span className="text-[10px] block font-bold text-cyan-400">
+              Manufacturer Portal
+            </span>
+          </div>
+        </Link>
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="p-1.5 rounded-xl text-cyan-400 border border-slate-700 bg-slate-800 hover:bg-slate-700 cursor-pointer"
+        >
+          {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </div>
+
       {/* Sidebar Navigation */}
-      <ManufacturerSidebar activeTab={activeTab} setActiveTab={setActiveTab} counts={counts} />
+      <ManufacturerSidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        counts={counts}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+      />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
@@ -175,7 +165,7 @@ export default function ManufacturerPortal() {
         <main className="p-6 flex-1">
           {loading ? (
             <div className="flex items-center justify-center py-20 text-slate-400 gap-3 text-sm">
-              <RefreshCw className="w-5 h-5 animate-spin text-indigo-400" />
+              <RefreshCw className="w-5 h-5 animate-spin text-cyan-400" />
               <span>Fetching live MongoDB manufacturer records...</span>
             </div>
           ) : error ? (
@@ -192,6 +182,9 @@ export default function ManufacturerPortal() {
             <>
               {activeTab === 'dashboard' && (
                 <DashboardView overview={overview} onNavigate={(tab) => setActiveTab(tab)} />
+              )}
+              {activeTab === 'quotations' && (
+                <QuotationsView quotations={quotations} onRefresh={fetchManufacturerData} />
               )}
               {activeTab === 'orders' && (
                 <ProductionOrdersView orders={orders} onRefresh={fetchManufacturerData} />

@@ -7,6 +7,7 @@ import WithdrawalRequest from '../models/WithdrawalRequest.js';
 import Organization from '../models/Organization.js';
 import Manufacturer from '../models/Manufacturer.js';
 import Techpack from '../models/Techpack.js';
+import Quotation from '../models/Quotation.js';
 import PlatformSettings from '../models/PlatformSettings.js';
 import AdminNotification from '../models/AdminNotification.js';
 import {
@@ -24,41 +25,88 @@ import {
 export const getAdminOverview = async (req, res) => {
   try {
     const [
+      allUsers,
       totalOrganizations,
       pendingVerifications,
       activeCampaigns,
-      totalOrders,
-      totalUsers,
-      pendingPayoutsDocs,
-      manufacturerOrdersCount,
-      paidOrders,
       allCampaigns,
+      allOrders,
+      allQuotations,
+      allWithdrawals,
+      allManufacturers,
       topCampaignsDocs,
       recentNotifs,
     ] = await Promise.all([
+      User.find({}, 'role createdAt'),
       Organization.countDocuments(),
       Organization.countDocuments({ status: ORGANIZATION_STATUS.PENDING }),
       Campaign.countDocuments({ status: 'active' }),
-      Order.countDocuments(),
-      User.countDocuments(),
-      WithdrawalRequest.find({
-        status: { $in: ['requested', 'pending', 'pending_review', 'scheduled'] },
-      }),
-      Order.countDocuments({
-        productionStatus: { $in: ['waiting', 'in_production', 'quality_check', 'shipped'] },
-      }),
-      Order.find({ paymentStatus: 'paid' }),
-      Campaign.find(),
+      Campaign.find({}, 'amountRaised raisedAmount fundingGoal goalAmount title createdAt status'),
+      Order.find({}).sort({ createdAt: -1 }),
+      Quotation.find({}).sort({ createdAt: -1 }),
+      WithdrawalRequest.find({}).sort({ createdAt: -1 }),
+      Manufacturer.find({}),
       Campaign.find().sort({ amountRaised: -1, raisedAmount: -1 }).limit(5),
-      AdminNotification.find().sort({ createdAt: -1 }).limit(5),
+      AdminNotification.find().sort({ createdAt: -1 }).limit(8),
     ]);
 
-    const pendingPayouts = pendingPayoutsDocs.length;
-    const pendingPayoutSum = pendingPayoutsDocs.reduce(
-      (sum, p) => sum + (p.amount || p.organizationShare || 0),
-      0
-    );
+    // 1. User Demographic Breakdown
+    const totalUsers = allUsers.length;
+    const buyersCount = allUsers.filter((u) => ['customer', 'donor'].includes(u.role)).length;
+    const fundraisersCount = allUsers.filter((u) =>
+      ['manager', 'fundraiser', 'org_leader'].includes(u.role)
+    ).length;
+    const manufacturersCount =
+      allManufacturers.length > 0
+        ? allManufacturers.length
+        : allUsers.filter((u) => u.role === 'manufacturer').length;
 
+    // 2. Orders & Production Pipeline Metrics
+    const totalOrders = allOrders.length;
+    const sampleOrdersCount = allOrders.filter((o) => o.orderType === 'sample').length;
+    const bulkOrdersCount = allOrders.filter((o) => o.orderType === 'bulk' || !o.orderType).length;
+    const paidOrders = allOrders.filter((o) => o.paymentStatus === 'paid');
+
+    const ordersByStatus = {
+      placed: allOrders.filter((o) => o.orderStatus === 'placed').length,
+      confirmed: allOrders.filter((o) => o.orderStatus === 'confirmed').length,
+      in_production: allOrders.filter((o) =>
+        ['in_production', 'production'].includes(o.orderStatus) ||
+        ['in_production', 'quality_check'].includes(o.productionStatus)
+      ).length,
+      shipped: allOrders.filter((o) => o.orderStatus === 'shipped' || o.productionStatus === 'shipped').length,
+      delivered: allOrders.filter((o) => o.orderStatus === 'delivered' || o.productionStatus === 'delivered').length,
+      completed: allOrders.filter((o) => o.orderStatus === 'completed' || o.productionStatus === 'completed').length,
+      cancelled: allOrders.filter((o) => o.orderStatus === 'cancelled').length,
+    };
+
+    const productionPipeline = {
+      pending_start: allOrders.filter((o) => o.productionStatus === 'pending_start').length,
+      in_production: allOrders.filter((o) => o.productionStatus === 'in_production').length,
+      quality_check: allOrders.filter((o) => o.productionStatus === 'quality_check').length,
+      ready_to_ship: allOrders.filter((o) => o.productionStatus === 'ready_to_ship').length,
+      shipped: allOrders.filter((o) => o.productionStatus === 'shipped').length,
+      delivered: allOrders.filter((o) => o.productionStatus === 'delivered').length,
+      completed: allOrders.filter((o) => o.productionStatus === 'completed').length,
+    };
+
+    // 3. Quotations Metrics & Breakdown
+    const totalQuotations = allQuotations.length;
+    const quotationsByStatus = {
+      draft: allQuotations.filter((q) => q.status === 'draft').length,
+      submitted_to_admin: allQuotations.filter((q) =>
+        ['submitted_to_admin', 'submitted_for_review'].includes(q.status)
+      ).length,
+      assigned_to_manufacturer: allQuotations.filter((q) => q.status === 'assigned_to_manufacturer').length,
+      manufacturer_reviewing: allQuotations.filter((q) => q.status === 'manufacturer_reviewing').length,
+      manufacturer_proposal_sent: allQuotations.filter((q) => q.status === 'manufacturer_proposal_sent').length,
+      accepted_by_fundraiser: allQuotations.filter((q) => q.status === 'accepted_by_fundraiser').length,
+      production_started: allQuotations.filter((q) => q.status === 'production_started').length,
+      completed: allQuotations.filter((q) => q.status === 'completed').length,
+      cancelled: allQuotations.filter((q) => q.status === 'cancelled').length,
+    };
+
+    // 4. Financial & Payouts Volume
     const orderRevenue = paidOrders.reduce((sum, o) => sum + (o.total || 0), 0);
     const campaignFunds = allCampaigns.reduce(
       (sum, c) => sum + (c.amountRaised || c.raisedAmount || 0),
@@ -67,8 +115,30 @@ export const getAdminOverview = async (req, res) => {
     const totalRevenue = orderRevenue + campaignFunds;
     const platformFeeEarned = Math.round(totalRevenue * 0.05);
 
-    // Dynamic Monthly Revenue Breakdown from real Orders & Campaigns
+    const pendingPayoutsDocs = allWithdrawals.filter((w) =>
+      ['requested', 'pending', 'pending_review', 'scheduled', 'available'].includes(w.status)
+    );
+    const pendingPayouts = pendingPayoutsDocs.length;
+    const pendingPayoutSum = pendingPayoutsDocs.reduce(
+      (sum, p) => sum + (p.amount || p.organizationShare || 0),
+      0
+    );
+
+    const payoutsSummary = {
+      totalWithdrawals: allWithdrawals.length,
+      pending: pendingPayouts,
+      pendingSum: pendingPayoutSum,
+      approved: allWithdrawals.filter((w) => w.status === 'approved').length,
+      paid: allWithdrawals.filter((w) => w.status === 'paid').length,
+      paidSum: allWithdrawals
+        .filter((w) => w.status === 'paid')
+        .reduce((sum, w) => sum + (w.amount || 0), 0),
+      rejected: allWithdrawals.filter((w) => w.status === 'rejected').length,
+    };
+
+    // 5. Dynamic Monthly Revenue & Volume Breakdown (Last 6 Months)
     const monthsMap = new Map();
+    const userGrowthMap = new Map();
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const now = new Date();
 
@@ -77,6 +147,7 @@ export const getAdminOverview = async (req, res) => {
       const key = `${d.getFullYear()}-${d.getMonth()}`;
       const label = `${monthNames[d.getMonth()]}`;
       monthsMap.set(key, { month: label, total: 0, organization: 0, manufacturer: 0, platform: 0 });
+      userGrowthMap.set(key, { month: label, buyers: 0, fundraisers: 0, manufacturers: 0, total: 0 });
     }
 
     paidOrders.forEach((o) => {
@@ -92,9 +163,22 @@ export const getAdminOverview = async (req, res) => {
       }
     });
 
-    const revenueChart = Array.from(monthsMap.values());
+    allUsers.forEach((u) => {
+      const d = new Date(u.createdAt);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      if (userGrowthMap.has(key)) {
+        const item = userGrowthMap.get(key);
+        item.total += 1;
+        if (['customer', 'donor'].includes(u.role)) item.buyers += 1;
+        else if (['manager', 'fundraiser', 'org_leader'].includes(u.role)) item.fundraisers += 1;
+        else if (u.role === 'manufacturer') item.manufacturers += 1;
+      }
+    });
 
-    // Dynamic Top Campaign Performance Chart
+    const revenueChart = Array.from(monthsMap.values());
+    const userGrowthChart = Array.from(userGrowthMap.values());
+
+    // 6. Dynamic Top Campaign Performance Chart
     const campaignPerformanceChart = topCampaignsDocs.map((c) => {
       const goal = c.fundingGoal || c.goalAmount || 1;
       const raised = c.amountRaised || c.raisedAmount || 0;
@@ -107,7 +191,7 @@ export const getAdminOverview = async (req, res) => {
       };
     });
 
-    // Dynamic Recent Activities Audit Feed
+    // 7. Dynamic Recent Activities Audit Feed
     const recentActivities = recentNotifs.map((n) => ({
       id: n._id,
       action: n.title,
@@ -122,14 +206,26 @@ export const getAdminOverview = async (req, res) => {
         pendingVerifications,
         activeCampaigns,
         totalOrders,
+        sampleOrdersCount,
+        bulkOrdersCount,
         totalRevenue,
         pendingPayouts,
         pendingPayoutSum,
-        manufacturerOrders: manufacturerOrdersCount,
+        manufacturerOrders: productionPipeline.in_production + productionPipeline.quality_check,
         totalUsers,
+        buyersCount,
+        fundraisersCount,
+        manufacturersCount,
+        totalQuotations,
         platformFeeEarned,
+        payoutsSummary,
       },
+      ordersByStatus,
+      productionPipeline,
+      quotationsByStatus,
+      payoutsSummary,
       revenueChart,
+      userGrowthChart,
       campaignPerformanceChart,
       recentActivities,
     });

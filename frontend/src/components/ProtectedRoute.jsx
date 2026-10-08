@@ -21,12 +21,13 @@ export default function ProtectedRoute({ children, roles }) {
     donor: ['customer', 'donor'],
     manager: ['manager', 'fundraiser'],
     fundraiser: ['manager', 'fundraiser'],
+    manufacturer: ['manufacturer'],
     admin: ['admin'],
   };
   const allowedRoles = roles?.flatMap((role) => roleAliases[role] || [role]);
 
   if (allowedRoles && !allowedRoles.includes(user.role) && user.role !== 'admin') {
-    return <Navigate to="/" replace />;
+    return <Navigate to={user.role === 'manufacturer' ? '/manufacturer' : '/'} replace />;
   }
 
   return children;

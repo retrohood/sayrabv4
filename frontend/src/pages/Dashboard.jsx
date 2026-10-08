@@ -300,9 +300,16 @@ export default function Dashboard() {
   const [settingsSuccess, setSettingsSuccess] = useState('');
   const [settingsError, setSettingsError] = useState('');
 
+  // Redirect manufacturer accounts directly to dedicated Manufacturer Portal
+  useEffect(() => {
+    if (user?.role === 'manufacturer') {
+      navigate('/manufacturer', { replace: true });
+    }
+  }, [user, navigate]);
+
   // Load Initial Data
   useEffect(() => {
-    if (!user) return;
+    if (!user || user.role === 'manufacturer') return;
 
     if (user.role === 'donor' || user.role === 'admin' || !isFundraiser) {
       api.get('/donations/my')
@@ -1813,7 +1820,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row font-sans antialiased selection:bg-cyan-500 selection:text-white">
       {/* Mobile Header */}
       <div className="md:hidden p-4 flex items-center justify-between bg-slate-900 border-b border-slate-800 text-white shadow-xl">
-        <Link to="/" className="flex items-center gap-2 hover:opacity-90">
+        <Link to={user?.role === 'manufacturer' ? '/manufacturer' : user?.role === 'admin' ? '/admin' : '/'} className="flex items-center gap-2 hover:opacity-90">
           <img src="/sayrab.png" alt="Sayrab" className="h-10 w-auto object-contain" />
           <div>
             <span className="font-bold text-white block leading-tight">Sayrab</span>
@@ -1837,7 +1844,7 @@ export default function Dashboard() {
         <div>
           {/* Sidebar Brand */}
           <div className="p-6 border-b border-slate-800 bg-slate-950/60">
-            <Link to="/" className="flex items-center gap-3 hover:opacity-90">
+            <Link to={user?.role === 'manufacturer' ? '/manufacturer' : user?.role === 'admin' ? '/admin' : '/'} className="flex items-center gap-3 hover:opacity-90">
               <img src="/sayrab.png" alt="Sayrab" className="h-14 w-auto object-contain" />
               <div>
                 <p className="font-bold text-lg leading-tight text-white">

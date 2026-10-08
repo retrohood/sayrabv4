@@ -14,6 +14,7 @@ import AdminNotification from '../models/AdminNotification.js';
 import WithdrawalRequest from '../models/WithdrawalRequest.js';
 import Order from '../models/Order.js';
 import SampleProduction from '../models/SampleProduction.js';
+import Quotation from '../models/Quotation.js';
 import { VERIFICATION_STATUS, LIFECYCLE_STATUS, USER_ROLES } from '../constants/index.js';
 import { fileURLToPath } from 'url';
 import { generateSlug, generateReferralCode } from '../utils/generateToken.js';
@@ -38,6 +39,7 @@ const seed = async () => {
     WithdrawalRequest.deleteMany({}),
     Order.deleteMany({}),
     SampleProduction.deleteMany({}),
+    Quotation.deleteMany({}),
   ]);
 
   console.log('Seeding Platform Settings...');
@@ -369,6 +371,147 @@ const seed = async () => {
     totalCampaignsSupported: 8,
     totalDonors: 1066,
     emergencyCampaignsFunded: 3,
+  });
+
+  console.log('Seeding Direct Quotations (Admin Assignment Flow)...');
+  // 1. Pending Assignment to Manufacturer (submitted by Fundraiser to Admin)
+  await Quotation.create({
+    owner: fundraiser._id,
+    projectName: 'Custom Varsity Rugby Polo 2026',
+    orderType: 'bulk',
+    quantity: 100,
+    shippingAddress: {
+      fullName: 'Ahmed Hassan',
+      phone: '+923001234567',
+      line1: 'Sayrab Hub, Mall Road',
+      city: 'Lahore',
+      postalCode: '54000',
+      country: 'Pakistan',
+    },
+    techPackImage: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=600&auto=format&fit=crop&q=80',
+    notes: 'Heavyweight double knit rugby jersey with white twill collar and embroidered chest crest.',
+    designSpec: {
+      quantity: 100,
+      garment: { type: 'polo', style: 'Rugby Polo Heavyweight', quantity: 100, size_reference: 'XL' },
+      fabrics: [{ name: 'Double Knit Cotton Fleece', composition: '80% Cotton / 20% Poly', gsm: 320, role: 'main' }],
+      decorations: [
+        { type: 'chenille_embroidery', placement: 'Left Chest', width_in: 4.5, height_in: 4.5, area_sq_in: 20.25 },
+        { type: 'screenprint', placement: 'Back Arch', width_in: 12.0, height_in: 3.5, area_sq_in: 42.0 },
+      ],
+      trims: [{ type: 'button', name: 'Rubber Rugby Buttons', quantity_per_garment: 3 }],
+    },
+    calculation: {
+      lines: [
+        { category: 'fabric', description: 'Double Knit Fabric', amount: 1450 },
+        { category: 'construction', description: 'Rugby Cut & Sew Tailoring', amount: 1250 },
+        { category: 'embellishment', description: 'Chenille Chest & Back Screenprint', amount: 1900 },
+        { category: 'trim', description: 'Collar Twill & Buttons', amount: 380 },
+        { category: 'fixed', description: 'Overhead & Grading', amount: 420 },
+      ],
+      totals: { landedUnitUsd: 28.50, fobUnitUsd: 25.50, shippingUnitUsd: 3.00, finalTotal: 540000 },
+    },
+    status: 'submitted_to_admin',
+  });
+
+  // 2. Assigned to Apex Textiles (Awaiting Manufacturer Quotation Review)
+  await Quotation.create({
+    owner: fundraiser._id,
+    assignedManufacturer: mfg1._id,
+    projectName: 'Charity Marathon Performance Windbreaker',
+    orderType: 'bulk',
+    quantity: 250,
+    shippingAddress: {
+      fullName: 'Ahmed Hassan',
+      phone: '+923001234567',
+      line1: 'Sayrab Hub, Mall Road',
+      city: 'Lahore',
+      postalCode: '54000',
+      country: 'Pakistan',
+    },
+    techPackImage: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=600&auto=format&fit=crop&q=80',
+    notes: 'Waterproof breathable shell jacket with reflective neon chest print and YKK waterproof zips.',
+    adminNotes: 'Priority client for Karachi Charity Marathon. Check waterproof tape seam sealing.',
+    designSpec: {
+      quantity: 250,
+      garment: { type: 'jacket', style: 'Performance Windbreaker', quantity: 250, size_reference: 'L' },
+      fabrics: [{ name: 'Ripstop Taslan Nylon with PU Coating', composition: '100% Nylon', gsm: 180, role: 'main' }],
+      decorations: [
+        { type: 'reflective_print', placement: 'Front Chest & Back Shoulder', width_in: 10.0, height_in: 3.0, area_sq_in: 30.0 },
+      ],
+      trims: [{ type: 'zipper', name: 'YKK Waterproof AquaGuard Zip', quantity_per_garment: 1 }],
+    },
+    calculation: {
+      lines: [
+        { category: 'fabric', description: 'Ripstop Taslan Shell', amount: 1600 },
+        { category: 'construction', description: 'Seam Sealed CMT', amount: 1400 },
+        { category: 'embellishment', description: '3M Reflective Transfer', amount: 1100 },
+        { category: 'trim', description: 'Waterproof Zips & Cordlocks', amount: 550 },
+        { category: 'fixed', description: 'CAD Pattern & Overhead', amount: 450 },
+      ],
+      totals: { landedUnitUsd: 32.00, fobUnitUsd: 28.50, shippingUnitUsd: 3.50, finalTotal: 896000 },
+    },
+    status: 'assigned_to_manufacturer',
+  });
+
+  // 3. Manufacturer Proposal Sent with customized rates and 40% margin
+  await Quotation.create({
+    owner: fundraiser._id,
+    assignedManufacturer: mfg1._id,
+    projectName: 'Premium Heavyweight Oversized Hoodie (450 GSM)',
+    orderType: 'bulk',
+    quantity: 150,
+    shippingAddress: {
+      fullName: 'Ahmed Hassan',
+      phone: '+923001234567',
+      line1: 'House 12, Gulberg III',
+      city: 'Lahore',
+      postalCode: '54660',
+      country: 'Pakistan',
+    },
+    techPackImage: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&auto=format&fit=crop&q=80',
+    notes: '450 GSM French Terry Cotton with double-layer hood and distress wash effect.',
+    adminNotes: 'Assigned to Apex Textiles for premium French Terry knit production.',
+    manufacturerNotes: 'Milled from 100% combed Pakistani long-staple cotton. 40% gross margin configured with 14-day turnaround.',
+    designSpec: {
+      quantity: 150,
+      garment: { type: 'hoodie', style: 'Oversized Boxy French Terry Hoodie', quantity: 150, size_reference: 'XL' },
+      fabrics: [{ name: 'Heavyweight French Terry Cotton', composition: '100% Combed Cotton', gsm: 450, role: 'main' }],
+      decorations: [
+        { type: 'high_density_embroidery', placement: 'Center Chest', width_in: 8.0, height_in: 4.0, area_sq_in: 32.0 },
+      ],
+      trims: [{ type: 'rib', name: '2x2 Heavy Rib Cuffs & Hem', quantity_per_garment: 1 }],
+    },
+    calculation: {
+      lines: [
+        { category: 'fabric', description: 'French Terry 450 GSM', amount: 2200 },
+        { category: 'construction', description: 'Flatlock Heavy Stitching', amount: 1500 },
+        { category: 'embellishment', description: 'Center Chest High Density Embroidery', amount: 1600 },
+        { category: 'trim', description: 'Heavy Rib & Drawcords', amount: 450 },
+        { category: 'fixed', description: 'Grading & Shrinkage Testing', amount: 450 },
+      ],
+      totals: { landedUnitUsd: 38.50, fobUnitUsd: 34.00, shippingUnitUsd: 4.50, finalTotal: 1617000 },
+    },
+    manufacturerProposal: {
+      costBreakdown: {
+        fabricCost: 2200,
+        stitchingCost: 1500,
+        embroideryCost: 1600,
+        trimsCost: 450,
+        shippingCost: 850,
+        overheadCost: 450,
+        subtotalCostPkr: 7050,
+      },
+      marginPercent: 40,
+      marginAmountPkr: 2820,
+      finalTotalPkr: 1480500,
+      landedUnitUsd: 35.25,
+      totalPriceUsd: 5287.50,
+      estimatedLeadDays: 14,
+      sampleAvailable: true,
+      customNotes: 'Milled from 100% combed Pakistani long-staple cotton. 40% margin configured with 14-day turnaround.',
+      submittedAt: new Date().toISOString(),
+    },
+    status: 'manufacturer_proposal_sent',
   });
 
   console.log('Seed completed successfully!');

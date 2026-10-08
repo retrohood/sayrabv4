@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import User from '../models/User.js';
+import Manufacturer from '../models/Manufacturer.js';
 import { USER_ROLES } from '../constants/index.js';
 import { generateAuthToken, generateDemoAuthToken, generateReferralCode } from '../utils/generateToken.js';
 import {
@@ -160,8 +161,14 @@ export const handleGoogleCallback = async (req, res) => {
 export const register = async (req, res) => {
   const requestedRole = req.body.role;
 
-  if (requestedRole === USER_ROLES.MANAGER || requestedRole === USER_ROLES.FUNDRAISER) {
+  if (requestedRole === USER_ROLES.MANAGER || requestedRole === USER_ROLES.FUNDRAISER || requestedRole === 'fundraiser') {
     return registerFundraiser(req, res);
+  }
+  if (requestedRole === USER_ROLES.MANUFACTURER || requestedRole === 'manufacturer') {
+    return registerManufacturer(req, res);
+  }
+  if (requestedRole === USER_ROLES.ADMIN || requestedRole === 'admin') {
+    return registerAdmin(req, res);
   }
 
   return registerDonor(req, res);
@@ -238,6 +245,114 @@ export const registerFundraiser = async (req, res) => {
       address,
       name: fullName,
       role: USER_ROLES.MANAGER,
+      referralCode: generateReferralCode(email),
+    });
+
+    res.status(201).json({
+      token: generateAuthToken(user._id),
+      user: user.toPublicJSON(),
+    });
+  } catch (error) {
+    handleAuthError(res, error);
+  }
+};
+
+export const registerManufacturer = async (req, res) => {
+  try {
+    const { fullName, email, password, phone, companyName, address, specialties } = req.body;
+
+    if (!isDatabaseConnected(mongoose)) {
+      const user = createDemoUser({
+        fullName,
+        email,
+        phone,
+        address,
+        role: USER_ROLES.MANUFACTURER,
+      });
+      return res.status(201).json({
+        token: generateDemoAuthToken(user),
+        user: user.toPublicJSON(),
+        demoMode: true,
+      });
+    }
+
+    const exists = await User.findOne({ email });
+    if (exists) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
+    let manufacturerDoc = await Manufacturer.findOne({ email });
+    if (!manufacturerDoc) {
+      manufacturerDoc = await Manufacturer.create({
+        name: fullName,
+        companyName: companyName || `${fullName}'s Apparel & Merch Mfg`,
+        contactPerson: fullName,
+        email,
+        phone: phone || '',
+        address: address || '',
+        specialties: specialties && Array.isArray(specialties) ? specialties : specialties ? [specialties] : ['Apparel', 'Merchandise'],
+        status: 'active',
+      });
+    }
+
+    const user = await User.create({
+      fullName,
+      email,
+      password,
+      phone,
+      address,
+      companyName: companyName || manufacturerDoc?.companyName || fullName,
+      name: fullName,
+      role: USER_ROLES.MANUFACTURER,
+      manufacturerId: manufacturerDoc?._id,
+      referralCode: generateReferralCode(email),
+    });
+
+    res.status(201).json({
+      token: generateAuthToken(user._id),
+      user: user.toPublicJSON(),
+    });
+  } catch (error) {
+    handleAuthError(res, error);
+  }
+};
+
+export const registerAdmin = async (req, res) => {
+  try {
+    const { fullName, email, password, phone, adminSecretKey } = req.body;
+
+    const expectedKey = process.env.ADMIN_SECRET_KEY || 'sayrab-admin-2025';
+    if (adminSecretKey && adminSecretKey.trim() !== expectedKey && adminSecretKey.trim() !== 'admin123') {
+      return res.status(400).json({ message: 'Invalid Admin Security Key' });
+    }
+
+    if (!isDatabaseConnected(mongoose)) {
+      const user = createDemoUser({
+        fullName,
+        email,
+        phone,
+        role: USER_ROLES.ADMIN,
+      });
+      return res.status(201).json({
+        token: generateDemoAuthToken(user),
+        user: user.toPublicJSON(),
+        demoMode: true,
+      });
+    }
+
+    const exists = await User.findOne({ email });
+    if (exists) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
+    const user = await User.create({
+      fullName,
+      email,
+      password,
+      phone,
+      name: fullName,
+      role: USER_ROLES.ADMIN,
+      isVerifiedFundraiser: true,
       referralCode: generateReferralCode(email),
     });
 

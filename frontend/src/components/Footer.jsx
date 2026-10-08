@@ -1,12 +1,16 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function Footer() {
+  const { user } = useAuth();
+  const homeTarget = user?.role === 'manufacturer' ? '/manufacturer' : user?.role === 'admin' ? '/admin' : '/';
+
   return (
     <footer className="bg-slate-950 text-slate-400 border-t border-slate-800 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <Link to="/" className="flex items-center gap-2 mb-4 hover:opacity-90">
+            <Link to={homeTarget} className="flex items-center gap-2 mb-4 hover:opacity-90">
               <img src="/sayrab.png" alt="Sayrab" className="h-16 w-auto" />
               <span className="font-extrabold text-white text-xl bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                 Sayrab
