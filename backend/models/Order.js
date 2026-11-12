@@ -3,7 +3,7 @@ import { ORDER_PAYMENT_STATUSES, ORDER_STATUSES, PRODUCTION_STATUSES } from '../
 
 const orderItemSchema = new mongoose.Schema(
   {
-    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: false },
     name: { type: String, required: true, trim: true },
     quantity: { type: Number, required: true, min: 1 },
     price: { type: Number, required: true, min: 0 },

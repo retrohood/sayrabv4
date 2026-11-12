@@ -28,6 +28,7 @@ import {
   ShieldCheck,
   User,
   ExternalLink,
+  MessageSquare,
 } from 'lucide-react';
 import api from '../../../api/client';
 import { formatCurrency } from '../../../utils/format';

@@ -712,10 +712,12 @@ export const getQuotationMessages = async (req, res) => {
 // 9. SECURE CHAT: Send Message for Quotation (Backend Access Control Enforced)
 export const sendQuotationMessage = async (req, res) => {
   try {
-    const { message, attachmentUrl } = req.body;
-    if (!message || !message.trim()) {
+    const text = req.body.message || req.body.body;
+    const attachmentUrl = req.body.attachmentUrl;
+    if (!text || !text.trim()) {
       return res.status(400).json({ message: 'Message text is required' });
     }
+    const message = text.trim();
 
     let quotation;
     if (!isDatabaseConnected(mongoose)) {
@@ -974,4 +976,42 @@ export const approveQuotation = async (req, res) => {
   req.body.status = 'approved';
   req.body.recalculate = false;
   return updateQuotation(req, res);
+};
+
+// 10. Fundraiser Releases Milestone Payment to Manufacturer
+export const releaseQuotationPayment = async (req, res) => {
+  try {
+    let quotation;
+    if (!isDatabaseConnected(mongoose)) {
+      quotation = inMemoryDB.quotations.findOne({ _id: req.params.id });
+    } else {
+      quotation = await Quotation.findById(req.params.id);
+    }
+
+    if (!quotation) return res.status(404).json({ message: 'Quotation not found' });
+    const ownerId = (quotation.owner?._id || quotation.owner)?.toString();
+    if (req.user && ownerId !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to release funds for this quotation' });
+    }
+
+    const updates = { payoutStatus: 'milestone_released', paymentReleasedAt: new Date() };
+    let updated;
+    if (!isDatabaseConnected(mongoose)) {
+      updated = inMemoryDB.quotations.update(req.params.id, updates);
+    } else {
+      updated = await Quotation.findByIdAndUpdate(req.params.id, updates, { new: true })
+        .populate('owner', 'fullName email phone')
+        .populate('assignedManufacturer', 'name companyName email phone');
+
+      // Update linked order payout status to available
+      await Order.findOneAndUpdate(
+        { quotationId: quotation._id },
+        { payoutStatus: 'available' }
+      );
+    }
+
+    res.json({ message: 'Milestone payment successfully released to manufacturer', quotation: updated });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
 };
