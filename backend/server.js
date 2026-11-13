@@ -92,10 +92,31 @@ const start = async () => {
     console.warn('Starting in demo mode. Auth data will not be saved until MongoDB is connected.');
   }
 
-  app.listen(PORT, () => {
-    const mode = databaseConnected ? 'MongoDB connected' : 'demo mode';
-    console.log(`Sayrab server running on port ${PORT} (${mode})`);
-  });
+  const listenWithRetry = (attempts = 5) => {
+    const server = app.listen(PORT, () => {
+      const mode = databaseConnected ? 'MongoDB connected' : 'demo mode';
+      console.log(`Sayrab server running on port ${PORT} (${mode})`);
+    });
+
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE' && attempts > 0) {
+        console.warn(`Port ${PORT} is busy, retrying in 1s... (${attempts} retries left)`);
+        setTimeout(() => {
+          listenWithRetry(attempts - 1);
+        }, 1000);
+      } else {
+        console.error('Server error:', err);
+      }
+    });
+
+    const shutdown = () => {
+      server.close(() => process.exit(0));
+    };
+    process.once('SIGINT', shutdown);
+    process.once('SIGTERM', shutdown);
+  };
+
+  listenWithRetry();
 };
 
 start();

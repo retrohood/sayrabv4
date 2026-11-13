@@ -23,6 +23,7 @@ import {
   requestRevision,
   getQuotationMessages,
   sendQuotationMessage,
+  releaseQuotationPayment,
 } from '../controllers/quotationController.js';
 import { protect, optionalAuth, requireFundraiser, requireAdmin } from '../middleware/auth.js';
 
@@ -39,6 +40,7 @@ router.post('/calculate-dual', optionalAuth, calculateDualQuotation);
 router.get('/samples', optionalAuth, getQuotationSamples);
 router.get('/my', protect, getMyQuotations);
 router.get('/manufacturer-review', protect, getManufacturerQuotations);
+router.get('/manufacturer/assigned', protect, getManufacturerQuotations);
 router.get('/admin/all', protect, getAllAdminQuotations);
 router.post('/analyze', optionalAuth, analyzeTechPack);
 router.post('/calculate', optionalAuth, calculateAndSaveQuotation);
@@ -49,9 +51,12 @@ router.post('/:id/submit-review', protect, submitForReview);
 router.post('/:id/assign-manufacturer', protect, assignToManufacturer);
 router.post('/:id/cancel', protect, cancelQuotation);
 router.post('/:id/manufacturer-response', protect, respondManufacturerProposal);
+router.post('/:id/respond', protect, respondManufacturerProposal);
+router.post('/:id/proposal', protect, respondManufacturerProposal);
 router.post('/:id/accept-proposal', protect, acceptProposal);
 router.post('/:id/request-revision', protect, requestRevision);
 router.post('/:id/start-production', protect, startProduction);
+router.post('/:id/release-payment', protect, releaseQuotationPayment);
 
 // Secure Quotation Private Chat
 router.get('/:id/messages', protect, getQuotationMessages);

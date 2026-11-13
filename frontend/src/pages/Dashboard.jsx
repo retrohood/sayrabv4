@@ -59,6 +59,9 @@ import { useAuth } from '../context/AuthContext';
 import { formatCurrency, formatDate } from '../utils/format';
 import InstantQuotation from './InstantQuotation';
 import { addCartItem, readCart, writeCart, cartTotal } from '../utils/cart';
+import FundraiserProposalModal from '../components/FundraiserProposalModal';
+import QuotationChatModal from '../components/QuotationChatModal';
+import FundraiserBulkOrdersView from '../components/FundraiserBulkOrdersView';
 
 export default function Dashboard() {
   const { user, setUser, logout } = useAuth();
@@ -81,6 +84,13 @@ export default function Dashboard() {
   const [campaigns, setCampaigns] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
   const [uploads, setUploads] = useState([]);
+
+  // Bulk / Quotation Orders States
+  const [selectedChatQuotation, setSelectedChatQuotation] = useState(null);
+  const [selectedProposalQuotation, setSelectedProposalQuotation] = useState(null);
+  const [quotationFilterStatus, setQuotationFilterStatus] = useState('all');
+  const [releasingPaymentQuoteId, setReleasingPaymentQuoteId] = useState(null);
+  const [paymentReleaseSuccess, setPaymentReleaseSuccess] = useState('');
 
   // Buyer Shopping Cart & Checkout States
   const [buyerCart, setBuyerCart] = useState(() => readCart(user?._id));
@@ -1898,6 +1908,23 @@ export default function Dashboard() {
                   <Calculator size={18} /> Instant Quotation
                 </button>
                 <button
+                  onClick={() => { setActiveTab('bulk_quotation_orders'); setIsSidebarOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                    activeTab === 'bulk_quotation_orders'
+                      ? 'bg-gradient-to-r from-emerald-600/35 to-teal-500/25 border border-emerald-500/45 text-emerald-300 font-extrabold shadow-lg shadow-emerald-500/10'
+                      : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Layers size={18} className="text-emerald-400" /> Bulk & Sample Orders
+                  </div>
+                  {recentQuotations.length > 0 && (
+                    <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+                      {recentQuotations.length}
+                    </span>
+                  )}
+                </button>
+                <button
                   onClick={() => { setActiveTab('fundraiser_orders'); setIsSidebarOpen(false); }}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                     activeTab === 'fundraiser_orders'
@@ -2015,7 +2042,9 @@ export default function Dashboard() {
               <span>{isFundraiser ? '📢 Fundraiser Workspace' : '🛍️ Buyer Workspace'}</span>
             </div>
             <h1 className="text-3xl font-black text-white capitalize">
-              {activeTab === 'new_campaign' || activeTab === 'fundraising' 
+              {activeTab === 'bulk_quotation_orders'
+                ? 'Bulk & Sample Quotations'
+                : activeTab === 'new_campaign' || activeTab === 'fundraising' 
                 ? 'Start a New Campaign' 
                 : activeTab === 'fundraiser_orders'
                 ? 'Merchandise Orders Received'
@@ -2027,10 +2056,12 @@ export default function Dashboard() {
                 ? 'My Cart'
                 : activeTab === 'buyer_tracking'
                 ? 'Delivery Tracking'
-                : activeTab.replace('_', ' ')}
+                : activeTab.replace(/_/g, ' ')}
             </h1>
             <p className="text-slate-400 text-sm mt-1">
-              {activeTab === 'new_campaign' || activeTab === 'fundraising'
+              {activeTab === 'bulk_quotation_orders'
+                ? 'Track custom bulk & sample production runs, communicate with assigned manufacturers, review landed proposals, and release milestone payouts.'
+                : activeTab === 'new_campaign' || activeTab === 'fundraising'
                 ? 'Create and submit your fundraising campaign with story, goal, and linked merchandise.'
                 : activeTab === 'fundraiser_orders'
                 ? 'Review buyer orders for your campaign merchandise, customer delivery details, ordered sizes/colors, and 50% revenue proceeds.'
@@ -3612,6 +3643,23 @@ export default function Dashboard() {
               )}
             </div>
           </div>
+        )}
+
+        {/* --------------------------------- */}
+        {/* BULK & SAMPLE QUOTATION ORDERS    */}
+        {/* --------------------------------- */}
+        {activeTab === 'bulk_quotation_orders' && isFundraiser && (
+          <FundraiserBulkOrdersView
+            quotations={recentQuotations}
+            onRefresh={() => {
+              api.get('/quotations/my')
+                .then((res) => setRecentQuotations(Array.isArray(res.data) ? res.data : []))
+                .catch(() => setRecentQuotations([]));
+            }}
+            onOpenChat={(quote) => setSelectedChatQuotation(quote)}
+            onOpenProposal={(quote) => setSelectedProposalQuotation(quote)}
+            onNewQuotation={() => setActiveTab('instant_quotation')}
+          />
         )}
 
         {/* ------------------------- */}
@@ -5796,6 +5844,30 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Fundraiser Proposal Modal */}
+        {selectedProposalQuotation && (
+          <FundraiserProposalModal
+            quotation={selectedProposalQuotation}
+            onClose={() => setSelectedProposalQuotation(null)}
+            onUpdated={(updated) => {
+              setSelectedProposalQuotation(null);
+              if (updated?._id) {
+                setRecentQuotations((prev) =>
+                  prev.map((q) => (q._id === updated._id ? { ...q, ...updated } : q))
+                );
+              }
+            }}
+          />
+        )}
+
+        {/* Quotation Chat Modal */}
+        {selectedChatQuotation && (
+          <QuotationChatModal
+            quotation={selectedChatQuotation}
+            onClose={() => setSelectedChatQuotation(null)}
+          />
         )}
       </main>
     </div>

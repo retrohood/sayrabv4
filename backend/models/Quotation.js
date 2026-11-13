@@ -21,6 +21,12 @@ const quotationSchema = new mongoose.Schema(
     manufacturerProposal: { type: mongoose.Schema.Types.Mixed, default: null },
     cancelledReason: { type: String, default: '' },
     cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    payoutStatus: {
+      type: String,
+      enum: ['pending', 'milestone_released', 'completed'],
+      default: 'pending',
+    },
+    paymentReleasedAt: { type: Date },
     status: {
       type: String,
       enum: [
