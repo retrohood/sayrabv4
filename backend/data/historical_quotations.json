@@ -1,0 +1,30 @@
+[
+  {
+    "id": "Q-2025-017",
+    "garment_type": "rugby_polo",
+    "quantity": 120,
+    "mfg_cost_per_garment": 4100,
+    "note": "2 embellishments, no sleeve embroidery"
+  },
+  {
+    "id": "Q-2025-041",
+    "garment_type": "rugby_polo",
+    "quantity": 80,
+    "mfg_cost_per_garment": 4850,
+    "note": "Heavy chenille"
+  },
+  {
+    "id": "Q-2025-052",
+    "garment_type": "hoodie",
+    "quantity": 300,
+    "mfg_cost_per_garment": 2300,
+    "note": "Print only"
+  },
+  {
+    "id": "Q-2025-063",
+    "garment_type": "tshirt",
+    "quantity": 500,
+    "mfg_cost_per_garment": 900,
+    "note": "Single sublimation"
+  }
+]
