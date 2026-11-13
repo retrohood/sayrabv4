@@ -1,0 +1,1036 @@
+[
+  {
+    "code": "SEW_POLO",
+    "category": "construction",
+    "technique": "stitching",
+    "name": "Stitching - Polo",
+    "appliesTo": [
+      "polo"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 1000,
+    "observed_pkr": [
+      1000
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S2"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "SEW_CREW",
+    "category": "construction",
+    "technique": "stitching",
+    "name": "Stitching - Crewneck (standard)",
+    "appliesTo": [
+      "crewneck"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 900,
+    "observed_pkr": [
+      900,
+      900,
+      700
+    ],
+    "n_observations": 3,
+    "source_sheets": [
+      "S9a",
+      "S9b",
+      "S12"
+    ],
+    "confidence": "MEDIUM",
+    "active": true
+  },
+  {
+    "code": "SEW_CREW_CX",
+    "category": "construction",
+    "technique": "stitching",
+    "name": "Stitching - Crewneck (complex: applique etc.)",
+    "appliesTo": [
+      "crewneck"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 2500,
+    "observed_pkr": [
+      2500,
+      2500
+    ],
+    "n_observations": 2,
+    "source_sheets": [
+      "S10a",
+      "S10b"
+    ],
+    "confidence": "LOW-MEDIUM",
+    "active": true,
+    "tier": "complex"
+  },
+  {
+    "code": "SEW_ZIPUP",
+    "category": "construction",
+    "technique": "stitching",
+    "name": "Stitching - Reversible Zip-up",
+    "appliesTo": [
+      "reversible_zipup"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 2500,
+    "observed_pkr": [
+      3000,
+      4000,
+      2000,
+      2000
+    ],
+    "n_observations": 4,
+    "source_sheets": [
+      "S1",
+      "S3",
+      "S4",
+      "S5"
+    ],
+    "confidence": "MEDIUM",
+    "active": true,
+    "notes": "High variance 2000-4000; probably quantity/complexity dependent"
+  },
+  {
+    "code": "PAT_POLO",
+    "category": "construction",
+    "technique": "pattern",
+    "name": "Pattern - Polo (per garment, amortised)",
+    "appliesTo": [
+      "polo"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 300,
+    "observed_pkr": [
+      300
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S2"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "PAT_CREW",
+    "category": "construction",
+    "technique": "pattern",
+    "name": "Pattern - Crewneck (per garment, amortised)",
+    "appliesTo": [
+      "crewneck"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 50,
+    "observed_pkr": [
+      50,
+      100,
+      50
+    ],
+    "n_observations": 3,
+    "source_sheets": [
+      "S9a",
+      "S12",
+      "S9b"
+    ],
+    "confidence": "MEDIUM",
+    "active": true
+  },
+  {
+    "code": "PAT_CREW_CX",
+    "category": "construction",
+    "technique": "pattern",
+    "name": "Pattern - Crewneck complex",
+    "appliesTo": [
+      "crewneck"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 1200,
+    "observed_pkr": [
+      1200,
+      1200
+    ],
+    "n_observations": 2,
+    "source_sheets": [
+      "S10a",
+      "S10b"
+    ],
+    "confidence": "LOW-MEDIUM",
+    "active": true,
+    "tier": "complex"
+  },
+  {
+    "code": "PAT_ZIPUP",
+    "category": "construction",
+    "technique": "pattern",
+    "name": "Pattern - Reversible Zip-up",
+    "appliesTo": [
+      "reversible_zipup"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 1425,
+    "observed_pkr": [
+      2250,
+      3000,
+      600,
+      450
+    ],
+    "n_observations": 4,
+    "source_sheets": [
+      "S1",
+      "S3",
+      "S4",
+      "S5"
+    ],
+    "confidence": "MEDIUM",
+    "active": true,
+    "notes": "Sheet S4 notes \"Pattern 1200 (per size)\": confirm if per-garment or per-order amortised"
+  },
+  {
+    "code": "FUEL_POLO",
+    "category": "fixed",
+    "technique": "fuel_misc",
+    "name": "Fuel/misc - Polo",
+    "appliesTo": [
+      "polo"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 100,
+    "observed_pkr": [
+      100
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S2"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "FUEL_CREW",
+    "category": "fixed",
+    "technique": "fuel_misc",
+    "name": "Fuel/misc - Crewneck",
+    "appliesTo": [
+      "crewneck"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 250,
+    "observed_pkr": [
+      250,
+      250,
+      250
+    ],
+    "n_observations": 3,
+    "source_sheets": [
+      "S9a",
+      "S9b",
+      "S12"
+    ],
+    "confidence": "MEDIUM",
+    "active": true
+  },
+  {
+    "code": "FUEL_ZIPUP",
+    "category": "fixed",
+    "technique": "fuel_misc",
+    "name": "Fuel/misc - Zip-up",
+    "appliesTo": [
+      "reversible_zipup"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 200,
+    "observed_pkr": [
+      100,
+      200,
+      200,
+      2000
+    ],
+    "n_observations": 4,
+    "source_sheets": [
+      "S1",
+      "S4",
+      "S5",
+      "S3"
+    ],
+    "confidence": "MEDIUM",
+    "active": true,
+    "notes": "S3 value 2000 is an outlier (median used)"
+  },
+  {
+    "code": "FUEL_SWEATER",
+    "category": "fixed",
+    "technique": "fuel_misc",
+    "name": "Fuel/misc - Sweater",
+    "appliesTo": [
+      "sweater"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 200,
+    "observed_pkr": [
+      200
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S6"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "FAB_POLO",
+    "category": "fabric",
+    "technique": "polo_fabric",
+    "name": "Polo fabric",
+    "appliesTo": [
+      "polo"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 1400,
+    "observed_pkr": [
+      1400
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S2"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "FAB_CREW_ECON",
+    "category": "fabric",
+    "technique": "crewneck_economy",
+    "name": "Crewneck fabric - economy",
+    "appliesTo": [
+      "crewneck"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 500,
+    "observed_pkr": [
+      500
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S12"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "FAB_CREW_STD",
+    "category": "fabric",
+    "technique": "crewneck_standard",
+    "name": "Crewneck fabric - standard",
+    "appliesTo": [
+      "crewneck"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 1300,
+    "observed_pkr": [
+      1300
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S9a"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "FAB_CREW_PREM",
+    "category": "fabric",
+    "technique": "crewneck_premium",
+    "name": "Crewneck fabric - premium",
+    "appliesTo": [
+      "crewneck"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 1750,
+    "observed_pkr": [
+      1750
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S10a"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "FAB_FT400",
+    "category": "fabric",
+    "technique": "french_terry_400gsm_80_20",
+    "name": "French Terry 400GSM 80/20",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 2600,
+    "observed_pkr": [
+      2600
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S1"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "FAB_FLANNEL",
+    "category": "fabric",
+    "technique": "flannel",
+    "name": "Flannel fabric",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 1800,
+    "observed_pkr": [
+      1800
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S1"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "FAB_ZIPUP_LIGHT",
+    "category": "fabric",
+    "technique": "zipup_light",
+    "name": "Zip-up fabric - light (e.g. black)",
+    "appliesTo": [
+      "reversible_zipup"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 1100,
+    "observed_pkr": [
+      1100
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S4"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "FAB_ZIPUP_PREM",
+    "category": "fabric",
+    "technique": "zipup_premium",
+    "name": "Zip-up fabric - premium",
+    "appliesTo": [
+      "reversible_zipup"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 4600,
+    "observed_pkr": [
+      4200,
+      5000
+    ],
+    "n_observations": 2,
+    "source_sheets": [
+      "S5",
+      "S3"
+    ],
+    "confidence": "LOW-MEDIUM",
+    "active": true
+  },
+  {
+    "code": "FAB_APPLIQUE",
+    "category": "fabric",
+    "technique": "applique_fabric",
+    "name": "Appliqué fabric",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 1500,
+    "observed_pkr": [
+      1500
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S10a"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "BLANK_SWEATER",
+    "category": "fabric",
+    "technique": "blank_sweater",
+    "name": "Blank sweater (purchased)",
+    "appliesTo": [
+      "sweater"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 5000,
+    "observed_pkr": [
+      5000
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S6"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "EMB",
+    "category": "embellishment",
+    "technique": "embroidery",
+    "name": "Embroidery (by size band)",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "bracket",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "pricing_axis": "area_sq_in",
+    "brackets": [
+      {
+        "max": 6,
+        "price": 400,
+        "observed": [
+          400,
+          400,
+          400,
+          600
+        ],
+        "sheets": [
+          "S9a",
+          "S9b",
+          "S12",
+          "S6"
+        ]
+      },
+      {
+        "max": 25,
+        "price": 1100,
+        "observed": [
+          1100,
+          1100,
+          850,
+          1100
+        ],
+        "sheets": [
+          "S2",
+          "S5",
+          "S7",
+          "S4 note 1000-1200"
+        ]
+      },
+      {
+        "max": 80,
+        "price": 2000,
+        "observed": [
+          2000,
+          2000
+        ],
+        "sheets": [
+          "S4",
+          "S10b"
+        ]
+      },
+      {
+        "max": null,
+        "price": 9000,
+        "observed": [
+          8000,
+          10000
+        ],
+        "sheets": [
+          "S10a",
+          "S3"
+        ]
+      }
+    ],
+    "source_sheets": [
+      "S2-S10"
+    ],
+    "confidence": "LOW",
+    "assumed_band_edges": true,
+    "notes": "Sheets give embroidery cost but NOT dimensions. Bands are ASSUMED to match observed price clusters; calibrate with real sizes/stitch counts.",
+    "active": true
+  },
+  {
+    "code": "CHENILLE",
+    "category": "embellishment",
+    "technique": "chenille_embroidery",
+    "name": "Chenille embroidery",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 850,
+    "observed_pkr": [
+      850
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S9a"
+    ],
+    "confidence": "LOW",
+    "active": true,
+    "notes": "size unknown"
+  },
+  {
+    "code": "PRINT",
+    "category": "embellishment",
+    "technique": "printing",
+    "name": "Printing / Sublimation (by size band)",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "bracket",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "pricing_axis": "area_sq_in",
+    "brackets": [
+      {
+        "max": 12,
+        "price": 400,
+        "observed": [
+          400
+        ],
+        "sheets": [
+          "S9b"
+        ]
+      },
+      {
+        "max": 40,
+        "price": 775,
+        "observed": [
+          750,
+          800
+        ],
+        "sheets": [
+          "S12",
+          "S8(scratch)"
+        ]
+      },
+      {
+        "max": 150,
+        "price": 4000,
+        "observed": [
+          4000
+        ],
+        "sheets": [
+          "S10b"
+        ]
+      },
+      {
+        "max": null,
+        "price": 10000,
+        "observed": [
+          10000
+        ],
+        "sheets": [
+          "S1"
+        ]
+      }
+    ],
+    "source_sheets": [
+      "S1,S9b,S10b,S12"
+    ],
+    "confidence": "LOW",
+    "assumed_band_edges": true,
+    "notes": "Bands assumed; sheet has no print dimensions.",
+    "active": true
+  },
+  {
+    "code": "RHINE",
+    "category": "embellishment",
+    "technique": "rhinestones",
+    "name": "Rhinestones / pearls (by piece-count band)",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "bracket",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "pricing_axis": "piece_count",
+    "brackets": [
+      {
+        "max": 30,
+        "price": 150,
+        "observed": [
+          150,
+          150,
+          150
+        ],
+        "sheets": [
+          "S9a",
+          "S9b",
+          "S12"
+        ]
+      },
+      {
+        "max": 300,
+        "price": 1000,
+        "observed": [
+          1000,
+          1000
+        ],
+        "sheets": [
+          "S10a",
+          "S10b"
+        ]
+      },
+      {
+        "max": null,
+        "price": 2500,
+        "observed": [
+          2500
+        ],
+        "sheets": [
+          "S1"
+        ]
+      }
+    ],
+    "source_sheets": [
+      "S1,S9,S10,S12"
+    ],
+    "confidence": "LOW",
+    "assumed_band_edges": true,
+    "notes": "Piece counts assumed; sheet has none.",
+    "active": true
+  },
+  {
+    "code": "FUR",
+    "category": "embellishment",
+    "technique": "fur",
+    "name": "Fur",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 1500,
+    "observed_pkr": [
+      1500
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S1"
+    ],
+    "confidence": "LOW",
+    "active": true,
+    "notes": "S8 scratch shows 500"
+  },
+  {
+    "code": "DISTRESS",
+    "category": "embellishment",
+    "technique": "distressing",
+    "name": "Distressing",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 500,
+    "observed_pkr": [
+      500
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S1"
+    ],
+    "confidence": "LOW",
+    "active": true,
+    "notes": "S8 scratch shows 100"
+  },
+  {
+    "code": "ZIP",
+    "category": "trim",
+    "technique": "zipper",
+    "name": "Zipper",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 400,
+    "observed_pkr": [
+      200,
+      400,
+      1500
+    ],
+    "n_observations": 3,
+    "source_sheets": [
+      "S5",
+      "S4",
+      "S1"
+    ],
+    "confidence": "MEDIUM",
+    "active": true,
+    "notes": "Wide spread: confirm zipper types"
+  },
+  {
+    "code": "ZIP_DOUBLE",
+    "category": "trim",
+    "technique": "double_sided_zip",
+    "name": "Double-sided zip",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 350,
+    "observed_pkr": [
+      350
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S1"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "ZIP_PULLER",
+    "category": "trim",
+    "technique": "zip_puller_woven",
+    "name": "Custom woven zip puller",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 200,
+    "observed_pkr": [
+      200
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S4"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "RIB_CUSTOM",
+    "category": "trim",
+    "technique": "custom_rib",
+    "name": "Custom rib",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 700,
+    "observed_pkr": [
+      700,
+      700
+    ],
+    "n_observations": 2,
+    "source_sheets": [
+      "S4",
+      "S5"
+    ],
+    "confidence": "LOW-MEDIUM",
+    "active": true
+  },
+  {
+    "code": "QUILT",
+    "category": "trim",
+    "technique": "quilt",
+    "name": "Quilt lining",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 800,
+    "observed_pkr": [
+      800,
+      800
+    ],
+    "n_observations": 2,
+    "source_sheets": [
+      "S4",
+      "S5"
+    ],
+    "confidence": "LOW-MEDIUM",
+    "active": true
+  },
+  {
+    "code": "BTN_POLO",
+    "category": "trim",
+    "technique": "button",
+    "name": "Buttons - Polo",
+    "appliesTo": [
+      "polo"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 50,
+    "observed_pkr": [
+      50
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S2"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "BTN_ZIPUP",
+    "category": "trim",
+    "technique": "button",
+    "name": "Buttons - Zip-up",
+    "appliesTo": [
+      "reversible_zipup"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 1000,
+    "observed_pkr": [
+      1000
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S3"
+    ],
+    "confidence": "LOW",
+    "active": true
+  },
+  {
+    "code": "TAG_PRINT",
+    "category": "trim",
+    "technique": "sizetag",
+    "name": "Size tag - crewneck",
+    "appliesTo": [
+      "crewneck"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 20,
+    "observed_pkr": [
+      20,
+      20,
+      20
+    ],
+    "n_observations": 3,
+    "source_sheets": [
+      "S9a",
+      "S9b",
+      "S12"
+    ],
+    "confidence": "MEDIUM",
+    "active": true
+  },
+  {
+    "code": "TAG_WOVEN",
+    "category": "trim",
+    "technique": "sizetag",
+    "name": "Size tag - zip-up/sweater",
+    "appliesTo": [
+      "reversible_zipup",
+      "sweater"
+    ],
+    "method": "fixed",
+    "scope": "per_unit",
+    "currency": "PKR",
+    "rate": 250,
+    "observed_pkr": [
+      300,
+      250,
+      250
+    ],
+    "n_observations": 3,
+    "source_sheets": [
+      "S4",
+      "S5",
+      "S6"
+    ],
+    "confidence": "MEDIUM",
+    "active": true
+  },
+  {
+    "code": "LABEL_WOVEN_SIZE",
+    "category": "trim",
+    "technique": "sizetag_woven",
+    "name": "Woven label (per size, per order)",
+    "appliesTo": [
+      "*"
+    ],
+    "method": "fixed",
+    "scope": "per_order",
+    "currency": "PKR",
+    "rate": 1500,
+    "observed_pkr": [
+      1500
+    ],
+    "n_observations": 1,
+    "source_sheets": [
+      "S1",
+      "S4 note"
+    ],
+    "confidence": "LOW",
+    "active": true,
+    "notes": "Charged once per size, not per garment"
+  }
+]

@@ -1,0 +1,68 @@
+{
+  "fx_pkr_per_usd": 273,
+  "currency_note": "USD = PKR / 273 (every sheet)",
+  "margin_mode": "gross_margin",
+  "margin_formula": "fob_usd = cost_usd / (1 - margin)   (verified on S2,S4,S5,S6,S7,S9)",
+  "margin_rules": {
+    "by_garment_default": {
+      "polo": 0.3,
+      "reversible_zipup": 0.3,
+      "sweater": 0.4
+    },
+    "by_quantity_tiers": [
+      {
+        "min_qty": 50,
+        "max_qty_exclusive": 100,
+        "margin": 0.5
+      },
+      {
+        "min_qty": 100,
+        "max_qty_exclusive": 150,
+        "margin": 0.45
+      },
+      {
+        "min_qty": 150,
+        "max_qty_exclusive": 200,
+        "margin": 0.4
+      }
+    ],
+    "tier_edge_rule": "[min, max) - 150 units falls in the 150-200 tier",
+    "outside_tiers": {
+      "margin": 0.3,
+      "flag": true,
+      "reason": "No sheet evidence below 50 or above 200 units"
+    },
+    "precedence": "by_garment_default if garment type present, else by_quantity_tiers, else outside_tiers (flagged)"
+  },
+  "shipping": {
+    "rate_usd_per_kg": 10.44,
+    "alt_rate_usd_per_kg": 9.62,
+    "estimated_weight_kg_per_garment": {
+      "polo": 0.65,
+      "crewneck": 0.7,
+      "sweater": 1.5,
+      "reversible_zipup": 1.5,
+      "hoodie": 1,
+      "default": 1
+    },
+    "options": [
+      {
+        "id": "duty_paid_2kg",
+        "label": "Duty paid, ~12 days",
+        "usd": 49.72,
+        "pkr": 13575,
+        "example_weight_kg": 2
+      },
+      {
+        "id": "dhl_direct",
+        "label": "DHL direct, 4-5 days, duty NOT included (~USD 30 expected)",
+        "usd": 54.49,
+        "pkr": 14876,
+        "expected_duty_usd": 30
+      }
+    ],
+    "final_price_formula": "total_per_garment_usd = fob_usd + weight_kg * rate_usd_per_kg"
+  },
+  "incoterm_footer": "Our prices are FOB [Sialkot, Pakistan]. You can arrange your own shipper to pick up the cargo. If you do not have one, we can arrange shipping for you at an extra cost.",
+  "rounding": "2 decimals on USD"
+}
