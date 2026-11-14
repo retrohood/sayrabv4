@@ -1,0 +1,136 @@
+{
+  "howard_polo_100": {
+    "id": "EXT-101",
+    "garment": {
+      "type": "polo",
+      "style": "Howard University Polo",
+      "quantity": 100
+    },
+    "fabrics": [
+      {
+        "slug": "polo_fabric",
+        "confidence": "HIGH"
+      }
+    ],
+    "embellishments": [
+      {
+        "type": "embroidery",
+        "placement": "left_chest",
+        "width_in": 3.2,
+        "height_in": 3.1,
+        "quantity": 1,
+        "confidence": "HIGH"
+      }
+    ],
+    "trims": [
+      {
+        "type": "button",
+        "quantity_per_garment": 1,
+        "confidence": "MEDIUM"
+      }
+    ],
+    "reproduces_sheet": "S2 (cost 3950 PKR)"
+  },
+  "eta_mu_crewneck_150": {
+    "id": "EXT-102",
+    "garment": {
+      "type": "crewneck",
+      "style": "Eta Mu Chapter Crewneck",
+      "quantity": 150
+    },
+    "fabrics": [
+      {
+        "slug": "crewneck_standard",
+        "confidence": "HIGH"
+      }
+    ],
+    "embellishments": [
+      {
+        "type": "embroidery",
+        "placement": "left_chest",
+        "width_in": 2.5,
+        "height_in": 2,
+        "quantity": 1,
+        "confidence": "HIGH"
+      },
+      {
+        "type": "chenille_embroidery",
+        "placement": "front",
+        "quantity": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "type": "rhinestones",
+        "placement": "front",
+        "piece_count": 20,
+        "quantity": 1,
+        "confidence": "MEDIUM"
+      }
+    ],
+    "trims": [
+      {
+        "type": "sizetag",
+        "quantity_per_garment": 1,
+        "confidence": "HIGH"
+      }
+    ],
+    "reproduces_sheet": "S9a (cost 3920 PKR, 150-200 tier => 40% margin)"
+  },
+  "reversible_zipup_50_gaps": {
+    "id": "EXT-103",
+    "garment": {
+      "type": "reversible_zipup",
+      "style": "Reversible Zip-up",
+      "quantity": 50
+    },
+    "fabrics": [
+      {
+        "slug": "zipup_light",
+        "confidence": "HIGH"
+      },
+      {
+        "slug": "sherpa_fleece",
+        "confidence": "LOW"
+      }
+    ],
+    "embellishments": [
+      {
+        "type": "embroidery",
+        "placement": "left_chest",
+        "width_in": 4,
+        "height_in": 4,
+        "quantity": 1,
+        "confidence": "HIGH"
+      },
+      {
+        "type": "laser_cutting",
+        "placement": "sleeve",
+        "quantity": 1,
+        "confidence": "MEDIUM"
+      }
+    ],
+    "trims": [
+      {
+        "type": "zipper",
+        "quantity_per_garment": 1,
+        "confidence": "HIGH"
+      },
+      {
+        "type": "quilt",
+        "quantity_per_garment": 1,
+        "confidence": "HIGH"
+      },
+      {
+        "type": "custom_rib",
+        "quantity_per_garment": 1,
+        "confidence": "HIGH"
+      },
+      {
+        "type": "sizetag",
+        "quantity_per_garment": 1,
+        "confidence": "HIGH"
+      }
+    ],
+    "tests": "sherpa_fleece + laser_cutting have no rate -> must be flagged, never invented; qty 50 hits the 50-100 tier edge but garment default 30% wins"
+  }
+}
