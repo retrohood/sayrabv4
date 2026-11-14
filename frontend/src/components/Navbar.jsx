@@ -1,47 +1,60 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ShoppingBag, Sparkles, User, LogOut, Shield, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
-const navLinks = [
-  { to: '/', label: 'Home' },
-  { to: '/about', label: 'About Us' },
-];
+import { isFundraiserUser } from '../utils/format';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const isFundraiser = isFundraiserUser(user);
 
   const handleLogout = () => {
     logout();
+    setUserDropdownOpen(false);
     navigate('/');
   };
 
+  const navLinks = [
+    { to: '/', label: 'Home' },
+    { to: '/start-campaign', label: 'Start a Campaign' },
+    { to: '/store', label: 'Merch Store' },
+    { to: '/reviews', label: 'Reviews' },
+    { to: '/about', label: 'About Us' },
+  ];
+
   return (
-    <header className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-xl shadow-cyan-950/20">
+    <header className="sticky top-0 z-50 bg-[#89ca2e] text-[#10182b] shadow-md border-b border-[#7bb926] transition-all">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
+          {/* Logo */}
           <Link
             to={user?.role === 'manufacturer' ? '/manufacturer' : user?.role === 'admin' ? '/admin' : '/'}
-            className="flex items-center gap-2 shrink-0 group"
+            className="flex items-center gap-2.5 shrink-0 group py-1"
           >
-            <img src="/sayrab.png" alt="Sayrab" className="h-14 w-auto group-hover:scale-105 transition-transform" />
-            <span className="font-black text-xl text-white hidden sm:block tracking-tight">
-              Sayrab<span className="text-cyan-400">.</span>
+            <img
+              src="/sayrab.png"
+              alt="Sayrab"
+              className="h-20 w-auto object-contain group-hover:scale-105 transition-transform"
+            />
+            <span className="font-black text-2xl text-[#10182b] tracking-tight hidden sm:block">
+              Sayrab<span className="text-[#367c35]">.</span>
             </span>
           </Link>
 
-          <div className="hidden lg:flex items-center gap-1.5 bg-slate-950/60 p-1.5 rounded-2xl border border-slate-800/80">
+          {/* Desktop Navigation Links */}
+          <div className="hidden lg:flex items-center gap-1 bg-[#7bb926]/40 p-1.5 rounded-2xl border border-[#367c35]/20">
             {navLinks.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  `px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  `px-3.5 py-2 rounded-xl text-sm font-bold transition-all ${
                     isActive
-                      ? 'text-cyan-300 bg-cyan-500/15 border border-cyan-500/30 shadow-xs shadow-cyan-500/20'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                      ? 'bg-[#10182b] text-white shadow-sm'
+                      : 'text-[#10182b] hover:bg-[#10182b]/10 hover:text-[#10182b]'
                   }`
                 }
               >
@@ -50,117 +63,158 @@ export default function Navbar() {
             ))}
           </div>
 
+          {/* Right Action / Auth Button */}
           <div className="hidden lg:flex items-center gap-3">
             {user ? (
-              <>
-                {user.role === 'admin' && (
-                  <Link
-                    to="/admin"
-                    className="px-3.5 py-2 rounded-xl text-xs font-bold text-cyan-300 bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/30 transition-all shadow-xs"
-                  >
-                    Admin Portal
-                  </Link>
-                )}
-                {user.role === 'manufacturer' && (
-                  <Link
-                    to="/manufacturer"
-                    className="px-3.5 py-2 rounded-xl text-xs font-bold text-cyan-300 bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/30 transition-all shadow-xs"
-                  >
-                    Manufacturer Portal
-                  </Link>
-                )}
-                <Link
-                  to={user.role === 'manufacturer' ? '/manufacturer' : user.role === 'admin' ? '/admin' : '/dashboard'}
-                  className="px-4 py-2 text-sm font-bold text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700 rounded-xl transition-all flex items-center gap-2"
-                >
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                  {user.fullName}
-                </Link>
+              <div className="relative">
                 <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 text-sm font-semibold text-rose-300 bg-rose-950/40 border border-rose-800/40 rounded-xl hover:bg-rose-900/60 transition-colors cursor-pointer"
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="px-4 py-2 bg-[#10182b] text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-[#172033] transition-all shadow-sm"
                 >
-                  Logout
+                  <span className="w-2 h-2 rounded-full bg-[#89ca2e] animate-pulse"></span>
+                  <span className="max-w-[130px] truncate">{user.fullName || 'My Account'}</span>
+                  <ChevronDown size={14} className={`transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
-              </>
+
+                {userDropdownOpen && (
+                  <div
+                    className="absolute right-0 mt-2 w-56 bg-white text-[#172033] rounded-2xl shadow-2xl border border-[#e5e9e3] py-2 z-50 animate-fade-in"
+                    onMouseLeave={() => setUserDropdownOpen(false)}
+                  >
+                    <div className="px-4 py-2.5 border-b border-[#e5e9e3]">
+                      <p className="text-xs text-[#64748b]">Signed in as</p>
+                      <p className="text-sm font-bold truncate text-[#10182b]">{user.email}</p>
+                      <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-extrabold uppercase rounded bg-[#89ca2e]/20 text-[#367c35]">
+                        {user.role}
+                      </span>
+                    </div>
+
+                    {user.role === 'admin' && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-[#10182b] hover:bg-[#f7f9f5] transition-colors"
+                      >
+                        <Shield size={14} className="text-[#367c35]" /> Admin Portal
+                      </Link>
+                    )}
+
+                    {user.role === 'manufacturer' && (
+                      <Link
+                        to="/manufacturer"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-[#10182b] hover:bg-[#f7f9f5] transition-colors"
+                      >
+                        <Sparkles size={14} className="text-[#367c35]" /> Manufacturer Portal
+                      </Link>
+                    )}
+
+                    <Link
+                      to={user.role === 'manufacturer' ? '/manufacturer' : user.role === 'admin' ? '/admin' : '/dashboard'}
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-[#10182b] hover:bg-[#f7f9f5] transition-colors"
+                    >
+                      <User size={14} className="text-[#367c35]" />
+                      {isFundraiser ? 'Fundraiser Dashboard' : 'Donor Dashboard'}
+                    </Link>
+
+                    <div className="border-t border-[#e5e9e3] mt-1 pt-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left flex items-center gap-2 px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors"
+                      >
+                        <LogOut size={14} /> Log Out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <Link
                 to="/auth"
-                className="px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 rounded-xl transition-all shadow-lg shadow-cyan-500/20"
+                className="px-5 py-2.5 bg-[#10182b] hover:bg-[#172033] text-white text-sm font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg"
               >
                 Login / Sign Up
               </Link>
             )}
           </div>
 
+          {/* Mobile Menu Button */}
           <button
-            className="lg:hidden p-2 text-slate-300 hover:text-white"
+            className="lg:hidden p-2 text-[#10182b] hover:bg-[#7bb926]/50 rounded-xl transition-colors"
             onClick={() => setOpen(!open)}
             aria-label="Toggle menu"
           >
-            {open ? <X size={24} /> : <Menu size={24} />}
+            {open ? <X size={26} /> : <Menu size={26} />}
           </button>
         </div>
 
+        {/* Mobile Dropdown Menu (Contains all 6 items) */}
         {open && (
-          <div className="lg:hidden pb-4 border-t border-slate-800 pt-3 space-y-1">
+          <div className="lg:hidden pb-5 pt-2 border-t border-[#7bb926] space-y-1.5 animate-fade-in">
             {navLinks.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
-                  `block px-4 py-2.5 rounded-xl text-sm font-semibold ${
-                    isActive ? 'text-cyan-300 bg-cyan-500/20 border border-cyan-500/30' : 'text-slate-300 hover:bg-slate-800'
+                  `block px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                    isActive
+                      ? 'bg-[#10182b] text-white'
+                      : 'text-[#10182b] hover:bg-[#7bb926]/50'
                   }`
                 }
               >
                 {link.label}
               </NavLink>
             ))}
-            <div className="mt-3 pt-3 border-t border-slate-800 space-y-2">
+
+            <div className="pt-3 border-t border-[#7bb926] space-y-2">
               {user ? (
                 <>
+                  <div className="px-4 py-1 text-xs text-[#10182b] font-medium">
+                    Signed in as <strong className="font-bold">{user.fullName || user.email}</strong>
+                  </div>
                   {user.role === 'admin' && (
                     <Link
                       to="/admin"
                       onClick={() => setOpen(false)}
-                      className="block px-4 py-2 text-sm font-bold text-cyan-400"
+                      className="block px-4 py-2 text-sm font-bold text-[#10182b] bg-white/40 rounded-xl"
                     >
-                      ★ Admin Portal
+                      Admin Portal
                     </Link>
                   )}
                   {user.role === 'manufacturer' && (
                     <Link
                       to="/manufacturer"
                       onClick={() => setOpen(false)}
-                      className="block px-4 py-2 text-sm font-bold text-cyan-400"
+                      className="block px-4 py-2 text-sm font-bold text-[#10182b] bg-white/40 rounded-xl"
                     >
-                      ⚙ Manufacturer Portal
+                      Manufacturer Portal
                     </Link>
                   )}
                   <Link
                     to={user.role === 'manufacturer' ? '/manufacturer' : user.role === 'admin' ? '/admin' : '/dashboard'}
                     onClick={() => setOpen(false)}
-                    className="block px-4 py-2 text-sm font-semibold text-white"
+                    className="block px-4 py-2.5 text-sm font-bold text-white bg-[#10182b] rounded-xl text-center"
                   >
-                    Dashboard ({user.fullName})
+                    Go to Dashboard
                   </Link>
                   <button
                     onClick={() => {
                       handleLogout();
                       setOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm font-semibold text-rose-400 hover:text-rose-300"
+                    className="w-full text-center px-4 py-2 text-sm font-bold text-rose-800 hover:text-rose-900"
                   >
-                    Logout
+                    Log Out
                   </button>
                 </>
               ) : (
                 <Link
                   to="/auth"
                   onClick={() => setOpen(false)}
-                  className="block text-center px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl"
+                  className="block text-center px-4 py-2.5 text-sm font-extrabold text-white bg-[#10182b] rounded-xl shadow-md"
                 >
                   Login / Sign Up
                 </Link>

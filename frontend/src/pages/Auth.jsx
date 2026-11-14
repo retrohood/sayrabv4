@@ -322,7 +322,7 @@ export default function Auth() {
 
         <div className="text-center mb-6 relative z-10">
           <Link to="/" className="inline-block hover:opacity-90 transition-opacity">
-            <img src="/sayrab.png" alt="Sayrab" className="h-16 w-auto mx-auto mb-3" />
+            <img src="/sayrab.png" alt="Sayrab" className="h-20 w-auto object-contain mx-auto mb-3" />
           </Link>
           <h1 className="text-2xl font-black text-white tracking-tight">
             {mode === 'login' ? 'Welcome Back to Sayrab' : 'Create an Account'}

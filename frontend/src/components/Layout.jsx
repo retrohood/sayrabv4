@@ -26,11 +26,14 @@ export default function Layout({ children }) {
   }, [user, location.pathname, navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div
+      className={`min-h-screen flex flex-col transition-colors duration-200 ${
+        !isStandalonePortal ? 'bg-[#f7f9f5] text-[#172033]' : 'bg-[#030712] text-[#f8fafc]'
+      }`}
+    >
       {!isStandalonePortal && <Navbar />}
       <main className="flex-1">{children}</main>
       {!isStandalonePortal && <Footer />}
     </div>
   );
 }
-
