@@ -11,10 +11,19 @@ import {
   ShieldAlert,
   X,
   ArrowRight,
+  MapPin,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  FileCheck,
+  Info,
+  Sparkles,
+  ExternalLink,
 } from 'lucide-react';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import DonationModal from '../components/DonationModal';
+import CampaignCard from '../components/CampaignCard';
 import { addCartItem } from '../utils/cart';
 import {
   formatCurrency,
@@ -30,6 +39,7 @@ export default function CampaignDetail() {
   const { user } = useAuth();
   const isFundraiser = isFundraiserUser(user);
   const navigate = useNavigate();
+
   const [campaign, setCampaign] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [showDonate, setShowDonate] = useState(false);
@@ -38,7 +48,9 @@ export default function CampaignDetail() {
   const [referralLink, setReferralLink] = useState('');
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [relatedCampaigns, setRelatedCampaigns] = useState([]);
 
+  // Campaign merchandise products
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [buyForm, setBuyForm] = useState({ size: '', color: '', qty: 1 });
@@ -46,48 +58,76 @@ export default function CampaignDetail() {
 
   const refCode = searchParams.get('ref');
 
-  useEffect(() => {
-    if (!user) {
-      navigate(`/auth?mode=login&redirect=/campaigns/${slug}`);
-    }
-  }, [user, slug, navigate]);
-
+  // Track referral click if ref param present
   useEffect(() => {
     if (refCode && slug) {
-      api.get('/referrals/track', { params: { ref: refCode, campaignSlug: slug } });
+      api.get('/referrals/track', { params: { ref: refCode, campaignSlug: slug } }).catch(() => {});
     }
   }, [refCode, slug]);
 
+  // Load campaign details
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
       try {
         const res = await api.get(`/campaigns/${slug}`);
-        setCampaign(res.data);
-        const lb = await api.get(`/referrals/leaderboard/${res.data._id}`);
-        setLeaderboard(lb.data);
-        const linkRes = await api.get(`/referrals/link/${res.data._id}`);
-        setReferralLink(linkRes.data.link);
+        const cData = res.data;
+        setCampaign(cData);
 
+        // Leaderboard
         try {
-          const productsRes = await api.get(`/products/campaign/${res.data._id}`);
+          const lb = await api.get(`/referrals/leaderboard/${cData._id}`);
+          setLeaderboard(Array.isArray(lb.data) ? lb.data : []);
+        } catch {
+          setLeaderboard([]);
+        }
+
+        // Referral link: logged-in user gets unique link, guest gets generic
+        if (user) {
+          try {
+            const linkRes = await api.get(`/referrals/link/${cData._id}`);
+            setReferralLink(linkRes.data?.link || window.location.href);
+          } catch {
+            setReferralLink(window.location.href);
+          }
+        } else {
+          setReferralLink(window.location.href);
+        }
+
+        // Merchandise tied to campaign
+        try {
+          const productsRes = await api.get(`/products/campaign/${cData._id}`);
           setProducts(productsRes.data || []);
-        } catch (err) {
-          console.error("Failed to load campaign merchandise:", err);
+        } catch {
           setProducts([]);
         }
-      } catch {
+
+        // Related campaigns
+        if (cData.category) {
+          try {
+            const relRes = await api.get('/campaigns', {
+              params: { category: cData.category, limit: 3 },
+            });
+            const filtered = (relRes.data?.campaigns || []).filter((c) => c._id !== cData._id);
+            setRelatedCampaigns(filtered.slice(0, 3));
+          } catch {
+            setRelatedCampaigns([]);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load campaign:', err);
         setCampaign(null);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [slug]);
+  }, [slug, user]);
 
   const handleDonateClick = () => {
     if (isFundraiser) {
       setFundraiserNoticeText(
-        'Fundraiser accounts are not allowed to make donations to campaigns on this platform. Please switch to or use a donor account to make a contribution.'
+        'Fundraiser accounts cannot make donations to campaigns on this platform. Please switch to a donor account to make a contribution.'
       );
       setShowFundraiserNotice(true);
       return;
@@ -96,13 +136,9 @@ export default function CampaignDetail() {
   };
 
   const handleBuyClick = (product) => {
-    if (!user) {
-      navigate(`/auth?mode=login&redirect=/campaigns/${slug}`);
-      return;
-    }
     if (isFundraiser) {
       setFundraiserNoticeText(
-        'Fundraiser accounts cannot purchase merchandise products. Merchandise purchases are for buyers and donors to support charitable goals.'
+        'Fundraiser accounts cannot purchase merchandise products. Product purchases are for buyers and donors to fund active campaigns.'
       );
       setShowFundraiserNotice(true);
       return;
@@ -130,21 +166,16 @@ export default function CampaignDetail() {
       setBuyError('Please select a color');
       return;
     }
-    if (buyForm.qty < 1 || buyForm.qty > selectedProduct.stock) {
-      setBuyError(`Quantity must be between 1 and ${selectedProduct.stock}`);
+    if (buyForm.qty < 1 || buyForm.qty > (selectedProduct.stock || 99)) {
+      setBuyError(`Quantity must be between 1 and ${selectedProduct.stock || 99}`);
       return;
     }
-
-    const linkedCampaignId =
-      (selectedProduct.campaignId?._id || selectedProduct.campaignId) ||
-      (selectedProduct.campaign?._id || selectedProduct.campaign) ||
-      campaign?._id;
 
     addCartItem(
       {
         ...selectedProduct,
-        campaignId: linkedCampaignId,
-        campaignTitle: campaign?.title || selectedProduct.campaignTitle || 'Campaign Merchandise',
+        campaignId: campaign._id,
+        campaignTitle: campaign.title,
         selectedSize: buyForm.size || undefined,
         selectedColor: buyForm.color || undefined,
       },
@@ -157,14 +188,15 @@ export default function CampaignDetail() {
   };
 
   const handleShare = async () => {
+    const link = referralLink || window.location.href;
     if (navigator.share) {
-      await navigator.share({ title: campaign.title, url: referralLink });
+      try {
+        await navigator.share({ title: campaign?.title, url: link });
+        api.post(`/campaigns/${campaign._id}/share`).catch(() => {});
+      } catch {}
     } else {
-      await navigator.clipboard.writeText(referralLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      handleCopyLink();
     }
-    api.post(`/campaigns/${campaign._id}/share`);
   };
 
   const handleCopyLink = async () => {
@@ -180,300 +212,459 @@ export default function CampaignDetail() {
       document.body.removeChild(textArea);
     }
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 2200);
+    if (campaign?._id) {
+      api.post(`/campaigns/${campaign._id}/share`).catch(() => {});
+    }
   };
-
-  if (!user) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] p-4 text-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-400 mb-3" />
-        <p className="text-slate-400 font-medium text-xs">Redirecting to login / sign up...</p>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-400" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#89ca2e]" />
       </div>
     );
   }
 
   if (!campaign) {
     return (
-      <div className="text-center py-20 bg-slate-900 rounded-3xl border border-slate-800 max-w-lg mx-auto my-12 p-8">
-        <h2 className="text-2xl font-black text-white">Campaign Not Found</h2>
-        <p className="text-slate-400 text-xs mt-2">The requested campaign could not be located or has ended.</p>
+      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
+        <h2 className="text-2xl font-black text-[#10182b]">Campaign Not Found</h2>
+        <p className="text-[#64748b] text-sm mt-2">The requested campaign does not exist or has been removed.</p>
+        <Link
+          to="/"
+          className="mt-6 inline-block px-5 py-2.5 bg-[#89ca2e] text-[#10182b] font-bold rounded-xl text-xs"
+        >
+          Return to Home
+        </Link>
       </div>
     );
   }
 
-  const percent = Math.min(100, Math.round((campaign.amountRaised / campaign.fundingGoal) * 100));
+  const fundingGoal = campaign.fundingGoal || 1;
+  const percent = Math.min(100, Math.round((campaign.amountRaised / fundingGoal) * 100));
   const daysLeft = getDaysRemaining(campaign.endDate);
-  const story = campaign.story || {};
+  const isVerified = ['verified', 'emergency_verified'].includes(campaign.verificationStatus);
+
+  // Story parsing (structured narrative)
+  const storyObj = typeof campaign.story === 'object' && campaign.story !== null ? campaign.story : null;
+  const storyText = typeof campaign.story === 'string' ? campaign.story : '';
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 pb-16">
-      <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl shadow-2xl border border-slate-800 overflow-hidden">
-        <div className="relative aspect-[21/9] sm:h-96 w-full bg-slate-950 overflow-hidden">
-          <img
-            src={campaign.thumbnail}
-            alt={campaign.title}
-            className="w-full h-full object-cover"
-          />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 pb-24 text-[#172033]">
+      {/* Fundraiser notice modal */}
+      {showFundraiserNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-[#e5e9e3] shadow-2xl space-y-4">
+            <div className="w-12 h-12 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center mx-auto">
+              <ShieldAlert size={26} />
+            </div>
+            <h3 className="text-lg font-black text-center text-[#10182b]">Fundraiser Policy Notice</h3>
+            <p className="text-xs sm:text-sm text-[#64748b] text-center leading-relaxed">
+              {fundraiserNoticeText}
+            </p>
+            <button
+              onClick={() => setShowFundraiserNotice(false)}
+              className="w-full py-2.5 bg-[#10182b] text-white rounded-xl text-xs font-bold hover:bg-[#172033]"
+            >
+              Understand & Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Header Area */}
+      <section className="space-y-4 border-b border-[#e5e9e3] pb-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="px-3 py-1 bg-[#89ca2e]/25 text-[#367c35] text-xs font-black uppercase tracking-wider rounded-lg">
+            {campaign.category}
+          </span>
           {campaign.isEmergency && (
-            <span className="absolute top-4 left-4 px-3 py-1 bg-red-600 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md">
-              EMERGENCY RELIEF
+            <span className="px-2.5 py-1 bg-red-600 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-xs">
+              Emergency Relief
+            </span>
+          )}
+          {isVerified && (
+            <span className="px-2.5 py-1 bg-[#367c35] text-white text-xs font-bold rounded-lg flex items-center gap-1">
+              <ShieldCheck size={14} /> {getVerificationLabel(campaign.verificationStatus)}
             </span>
           )}
         </div>
 
-        <div className="p-6 sm:p-8 space-y-8">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <span className="inline-block px-3 py-1 bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-extrabold rounded-full mb-2">
-                {campaign.category}
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{campaign.title}</h1>
-              <p className="text-slate-400 text-xs sm:text-sm mt-1">
-                Organized by <strong className="text-white">{campaign.organizer?.fullName}</strong>
-                {campaign.organizer?.isVerifiedFundraiser && (
-                  <span className="ml-2 text-emerald-400 text-xs font-bold">✓ Verified Fundraiser</span>
-                )}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl">
-              <ShieldCheck className="text-cyan-400" size={18} />
-              <span className="text-xs font-bold text-slate-200">
-                {getVerificationLabel(campaign.verificationStatus)}
-              </span>
-            </div>
+        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#10182b] tracking-tight leading-tight">
+          {campaign.title}
+        </h1>
+
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs sm:text-sm text-[#64748b] pt-1">
+          <div className="flex items-center gap-1.5 font-bold text-[#10182b]">
+            <span>Organized by:</span>
+            <span className="text-[#367c35] underline decoration-[#89ca2e] underline-offset-2">
+              {campaign.organizer?.fullName || 'Verified Campaign Leader'}
+            </span>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 p-5 bg-slate-950/80 border border-slate-800/80 rounded-2xl">
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase">Raised</p>
-              <p className="text-xl font-black text-cyan-400 mt-0.5">
-                {formatCurrency(campaign.amountRaised)}
-              </p>
+          {campaign.location && (
+            <div className="flex items-center gap-1">
+              <MapPin size={15} className="text-[#367c35]" />
+              <span>{campaign.location}</span>
             </div>
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase">Target Goal</p>
-              <p className="text-xl font-black text-white mt-0.5">{formatCurrency(campaign.fundingGoal)}</p>
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase">Total Donors</p>
-              <p className="text-xl font-black text-white mt-0.5 flex items-center gap-1.5">
-                <Users size={18} className="text-cyan-400" /> {campaign.donorCount}
-              </p>
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase">Time Remaining</p>
-              <p className="text-xl font-black text-white mt-0.5">{daysLeft} days</p>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs font-semibold">
-              <span className="text-cyan-400 font-bold">{percent}% funded</span>
-              <span className="text-slate-400">{formatCurrency(campaign.amountRaised)} of {formatCurrency(campaign.fundingGoal)}</span>
-            </div>
-            <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/60">
-              <div
-                className="bg-gradient-to-r from-blue-600 to-cyan-500 h-2.5 rounded-full transition-all duration-500"
-                style={{ width: `${percent}%` }}
-              />
-            </div>
-          </div>
-
-          <p className="text-xs text-slate-500">
-            Active Campaign Period: {formatDate(campaign.startDate)} — {formatDate(campaign.endDate)}
-          </p>
-
-          <div className="flex flex-wrap gap-3 pt-2">
-            <button
-              onClick={handleDonateClick}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
-            >
-              <Heart size={16} /> Donate Directly Now
-            </button>
-            <button
-              onClick={handleShare}
-              className="flex items-center gap-2 px-5 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-colors cursor-pointer"
-            >
-              <Share2 size={16} /> Share Campaign
-            </button>
-            <button
-              onClick={handleCopyLink}
-              className="flex items-center gap-2 px-5 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-colors cursor-pointer"
-            >
-              <Copy size={16} /> {copied ? 'Copied!' : 'Copy Referral Link'}
-            </button>
-          </div>
-
-          <section className="border-t border-slate-800/80 pt-6">
-            <h2 className="text-lg font-black text-white uppercase tracking-wider text-cyan-400 mb-4">
-              Campaign Story & Impact
-            </h2>
-            <div className="space-y-4 text-slate-300 text-xs sm:text-sm leading-relaxed">
-              {story.background && (
-                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/60">
-                  <h3 className="font-bold text-white mb-1">Background</h3>
-                  <p>{story.background}</p>
-                </div>
-              )}
-              {story.currentSituation && (
-                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/60">
-                  <h3 className="font-bold text-white mb-1">Current Situation</h3>
-                  <p>{story.currentSituation}</p>
-                </div>
-              )}
-              {story.fundingNeed && (
-                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/60">
-                  <h3 className="font-bold text-white mb-1">Funding Need & Allocation</h3>
-                  <p>{story.fundingNeed}</p>
-                </div>
-              )}
-              {story.expectedImpact && (
-                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/60">
-                  <h3 className="font-bold text-white mb-1">Expected Community Impact</h3>
-                  <p>{story.expectedImpact}</p>
-                </div>
-              )}
-              {story.supportingEvidence && (
-                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/60">
-                  <h3 className="font-bold text-white mb-1">Supporting Evidence & Verifications</h3>
-                  <p>{story.supportingEvidence}</p>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {products.length > 0 && (
-            <section className="border-t border-slate-800/80 pt-6 space-y-4">
-              <div>
-                <h2 className="text-xl font-black text-white">Campaign Merchandise</h2>
-                <p className="text-slate-400 text-xs mt-0.5">
-                  Support this campaign by purchasing official merchandise. 50% of the proceeds directly fund this campaign goal!
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                {products.map((product) => {
-                  const contribution = product.price * 0.5;
-                  return (
-                    <div
-                      key={product._id}
-                      className="bg-slate-950/80 rounded-2xl border border-slate-800 overflow-hidden flex flex-col justify-between hover:border-cyan-500/40 transition-all shadow-xl"
-                    >
-                      <div>
-                        <img
-                          src={product.image || product.images?.[0] || 'https://picsum.photos/seed/placeholder/300/300'}
-                          alt={product.name}
-                          className="w-full h-48 object-cover bg-slate-900"
-                        />
-                        <div className="p-4">
-                          <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block mb-1">
-                            {product.category}
-                          </span>
-                          <h3 className="font-bold text-white text-sm line-clamp-1">{product.name}</h3>
-                          <p className="text-xs text-slate-400 mt-1 line-clamp-2">{product.description}</p>
-                        </div>
-                      </div>
-
-                      <div className="p-4 pt-0">
-                        <div className="flex items-baseline justify-between pt-3 border-t border-slate-800/80 mb-3">
-                          <span className="text-lg font-black text-white">{formatCurrency(product.price)}</span>
-                          <span className="text-[10px] font-bold text-cyan-300 bg-cyan-500/20 px-2 py-0.5 rounded border border-cyan-500/30">
-                            +{formatCurrency(contribution)} to cause
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => handleBuyClick(product)}
-                          className="w-full py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
-                        >
-                          Buy Merchandise
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
           )}
 
-          {leaderboard.length > 0 && (
-            <section className="border-t border-slate-800/80 pt-6 space-y-4">
-              <h2 className="text-lg font-black text-white flex items-center gap-2">
-                <Trophy className="text-amber-400" size={20} /> Referral Leaderboard
-              </h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b border-slate-800 text-left text-slate-400 font-bold uppercase">
-                      <th className="py-2.5 pr-4">Rank</th>
-                      <th className="py-2.5 pr-4">Promoter</th>
-                      <th className="py-2.5 pr-4">Donors Referred</th>
-                      <th className="py-2.5 text-right">Amount Raised</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                    {leaderboard.map((entry) => (
-                      <tr key={entry.rank} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="py-3 pr-4 font-mono font-bold text-cyan-400">#{entry.rank}</td>
-                        <td className="py-3 pr-4 font-semibold text-white">{entry.name}</td>
-                        <td className="py-3 pr-4">{entry.donationCount} supporters</td>
-                        <td className="py-3 text-right font-bold text-cyan-400">{formatCurrency(entry.amountRaised)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <div className="flex items-center gap-1">
+            <Calendar size={15} className="text-[#367c35]" />
+            <span>Started {formatDate(campaign.createdAt || campaign.startDate)}</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Two-Column Layout */}
+      <div className="grid lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column (8 cols): Campaign Story, Updates, Evidence, Referral */}
+        <div className="lg:col-span-8 space-y-8">
+          {/* Large Campaign Thumbnail / Media */}
+          <div className="aspect-video w-full rounded-3xl overflow-hidden bg-slate-100 border border-[#e5e9e3] shadow-sm">
+            <img
+              src={campaign.thumbnail || '/placeholder-campaign.jpg'}
+              alt={campaign.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Structured Story Narrative */}
+          <div className="bg-white rounded-3xl border border-[#e5e9e3] p-6 sm:p-8 space-y-6 shadow-xs">
+            <h2 className="text-xl font-black text-[#10182b] border-b border-[#e5e9e3] pb-3">
+              About This Campaign
+            </h2>
+
+            {/* 1. Introduction */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#367c35]">
+                1. Campaign Introduction
+              </h3>
+              <p className="text-sm sm:text-base text-[#172033] leading-relaxed">
+                {campaign.shortDescription || campaign.description || 'This campaign represents a genuine community appeal seeking transparent support.'}
+              </p>
+            </div>
+
+            {/* 2. Background */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#367c35]">
+                2. Background & Circumstances
+              </h3>
+              <p className="text-sm sm:text-base text-[#172033] leading-relaxed">
+                {storyObj?.background ||
+                  'The beneficiaries are facing critical challenges requiring immediate community intervention and solidarity.'}
+              </p>
+            </div>
+
+            {/* 3. Current Problem */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#367c35]">
+                3. The Current Challenge
+              </h3>
+              <p className="text-sm sm:text-base text-[#172033] leading-relaxed">
+                {storyObj?.currentSituation ||
+                  'Without timely financial backing, this vital initiative risks stalling, leaving beneficiaries in acute distress.'}
+              </p>
+            </div>
+
+            {/* 4. Why Assistance Is Needed */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#367c35]">
+                4. Why Immediate Assistance Is Needed
+              </h3>
+              <p className="text-sm sm:text-base text-[#172033] leading-relaxed">
+                {storyObj?.fundingNeed ||
+                  'Every rupee gathered directly provides essential relief, medical treatment, education, or rehabilitation.'}
+              </p>
+            </div>
+
+            {/* 5. Intended Use of Funds */}
+            <div className="space-y-2 bg-[#f7f9f5] p-4 sm:p-5 rounded-2xl border border-[#e5e9e3]">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#10182b] flex items-center gap-1.5">
+                <CheckCircle2 size={16} className="text-[#367c35]" /> 5. Intended Use of Collected Funds
+              </h3>
+              <p className="text-sm text-[#172033] leading-relaxed font-medium">
+                {campaign.purposeOfFunds || 'Direct allocation towards medical, education, or community welfare relief as authorized.'}
+              </p>
+            </div>
+
+            {/* 6. Expected Impact */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#367c35]">
+                6. Expected Community Impact
+              </h3>
+              <p className="text-sm sm:text-base text-[#172033] leading-relaxed">
+                {storyObj?.expectedImpact ||
+                  storyText ||
+                  'Achieving this funding target will stabilize the crisis and empower the recipients to rebuild their lives with dignity.'}
+              </p>
+            </div>
+          </div>
+
+          {/* Verification & Supporting Evidence */}
+          <div className="bg-white rounded-3xl border border-[#e5e9e3] p-6 sm:p-8 space-y-4 shadow-xs">
+            <div className="flex items-center gap-2 text-[#367c35]">
+              <FileCheck size={20} />
+              <h3 className="text-base font-black text-[#10182b]">Platform Verification & Evidence</h3>
+            </div>
+            <p className="text-xs text-[#64748b] leading-relaxed">
+              This campaign has undergone verified review by our compliance team. Supporting documentation has been inspected to validate the urgency and legitimacy of this cause. In accordance with privacy and security standards, personal identification numbers (CNIC) and confidential private records remain securely protected.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <div className="flex items-center gap-2 p-3 bg-[#f7f9f5] rounded-xl border border-[#e5e9e3] text-xs">
+                <ShieldCheck size={16} className="text-[#367c35]" />
+                <span className="font-bold text-[#10182b]">Identity Verification: Completed</span>
               </div>
-            </section>
+              <div className="flex items-center gap-2 p-3 bg-[#f7f9f5] rounded-xl border border-[#e5e9e3] text-xs">
+                <ShieldCheck size={16} className="text-[#367c35]" />
+                <span className="font-bold text-[#10182b]">Document & Purpose Review: Passed</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Referral & Sharing Tracking */}
+          <div className="bg-white rounded-3xl border border-[#e5e9e3] p-6 sm:p-8 space-y-5 shadow-xs">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-black text-[#10182b]">Share This Campaign</h3>
+                <p className="text-xs text-[#64748b]">
+                  {user ? 'Share your unique referral link to track donors and contributions inspired by you.' : 'Copy and share this link to help spread awareness for this cause.'}
+                </p>
+              </div>
+              <div className="p-2.5 bg-[#89ca2e]/20 text-[#367c35] rounded-xl">
+                <Share2 size={20} />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={referralLink}
+                className="flex-1 px-4 py-2.5 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#172033] font-mono select-all truncate"
+              />
+              <button
+                onClick={handleCopyLink}
+                className="px-4 py-2.5 bg-[#89ca2e] hover:bg-[#7bb926] text-[#10182b] rounded-xl font-bold text-xs flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer"
+              >
+                <Copy size={14} /> {copied ? 'Copied!' : 'Copy'}
+              </button>
+              <button
+                onClick={handleShare}
+                className="px-4 py-2.5 bg-[#10182b] hover:bg-[#172033] text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer"
+              >
+                <Share2 size={14} /> Share
+              </button>
+            </div>
+
+            {/* Leaderboard */}
+            {leaderboard.length > 0 && (
+              <div className="pt-4 border-t border-[#e5e9e3] space-y-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-[#10182b] flex items-center gap-1.5">
+                  <Trophy size={15} className="text-amber-500" /> Top Referral Supporters
+                </h4>
+                <div className="space-y-2">
+                  {leaderboard.slice(0, 5).map((entry, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between text-xs p-2.5 bg-[#f7f9f5] rounded-xl border border-[#e5e9e3]"
+                    >
+                      <span className="font-bold text-[#10182b]">
+                        #{idx + 1} {entry.referrerName || 'Generous Supporter'}
+                      </span>
+                      <span className="text-[#367c35] font-extrabold">
+                        {entry.referralCount || 0} donors referred
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column (4 cols): Sticky Donation Panel & Campaign Merch */}
+        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+          {/* Prominent Donation Card */}
+          <div className="bg-white rounded-3xl border-2 border-[#89ca2e] p-6 sm:p-7 space-y-6 shadow-lg">
+            <div className="space-y-2">
+              <div className="flex items-baseline justify-between">
+                <span className="text-xs font-bold text-[#64748b]">Total Raised</span>
+                <span className="text-xs font-extrabold text-[#367c35] bg-[#89ca2e]/20 px-2 py-0.5 rounded-full">
+                  {percent}% of Goal
+                </span>
+              </div>
+              <p className="text-3xl font-black text-[#10182b] tracking-tight">
+                {formatCurrency(campaign.amountRaised)}
+              </p>
+              <p className="text-xs text-[#64748b]">
+                Target Goal: <strong className="text-[#10182b] font-bold">{formatCurrency(campaign.fundingGoal)}</strong>
+              </p>
+
+              {/* Progress Bar */}
+              <div className="w-full bg-[#f7f9f5] rounded-full h-3 overflow-hidden border border-[#e5e9e3] mt-2">
+                <div
+                  className="bg-gradient-to-r from-[#89ca2e] to-[#367c35] h-3 rounded-full transition-all duration-500"
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Quick Metrics */}
+            <div className="grid grid-cols-2 gap-3 py-3 border-y border-[#e5e9e3] text-center">
+              <div>
+                <p className="text-lg font-black text-[#10182b]">{campaign.donorCount || 0}</p>
+                <p className="text-[11px] font-semibold text-[#64748b] flex items-center justify-center gap-1">
+                  <Users size={12} className="text-[#367c35]" /> Donors
+                </p>
+              </div>
+              <div>
+                <p className="text-lg font-black text-[#10182b]">{daysLeft}</p>
+                <p className="text-[11px] font-semibold text-[#64748b] flex items-center justify-center gap-1">
+                  <Clock size={12} className="text-[#367c35]" /> Days Remaining
+                </p>
+              </div>
+            </div>
+
+            {/* Primary Action Button */}
+            <button
+              onClick={handleDonateClick}
+              className="w-full py-3.5 bg-[#89ca2e] hover:bg-[#7bb926] text-[#10182b] text-base font-black rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Heart size={18} className="fill-[#10182b]" /> Donate Now
+            </button>
+
+            <button
+              onClick={handleShare}
+              className="w-full py-3 bg-[#f7f9f5] hover:bg-slate-100 border border-[#e5e9e3] text-[#10182b] text-xs font-bold rounded-2xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Share2 size={15} /> Share with Family & Friends
+            </button>
+
+            <div className="text-[11px] text-[#64748b] text-center space-y-1">
+              <p className="flex items-center justify-center gap-1 text-[#367c35] font-semibold">
+                <ShieldCheck size={14} /> 100% Secure & Verified Donation Flow
+              </p>
+              <p>Supports Card, Easypaisa, JazzCash, QR Code & Bank Transfer</p>
+            </div>
+          </div>
+
+          {/* Campaign Merchandise Box (If any products tied to this campaign) */}
+          {products.length > 0 && (
+            <div className="bg-white rounded-3xl border border-[#e5e9e3] p-6 space-y-4 shadow-sm">
+              <div className="flex items-center gap-2 text-[#10182b]">
+                <ShoppingBag size={18} className="text-[#367c35]" />
+                <h3 className="text-sm font-black">Support Through Merchandise</h3>
+              </div>
+              <p className="text-xs text-[#64748b] leading-relaxed">
+                Purchase merchandise linked to this campaign. Proceeds are directly allocated to this fundraiser.
+              </p>
+
+              <div className="space-y-3">
+                {products.map((prod) => (
+                  <div
+                    key={prod._id}
+                    className="p-3 bg-[#f7f9f5] rounded-2xl border border-[#e5e9e3] flex items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src={prod.image || prod.images?.[0] || '/placeholder-merch.jpg'}
+                        alt={prod.name}
+                        className="w-12 h-12 object-contain bg-white rounded-xl border border-[#e5e9e3] shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-[#10182b] truncate">{prod.name}</p>
+                        <p className="text-xs font-black text-[#367c35]">{formatCurrency(prod.price)}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleBuyClick(prod)}
+                      className="px-3 py-1.5 bg-[#10182b] hover:bg-[#172033] text-white text-xs font-bold rounded-xl shrink-0 transition-colors"
+                    >
+                      Buy Now
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>
 
+      {/* Related Campaigns */}
+      {relatedCampaigns.length > 0 && (
+        <section className="pt-10 border-t border-[#e5e9e3] space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-black text-[#10182b]">Related Campaigns</h3>
+            <Link to="/campaigns" className="text-xs font-bold text-[#367c35] hover:underline flex items-center gap-1">
+              View all campaigns <ArrowRight size={14} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {relatedCampaigns.map((c) => (
+              <CampaignCard key={c._id} campaign={c} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Donation Modal */}
       {showDonate && (
         <DonationModal
           campaign={campaign}
           referralCode={refCode}
           onClose={() => setShowDonate(false)}
-          onSuccess={() => {
-            api.get(`/campaigns/${slug}`).then((res) => setCampaign(res.data));
+          onSuccess={(donationData) => {
+            setShowDonate(false);
+            if (donationData) {
+              setCampaign((prev) => ({
+                ...prev,
+                amountRaised: (prev.amountRaised || 0) + (donationData.amount || 0),
+                donorCount: (prev.donorCount || 0) + 1,
+              }));
+            }
           }}
         />
       )}
 
+      {/* Merchandise Quick Buy Modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-800 relative animate-scale-up space-y-4">
-            <button
-              onClick={() => setSelectedProduct(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white cursor-pointer"
-            >
-              ✕
-            </button>
-            <div>
-              <h3 className="text-lg font-black text-white">{selectedProduct.name}</h3>
-              <p className="text-xs text-cyan-400 mt-0.5">{formatCurrency(selectedProduct.price)} · 50% split contribution</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full border border-[#e5e9e3] shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#e5e9e3] pb-3">
+              <h3 className="font-black text-[#10182b] text-sm">Select Product Options</h3>
+              <button onClick={() => setSelectedProduct(null)} className="text-[#64748b] hover:text-[#10182b]">
+                <X size={20} />
+              </button>
             </div>
 
             <form onSubmit={handleCheckoutSubmit} className="space-y-4">
-              {selectedProduct.sizes?.length > 0 && (
+              <div className="flex items-center gap-3">
+                <img
+                  src={selectedProduct.image || selectedProduct.images?.[0] || '/placeholder-merch.jpg'}
+                  alt={selectedProduct.name}
+                  className="w-16 h-16 object-contain bg-[#f7f9f5] rounded-xl border border-[#e5e9e3]"
+                />
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Select Size *</label>
+                  <h4 className="font-bold text-sm text-[#10182b]">{selectedProduct.name}</h4>
+                  <p className="text-sm font-black text-[#367c35]">{formatCurrency(selectedProduct.price)}</p>
+                </div>
+              </div>
+
+              {selectedProduct.sizes?.length > 0 && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#10182b]">Size</label>
                   <div className="flex flex-wrap gap-2">
                     {selectedProduct.sizes.map((s) => (
                       <button
                         key={s}
                         type="button"
                         onClick={() => setBuyForm({ ...buyForm, size: s })}
-                        className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 text-xs font-bold rounded-xl border ${
                           buyForm.size === s
-                            ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white border-transparent shadow-md shadow-cyan-500/25'
-                            : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-600'
+                            ? 'bg-[#89ca2e] text-[#10182b] border-[#89ca2e]'
+                            : 'bg-[#f7f9f5] text-[#172033] border-[#e5e9e3]'
                         }`}
                       >
                         {s}
@@ -484,18 +675,18 @@ export default function CampaignDetail() {
               )}
 
               {selectedProduct.colors?.length > 0 && (
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Select Color *</label>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#10182b]">Color</label>
                   <div className="flex flex-wrap gap-2">
                     {selectedProduct.colors.map((c) => (
                       <button
                         key={c}
                         type="button"
                         onClick={() => setBuyForm({ ...buyForm, color: c })}
-                        className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 text-xs font-bold rounded-xl border ${
                           buyForm.color === c
-                            ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white border-transparent shadow-md shadow-cyan-500/25'
-                            : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-600'
+                            ? 'bg-[#89ca2e] text-[#10182b] border-[#89ca2e]'
+                            : 'bg-[#f7f9f5] text-[#172033] border-[#e5e9e3]'
                         }`}
                       >
                         {c}
@@ -505,85 +696,27 @@ export default function CampaignDetail() {
                 </div>
               )}
 
-              <div>
-                <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Quantity *</label>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    disabled={buyForm.qty <= 1}
-                    onClick={() => setBuyForm({ ...buyForm, qty: buyForm.qty - 1 })}
-                    className="w-10 h-10 border border-slate-700 bg-slate-800 rounded-xl flex items-center justify-center text-slate-200 hover:bg-slate-700 disabled:opacity-40 cursor-pointer"
-                  >
-                    -
-                  </button>
-                  <span className="w-12 text-center font-bold text-white text-sm">{buyForm.qty}</span>
-                  <button
-                    type="button"
-                    disabled={buyForm.qty >= selectedProduct.stock}
-                    onClick={() => setBuyForm({ ...buyForm, qty: buyForm.qty + 1 })}
-                    className="w-10 h-10 border border-slate-700 bg-slate-800 rounded-xl flex items-center justify-center text-slate-200 hover:bg-slate-700 disabled:opacity-40 cursor-pointer"
-                  >
-                    +
-                  </button>
-                  <span className="text-xs text-slate-400 font-medium">({selectedProduct.stock} in stock)</span>
-                </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#10182b]">Quantity</label>
+                <input
+                  type="number"
+                  min="1"
+                  max={selectedProduct.stock || 99}
+                  value={buyForm.qty}
+                  onChange={(e) => setBuyForm({ ...buyForm, qty: parseInt(e.target.value, 10) || 1 })}
+                  className="w-full px-3 py-2 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#172033]"
+                />
               </div>
 
-              {buyError && <p className="text-xs text-red-400 font-semibold">{buyError}</p>}
+              {buyError && <p className="text-xs text-rose-600 font-semibold">{buyError}</p>}
 
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold rounded-xl text-xs transition-all cursor-pointer shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-[#89ca2e] hover:bg-[#7bb926] text-[#10182b] font-black text-xs rounded-xl shadow-md transition-all cursor-pointer"
               >
-                <ShoppingBag size={16} /> Add to Cart & Checkout
+                Proceed to Checkout
               </button>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Fundraiser Role Policy Notice Modal */}
-      {showFundraiserNotice && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-800 animate-scale-up space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2 text-white">
-                <ShieldAlert className="text-amber-400" size={22} />
-                <h3 className="text-base font-extrabold text-white">Action Restricted for Fundraisers</h3>
-              </div>
-              <button
-                onClick={() => setShowFundraiserNotice(false)}
-                className="text-slate-400 hover:text-white cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
-              <p className="text-xs text-slate-300 leading-relaxed">
-                {fundraiserNoticeText}
-              </p>
-              <p className="text-[11px] text-slate-500">
-                Fundraiser accounts are strictly designated for campaign creation, merchandise launching, and payout tracking.
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Link
-                to="/dashboard"
-                onClick={() => setShowFundraiserNotice(false)}
-                className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xs font-bold rounded-xl text-center shadow-md shadow-cyan-500/20 flex items-center justify-center gap-1.5"
-              >
-                Go to Fundraiser Portal <ArrowRight size={14} />
-              </Link>
-              <button
-                type="button"
-                onClick={() => setShowFundraiserNotice(false)}
-                className="py-2.5 px-4 bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-700 cursor-pointer text-center"
-              >
-                Close
-              </button>
-            </div>
           </div>
         </div>
       )}

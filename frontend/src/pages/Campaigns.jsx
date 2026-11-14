@@ -12,7 +12,8 @@ export default function Campaigns() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/constants')
+    api
+      .get('/constants')
       .then((res) => setCategories(res.data?.campaignCategories || []))
       .catch((err) => {
         console.error('Failed to fetch categories:', err);
@@ -25,7 +26,7 @@ export default function Campaigns() {
     api
       .get('/campaigns', {
         params: {
-          search: search || undefined,
+          search: search.trim() || undefined,
           category: category === 'All' ? undefined : category,
           sort,
           limit: 24,
@@ -41,12 +42,16 @@ export default function Campaigns() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 pb-20">
-      <div>
-        <h1 className="text-3xl font-black text-white tracking-tight">Browse Campaigns</h1>
-        <p className="text-slate-400 text-xs mt-1">Explore verified fundraisers and active community appeals.</p>
+      <div className="border-b border-[#e5e9e3] pb-4">
+        <h1 className="text-3xl font-black text-[#10182b] tracking-tight">Explore Campaigns</h1>
+        <p className="text-[#64748b] text-xs sm:text-sm mt-1">
+          Discover genuine community causes and support verified appeals across Pakistan.
+        </p>
       </div>
 
       <SearchFilters
+        search={search}
+        setSearch={setSearch}
         categories={categories}
         category={category}
         setCategory={setCategory}
@@ -55,19 +60,20 @@ export default function Campaigns() {
       />
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="h-80 rounded-2xl border border-slate-800 bg-slate-900 animate-pulse" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="h-80 rounded-2xl border border-[#e5e9e3] bg-white animate-pulse" />
           ))}
         </div>
       ) : campaigns.length === 0 ? (
-        <div className="text-center py-16 bg-slate-900 rounded-2xl border border-slate-800">
-          <p className="text-slate-400 text-sm">No campaigns match your selected criteria.</p>
+        <div className="text-center py-16 bg-white rounded-2xl border border-[#e5e9e3] shadow-xs">
+          <p className="text-[#10182b] font-bold text-sm">No campaigns found matching your selection.</p>
+          <p className="text-[#64748b] text-xs mt-1">Try resetting search or category filters.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {campaigns.map((campaign) => (
-            <CampaignCard key={campaign._id} campaign={campaign} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          {campaigns.map((c) => (
+            <CampaignCard key={c._id} campaign={c} />
           ))}
         </div>
       )}

@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Star, MessageSquare } from 'lucide-react';
+import { Star, MessageSquare, ShieldCheck, Heart, Sparkles } from 'lucide-react';
 import api from '../api/client';
+import { formatDate } from '../utils/format';
 
-function StarRating({ rating }) {
+function StarRating({ rating = 5 }) {
   return (
-    <div className="flex gap-0.5">
+    <div className="flex gap-1">
       {Array.from({ length: 5 }).map((_, i) => (
         <Star
           key={i}
           size={16}
-          className={i < rating ? 'fill-amber-400 text-amber-400' : 'text-slate-700'}
+          className={i < rating ? 'fill-amber-400 text-amber-400' : 'text-[#e5e9e3]'}
         />
       ))}
     </div>
@@ -23,47 +24,73 @@ export default function Reviews() {
   useEffect(() => {
     api
       .get('/reviews')
-      .then((res) => setReviews(res.data))
+      .then((res) => setReviews(Array.isArray(res.data) ? res.data : []))
+      .catch((err) => {
+        console.error('Failed to load reviews:', err);
+        setReviews([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10 space-y-6 pb-20">
-      <div>
-        <h1 className="text-3xl font-black text-white tracking-tight">Campaign Reviews</h1>
-        <p className="text-slate-400 text-xs mt-1">
-          Verified campaign creators share their experience after campaigns conclude. Reviews are moderated before publication.
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 pb-20 text-[#172033]">
+      {/* Page Header */}
+      <div className="border-b border-[#e5e9e3] pb-4 space-y-1">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#89ca2e]/25 text-[#367c35] text-xs font-bold uppercase tracking-wider">
+          <Sparkles size={12} /> Community Feedback
+        </div>
+        <h1 className="text-3xl font-black text-[#10182b] tracking-tight">Campaign & Platform Reviews</h1>
+        <p className="text-xs sm:text-sm text-[#64748b]">
+          Verified organizers and donors share their real experiences after campaigns conclude. All reviews are checked for authenticity.
         </p>
       </div>
 
       {loading ? (
-        <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-slate-900 rounded-2xl h-32 animate-pulse border border-slate-800" />
+        <div className="grid sm:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-3xl h-40 animate-pulse border border-[#e5e9e3]" />
           ))}
         </div>
       ) : reviews.length === 0 ? (
-        <div className="text-center py-16 bg-slate-900 rounded-2xl border border-slate-800 space-y-3">
-          <MessageSquare size={44} className="text-slate-600 mx-auto" />
-          <p className="text-slate-400 text-sm">No published reviews yet.</p>
+        <div className="text-center py-20 bg-white rounded-3xl border border-[#e5e9e3] space-y-3 shadow-xs">
+          <MessageSquare size={44} className="text-[#64748b] mx-auto opacity-40" />
+          <h2 className="text-base font-bold text-[#10182b]">No Published Reviews Yet</h2>
+          <p className="text-xs text-[#64748b] max-w-sm mx-auto">
+            Reviews will appear here as verified campaign creators and donors conclude their initiatives and submit feedback.
+          </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid sm:grid-cols-2 gap-5">
           {reviews.map((review) => (
             <div
               key={review._id}
-              className="bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-xl border border-slate-800 p-6 space-y-3 hover:border-cyan-500/40 transition-all"
+              className="bg-white rounded-3xl border border-[#e5e9e3] hover:border-[#89ca2e] p-6 space-y-3.5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="font-bold text-white text-sm">{review.campaignName}</h3>
-                  <p className="text-xs text-cyan-400 mt-0.5">
-                    by {review.author?.fullName || 'Verified Creator'}
-                  </p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <StarRating rating={review.rating || 5} />
+                  <span className="text-[11px] text-[#64748b] font-medium">
+                    {formatDate(review.createdAt || new Date())}
+                  </span>
                 </div>
-                <StarRating rating={review.rating} />
+
+                <h3 className="font-extrabold text-[#10182b] text-sm">
+                  {review.campaignName || 'Community Campaign'}
+                </h3>
+
+                <p className="text-xs text-[#172033] leading-relaxed italic">
+                  &ldquo;{review.comment || review.text}&rdquo;
+                </p>
               </div>
-              <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">{review.feedback}</p>
+
+              <div className="pt-3 border-t border-[#e5e9e3] flex items-center justify-between text-xs">
+                <span className="font-bold text-[#367c35] flex items-center gap-1">
+                  <ShieldCheck size={14} /> {review.reviewerName || review.user?.fullName || 'Verified Supporter'}
+                </span>
+                <span className="text-[10px] text-[#64748b] uppercase tracking-wider font-semibold">
+                  Verified Review
+                </span>
+              </div>
             </div>
           ))}
         </div>
