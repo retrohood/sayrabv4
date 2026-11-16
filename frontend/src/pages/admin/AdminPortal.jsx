@@ -204,30 +204,28 @@ export default function AdminPortal() {
   // If user is not admin, show dedicated Admin Gate screen with 1-click login
   if (user?.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4">
-        <div className="max-w-md w-full p-8 rounded-3xl bg-slate-900 border border-slate-800 text-center shadow-2xl space-y-6 animate-in fade-in zoom-in-95">
-          <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/25">
-            <Lock size={30} />
-          </div>
+      <div className="min-h-screen bg-[#f7f9f5] text-[#10182b] flex items-center justify-center p-4">
+        <div className="max-w-md w-full p-8 rounded-3xl bg-white border border-[#e5e9e3] text-center shadow-xl space-y-6 animate-in fade-in zoom-in-95">
+          <img src="/sayrab.png" alt="Sayrab" className="h-20 w-auto object-contain mx-auto mb-2" />
 
           <div>
-            <h2 className="text-2xl font-extrabold tracking-tight">Sayrab Admin Portal</h2>
-            <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-              This area requires <strong>Admin Privileges</strong> to access organization verification, payout disbursement, and system configuration.
+            <h2 className="text-2xl font-black text-[#10182b] tracking-tight">Sayrab Admin Portal</h2>
+            <p className="text-xs text-[#64748b] mt-1.5 leading-relaxed">
+              This area requires <strong>Admin Privileges</strong> to access organization verification, payout disbursement, and platform configuration.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-800/60 border border-slate-700/60 text-xs text-left space-y-2">
-            <div className="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
-              Platform Admin Credentials:
+          <div className="p-4 rounded-2xl bg-[#f7f9f5] border border-[#e5e9e3] text-xs text-left space-y-2">
+            <div className="text-[#64748b] font-bold uppercase tracking-wider text-[10px]">
+              Platform Admin Demo Credentials:
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Email:</span>
-              <strong className="text-white font-mono">admin@sayrab.com</strong>
+              <span className="text-[#64748b]">Email:</span>
+              <strong className="text-[#10182b] font-mono">admin@sayrab.com</strong>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Password:</span>
-              <strong className="text-white font-mono">password123</strong>
+              <span className="text-[#64748b]">Password:</span>
+              <strong className="text-[#10182b] font-mono">password123</strong>
             </div>
           </div>
 
@@ -235,7 +233,7 @@ export default function AdminPortal() {
             <button
               onClick={handleQuickAdminLogin}
               disabled={switchingAdmin}
-              className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition-all hover:scale-102"
+              className="w-full py-3 px-4 rounded-xl bg-[#89ca2e] hover:bg-[#78b327] text-white font-black text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
             >
               <ShieldCheck size={18} />
               <span>{switchingAdmin ? 'Signing In as Admin...' : 'Sign In as Admin (One Click)'}</span>
@@ -243,7 +241,7 @@ export default function AdminPortal() {
 
             <button
               onClick={() => navigate('/')}
-              className="w-full py-2.5 px-4 rounded-xl border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 text-xs font-semibold transition-colors"
+              className="w-full py-2.5 px-4 rounded-xl border border-[#e5e9e3] text-[#64748b] hover:text-[#10182b] hover:bg-[#f7f9f5] text-xs font-semibold transition-colors cursor-pointer"
             >
               Return to Public Website
             </button>
@@ -254,7 +252,7 @@ export default function AdminPortal() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-[#f7f9f5] text-[#10182b] flex flex-col lg:flex-row">
       {/* Sidebar Navigation */}
       <AdminSidebar
         activeTab={activeTab}
@@ -283,8 +281,8 @@ export default function AdminPortal() {
         <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto">
           {loading ? (
             <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600" />
-              <p className="text-xs text-slate-400 font-semibold">Loading platform management data...</p>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#89ca2e]" />
+              <p className="text-xs text-[#64748b] font-semibold">Loading platform management data...</p>
             </div>
           ) : (
             <>
