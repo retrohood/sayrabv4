@@ -38,12 +38,15 @@ export default function ReportsView({ reportsData }) {
   return (
     <div className="space-y-6">
       {/* Top Banner & Export Buttons */}
-      <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white border border-[#e5e9e3] p-5 rounded-3xl shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-sm font-bold text-white flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-indigo-400" /> Production & SLA SLA Performance Reports
+          <h2 className="text-base font-black text-[#172033] flex items-center gap-2">
+            <span className="p-1.5 rounded-xl bg-[#0ea5c6]/10 text-[#0ea5c6] border border-[#0ea5c6]/20">
+              <TrendingUp className="w-5 h-5" />
+            </span>
+            Production & SLA Performance Reports
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#64748b] mt-1">
             Analyze historical fulfillment velocity, completed orders count, SLA compliance %, and download production logs.
           </p>
         </div>
@@ -52,13 +55,13 @@ export default function ReportsView({ reportsData }) {
         <div className="flex items-center gap-2">
           <button
             onClick={exportCSV}
-            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs inline-flex items-center gap-1.5 transition-colors shadow-md shadow-emerald-600/20"
+            className="px-3.5 py-2 rounded-xl bg-[#367c35] hover:bg-[#2e682d] text-white font-bold text-xs inline-flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4" /> Export CSV
           </button>
           <button
             onClick={() => alert('Exporting PDF Report...')}
-            className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs inline-flex items-center gap-1.5 transition-colors shadow-md shadow-indigo-600/20"
+            className="px-3.5 py-2 rounded-xl bg-[#10182b] hover:bg-[#172033] text-white font-bold text-xs inline-flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer"
           >
             <FileText className="w-4 h-4" /> Export PDF
           </button>
@@ -67,36 +70,36 @@ export default function ReportsView({ reportsData }) {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-1">
-          <span className="text-xs text-slate-400 font-semibold uppercase">Total Production Jobs</span>
-          <div className="text-2xl font-black text-white">{data.totalOrders}</div>
+        <div className="p-5 bg-white border border-[#e5e9e3] rounded-3xl shadow-sm hover:border-[#89ca2e]/60 transition space-y-1">
+          <span className="text-xs text-[#64748b] font-bold uppercase tracking-wider">Total Production Jobs</span>
+          <div className="text-2xl font-black text-[#172033]">{data.totalOrders}</div>
         </div>
 
-        <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-1">
-          <span className="text-xs text-slate-400 font-semibold uppercase">Completed & Delivered</span>
-          <div className="text-2xl font-black text-emerald-400">{data.completedOrders}</div>
+        <div className="p-5 bg-white border border-[#e5e9e3] rounded-3xl shadow-sm hover:border-[#89ca2e]/60 transition space-y-1">
+          <span className="text-xs text-[#64748b] font-bold uppercase tracking-wider">Completed & Delivered</span>
+          <div className="text-2xl font-black text-[#367c35]">{data.completedOrders}</div>
         </div>
 
-        <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-1">
-          <span className="text-xs text-slate-400 font-semibold uppercase">On-Time Delivery Rate</span>
-          <div className="text-2xl font-black text-indigo-400">{data.onTimeDeliveryRate}%</div>
+        <div className="p-5 bg-white border border-[#e5e9e3] rounded-3xl shadow-sm hover:border-[#89ca2e]/60 transition space-y-1">
+          <span className="text-xs text-[#64748b] font-bold uppercase tracking-wider">On-Time Delivery Rate</span>
+          <div className="text-2xl font-black text-[#0ea5c6]">{data.onTimeDeliveryRate}%</div>
         </div>
 
-        <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-1">
-          <span className="text-xs text-slate-400 font-semibold uppercase">Avg Production SLA</span>
-          <div className="text-2xl font-black text-cyan-400">{data.averageProductionTime} Days</div>
+        <div className="p-5 bg-white border border-[#e5e9e3] rounded-3xl shadow-sm hover:border-[#89ca2e]/60 transition space-y-1">
+          <span className="text-xs text-[#64748b] font-bold uppercase tracking-wider">Avg Production SLA</span>
+          <div className="text-2xl font-black text-[#172033]">{data.averageProductionTime} Days</div>
         </div>
       </div>
 
       {/* Historical Logs Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-slate-800 font-bold text-white text-sm">
+      <div className="bg-white border border-[#e5e9e3] rounded-3xl overflow-hidden shadow-sm">
+        <div className="p-5 border-b border-[#e5e9e3] font-black text-[#172033] text-sm">
           Production History Log
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-950 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider text-[10px]">
+            <thead className="bg-[#f7f9f5] text-[#64748b] font-bold border-b border-[#e5e9e3] uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="p-4">Invoice</th>
                 <th className="p-4">Total Value</th>
@@ -105,21 +108,21 @@ export default function ReportsView({ reportsData }) {
                 <th className="p-4">Created Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-300">
+            <tbody className="divide-y divide-[#e5e9e3] text-[#172033]">
               {data.history.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="p-8 text-center text-slate-500">
+                  <td colSpan="5" className="p-8 text-center text-[#94a3b8]">
                     No production history recorded yet.
                   </td>
                 </tr>
               ) : (
                 data.history.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="p-4 font-bold text-white">#{item.invoice}</td>
-                    <td className="p-4">PKR {item.total?.toLocaleString()}</td>
-                    <td className="p-4 font-bold text-emerald-400">PKR {item.manufacturerEarnings?.toLocaleString()}</td>
-                    <td className="p-4 capitalize text-indigo-300">{item.status.replace('_', ' ')}</td>
-                    <td className="p-4 text-slate-400">{new Date(item.createdAt).toLocaleDateString()}</td>
+                  <tr key={idx} className="hover:bg-[#f8fafc] transition-colors">
+                    <td className="p-4 font-bold text-[#172033]">#{item.invoice}</td>
+                    <td className="p-4 text-[#64748b] font-mono">PKR {item.total?.toLocaleString()}</td>
+                    <td className="p-4 font-black font-mono text-[#367c35]">PKR {item.manufacturerEarnings?.toLocaleString()}</td>
+                    <td className="p-4 capitalize text-[#0ea5c6] font-bold">{item.status.replace('_', ' ')}</td>
+                    <td className="p-4 text-[#64748b]">{new Date(item.createdAt).toLocaleDateString()}</td>
                   </tr>
                 ))
               )}
