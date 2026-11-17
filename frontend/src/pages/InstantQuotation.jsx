@@ -384,22 +384,22 @@ export default function InstantQuotation({ inDashboard = false }) {
   };
 
   return (
-    <div className={`min-h-screen bg-slate-900 text-slate-100 ${inDashboard ? 'p-2 md:p-4' : 'pt-20 pb-16 px-4 md:px-8'}`}>
+    <div className={`min-h-screen bg-[#f7f9f5] text-[#172033] ${inDashboard ? 'p-2 md:p-4' : 'pt-20 pb-16 px-4 md:px-8'}`}>
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Top Header & Breadcrumb */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#e5e9e3]">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-1">
-              <Sparkles className="w-4 h-4" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#89ca2e]/15 text-[#367c35] text-xs font-bold uppercase tracking-wider mb-1.5 border border-[#89ca2e]/30">
+              <Sparkles className="w-3.5 h-3.5" />
               <span>Garment Manufacturing Intelligence</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#10182b] flex items-center gap-3">
               Apparel Instant Quotation Workspace
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#89ca2e]/15 text-[#367c35] border border-[#89ca2e]/30 font-bold">
                 Dual AI Engine
               </span>
             </h1>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-sm text-[#64748b] mt-1">
               Visual tech-pack digitizer & deterministic Sialkot factory costing engine (30% gross margin + $10/kg shipping).
             </p>
           </div>
@@ -409,16 +409,16 @@ export default function InstantQuotation({ inDashboard = false }) {
               <>
                 <button
                   onClick={() => setPipelineStage('print_pdf')}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold border border-slate-700 flex items-center gap-2 transition"
+                  className="px-4 py-2 rounded-xl bg-white hover:bg-[#f7f9f5] text-[#10182b] text-sm font-semibold border border-[#e5e9e3] shadow-xs flex items-center gap-2 transition cursor-pointer"
                 >
-                  <Printer className="w-4 h-4 text-emerald-400" />
+                  <Printer className="w-4 h-4 text-[#367c35]" />
                   Print / Export PDF
                 </button>
                 <button
                   onClick={copyShareLink}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold border border-slate-700 flex items-center gap-2 transition"
+                  className="px-4 py-2 rounded-xl bg-white hover:bg-[#f7f9f5] text-[#10182b] text-sm font-semibold border border-[#e5e9e3] shadow-xs flex items-center gap-2 transition cursor-pointer"
                 >
-                  {linkCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-400" />}
+                  {linkCopied ? <Check className="w-4 h-4 text-[#367c35]" /> : <Copy className="w-4 h-4 text-[#64748b]" />}
                   {linkCopied ? 'Link Copied!' : 'Share Quote'}
                 </button>
               </>
@@ -434,9 +434,9 @@ export default function InstantQuotation({ inDashboard = false }) {
                   setQuotationA(null);
                   setQuotationB(null);
                 }}
-                className="px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-sm font-medium border border-slate-700/60 transition flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-xl bg-white hover:bg-[#f7f9f5] text-[#10182b] text-sm font-medium border border-[#e5e9e3] shadow-xs transition flex items-center gap-1.5 cursor-pointer"
               >
-                <RefreshCw className="w-3.5 h-3.5" />
+                <RefreshCw className="w-3.5 h-3.5 text-[#64748b]" />
                 New Tech Pack
               </button>
             )}
@@ -445,19 +445,19 @@ export default function InstantQuotation({ inDashboard = false }) {
 
         {/* API / Fallback Notice Banner */}
         {apiNotice && (
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between text-xs text-amber-300">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between text-xs text-amber-800 shadow-xs">
             <div className="flex items-center gap-2">
-              <Info className="w-4 h-4 text-amber-400 shrink-0" />
+              <Info className="w-4 h-4 text-amber-600 shrink-0" />
               <span>{apiNotice}</span>
             </div>
-            <button onClick={() => setApiNotice('')} className="text-amber-400 hover:text-amber-200">
+            <button onClick={() => setApiNotice('')} className="text-amber-700 hover:text-amber-900 cursor-pointer">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
 
         {/* Pipeline Stepper Navigation */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-800/60 p-1.5 rounded-2xl border border-slate-800">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-white p-2 rounded-2xl border border-[#e5e9e3] shadow-xs">
           {[
             { id: 'upload', label: '1. Upload Tech Pack', active: pipelineStage === 'upload' || pipelineStage === 'extracting' },
             { id: 'confirm', label: '2. Confirm Scale & Sizes', active: pipelineStage === 'confirm_dimensions' },
@@ -468,12 +468,12 @@ export default function InstantQuotation({ inDashboard = false }) {
               key={step.id}
               className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-semibold transition ${
                 step.active
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : 'text-slate-400 hover:text-slate-300'
+                  ? 'bg-[#89ca2e]/15 text-[#367c35] border border-[#89ca2e]/30 font-bold'
+                  : 'text-[#64748b] hover:text-[#10182b] hover:bg-[#f7f9f5]'
               }`}
             >
               <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                step.active ? 'bg-emerald-500 text-slate-950' : 'bg-slate-700 text-slate-400'
+                step.active ? 'bg-[#89ca2e] text-[#10182b]' : 'bg-[#f7f9f5] text-[#64748b] border border-[#e5e9e3]'
               }`}>
                 {idx + 1}
               </span>
@@ -484,8 +484,8 @@ export default function InstantQuotation({ inDashboard = false }) {
 
         {/* Error message */}
         {errorMessage && (
-          <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 p-4 rounded-xl text-sm flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+          <div className="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl text-sm flex items-center gap-3 shadow-xs">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
@@ -496,12 +496,12 @@ export default function InstantQuotation({ inDashboard = false }) {
         {pipelineStage === 'upload' && (
           <div className="space-y-6">
             {/* Step 1.1: Order Type, Quantity & Shipping Destination Form */}
-            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 md:p-8">
-              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">
+            <div className="bg-white border border-[#e5e9e3] rounded-3xl p-6 md:p-8 shadow-xs">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#367c35] uppercase tracking-wider mb-2">
                 <Package className="w-4 h-4" />
                 <span>Step 1: Order Specifications & Delivery Details</span>
               </div>
-              <h2 className="text-xl font-bold text-white mb-6">
+              <h2 className="text-xl font-bold text-[#10182b] mb-6">
                 Configure Order Type, Quantity & Shipping Address
               </h2>
 
@@ -509,7 +509,7 @@ export default function InstantQuotation({ inDashboard = false }) {
                 {/* Left: Order Type & Quantity */}
                 <div className="space-y-5">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[#10182b] mb-2">
                       Order Type *
                     </label>
                     <div className="grid grid-cols-2 gap-3">
@@ -519,17 +519,17 @@ export default function InstantQuotation({ inDashboard = false }) {
                           setOrderType('sample');
                           if (orderQuantity > 5) setOrderQuantity(1);
                         }}
-                        className={`p-4 rounded-xl border text-left transition ${
+                        className={`p-4 rounded-xl border text-left transition cursor-pointer ${
                           orderType === 'sample'
-                            ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-lg shadow-emerald-500/10'
-                            : 'bg-slate-900/60 border-slate-700 text-slate-400 hover:text-white'
+                            ? 'bg-[#89ca2e]/10 border-[#89ca2e] text-[#10182b] shadow-xs'
+                            : 'bg-[#f7f9f5] border-[#e5e9e3] text-[#64748b] hover:text-[#10182b] hover:border-[#89ca2e]'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-bold text-white">Sample Order</span>
-                          <span className={`w-3 h-3 rounded-full border ${orderType === 'sample' ? 'bg-emerald-500 border-emerald-400' : 'border-slate-600'}`} />
+                          <span className="text-sm font-bold text-[#10182b]">Sample Order</span>
+                          <span className={`w-3.5 h-3.5 rounded-full border ${orderType === 'sample' ? 'bg-[#89ca2e] border-[#367c35]' : 'border-[#e5e9e3] bg-white'}`} />
                         </div>
-                        <p className="text-xs text-slate-400">1 to 5 prototype units for fit & physical review</p>
+                        <p className="text-xs text-[#64748b]">1 to 5 prototype units for fit & physical review</p>
                       </button>
 
                       <button
@@ -538,24 +538,24 @@ export default function InstantQuotation({ inDashboard = false }) {
                           setOrderType('bulk');
                           if (orderQuantity < 50) setOrderQuantity(100);
                         }}
-                        className={`p-4 rounded-xl border text-left transition ${
+                        className={`p-4 rounded-xl border text-left transition cursor-pointer ${
                           orderType === 'bulk'
-                            ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-lg shadow-emerald-500/10'
-                            : 'bg-slate-900/60 border-slate-700 text-slate-400 hover:text-white'
+                            ? 'bg-[#89ca2e]/10 border-[#89ca2e] text-[#10182b] shadow-xs'
+                            : 'bg-[#f7f9f5] border-[#e5e9e3] text-[#64748b] hover:text-[#10182b] hover:border-[#89ca2e]'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-bold text-white">Bulk Production</span>
-                          <span className={`w-3 h-3 rounded-full border ${orderType === 'bulk' ? 'bg-emerald-500 border-emerald-400' : 'border-slate-600'}`} />
+                          <span className="text-sm font-bold text-[#10182b]">Bulk Production</span>
+                          <span className={`w-3.5 h-3.5 rounded-full border ${orderType === 'bulk' ? 'bg-[#89ca2e] border-[#367c35]' : 'border-[#e5e9e3] bg-white'}`} />
                         </div>
-                        <p className="text-xs text-slate-400">50+ units with factory volume discounts</p>
+                        <p className="text-xs text-[#64748b]">50+ units with factory volume discounts</p>
                       </button>
                     </div>
                   </div>
 
                   {/* Quantity Input with Presets */}
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[#10182b] mb-2">
                       Target Order Quantity *
                     </label>
                     <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -564,10 +564,10 @@ export default function InstantQuotation({ inDashboard = false }) {
                           key={qty}
                           type="button"
                           onClick={() => setOrderQuantity(qty)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition ${
+                          className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition cursor-pointer ${
                             orderQuantity === qty
-                              ? 'bg-emerald-500 text-slate-950 font-bold'
-                              : 'bg-slate-900 border border-slate-700 text-slate-300 hover:border-slate-600'
+                              ? 'bg-[#89ca2e] text-[#10182b] font-black shadow-xs'
+                              : 'bg-[#f7f9f5] border border-[#e5e9e3] text-[#10182b] hover:border-[#89ca2e]'
                           }`}
                         >
                           {qty} {qty === 1 ? 'unit' : 'units'}
@@ -581,34 +581,34 @@ export default function InstantQuotation({ inDashboard = false }) {
                         value={orderQuantity}
                         onChange={(e) => setOrderQuantity(Math.max(1, Number(e.target.value) || 1))}
                         placeholder="Custom quantity"
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono placeholder-slate-500 focus:border-emerald-500 outline-none"
+                        className="w-full bg-[#f7f9f5] border border-[#e5e9e3] focus:bg-white rounded-xl px-4 py-2.5 text-sm text-[#10182b] font-mono placeholder-[#64748b] focus:border-[#89ca2e] outline-none shadow-xs transition-colors"
                       />
-                      <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-mono">
+                      <span className="absolute right-3 top-2.5 text-xs text-[#64748b] font-mono">
                         units
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Right: Shipping Destination Address (Both Sample & Bulk ship to Fundraiser) */}
-                <div className="space-y-3 bg-slate-900/60 p-5 rounded-xl border border-slate-700/80">
-                  <div className="flex items-center justify-between pb-1 border-b border-slate-800">
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-300">
-                      <Truck className="w-4 h-4 text-emerald-400" />
+                {/* Right: Shipping Destination Address */}
+                <div className="space-y-3 bg-[#f7f9f5] p-5 rounded-2xl border border-[#e5e9e3]">
+                  <div className="flex items-center justify-between pb-1 border-b border-[#e5e9e3]">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#10182b]">
+                      <Truck className="w-4 h-4 text-[#367c35]" />
                       <span>Fundraiser Delivery Address *</span>
                     </div>
-                    <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-mono font-bold text-[#367c35] bg-[#89ca2e]/15 border border-[#89ca2e]/30 px-2 py-0.5 rounded">
                       {orderType === 'sample' ? 'Sample Prototype Run' : 'Bulk Production Run'}
                     </span>
                   </div>
 
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="text-[11px] text-[#64748b] leading-tight">
                     Both sample orders and bulk production orders are shipped directly to your address. You act as the primary delivery receiver and manage any subsequent supporter distribution.
                   </p>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                      <label className="block text-[11px] font-medium text-[#64748b] mb-1">
                         Fundraiser Full Name / Receiver *
                       </label>
                       <input
@@ -616,11 +616,11 @@ export default function InstantQuotation({ inDashboard = false }) {
                         value={shippingAddress.fullName}
                         onChange={(e) => setShippingAddress({ ...shippingAddress, fullName: e.target.value })}
                         placeholder="e.g. Ahmed Khan"
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                        className="w-full bg-white border border-[#e5e9e3] rounded-lg px-3 py-1.5 text-xs text-[#10182b] focus:border-[#89ca2e] outline-none shadow-xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                      <label className="block text-[11px] font-medium text-[#64748b] mb-1">
                         Receiver Mobile Phone *
                       </label>
                       <input
@@ -628,13 +628,13 @@ export default function InstantQuotation({ inDashboard = false }) {
                         value={shippingAddress.phone}
                         onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value })}
                         placeholder="+92 300 1234567"
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                        className="w-full bg-white border border-[#e5e9e3] rounded-lg px-3 py-1.5 text-xs text-[#10182b] focus:border-[#89ca2e] outline-none shadow-xs"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                    <label className="block text-[11px] font-medium text-[#64748b] mb-1">
                       Street Address / Studio / Office *
                     </label>
                     <input
@@ -642,39 +642,39 @@ export default function InstantQuotation({ inDashboard = false }) {
                       value={shippingAddress.street}
                       onChange={(e) => setShippingAddress({ ...shippingAddress, street: e.target.value })}
                       placeholder="e.g. Studio 4B, Sector F-8/4"
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                      className="w-full bg-white border border-[#e5e9e3] rounded-lg px-3 py-1.5 text-xs text-[#10182b] focus:border-[#89ca2e] outline-none shadow-xs"
                     />
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-400 mb-1">City</label>
+                      <label className="block text-[11px] font-medium text-[#64748b] mb-1">City</label>
                       <input
                         type="text"
                         value={shippingAddress.city}
                         onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
                         placeholder="Lahore"
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                        className="w-full bg-white border border-[#e5e9e3] rounded-lg px-2.5 py-1.5 text-xs text-[#10182b] focus:border-[#89ca2e] outline-none shadow-xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-400 mb-1">Country</label>
+                      <label className="block text-[11px] font-medium text-[#64748b] mb-1">Country</label>
                       <input
                         type="text"
                         value={shippingAddress.country}
                         onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
                         placeholder="Pakistan"
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                        className="w-full bg-white border border-[#e5e9e3] rounded-lg px-2.5 py-1.5 text-xs text-[#10182b] focus:border-[#89ca2e] outline-none shadow-xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-400 mb-1">Postal Code</label>
+                      <label className="block text-[11px] font-medium text-[#64748b] mb-1">Postal Code</label>
                       <input
                         type="text"
                         value={shippingAddress.postalCode}
                         onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
                         placeholder="54000"
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-emerald-500 outline-none"
+                        className="w-full bg-white border border-[#e5e9e3] rounded-lg px-2.5 py-1.5 text-xs text-[#10182b] focus:border-[#89ca2e] outline-none shadow-xs"
                       />
                     </div>
                   </div>
@@ -685,7 +685,7 @@ export default function InstantQuotation({ inDashboard = false }) {
             {/* Step 1.2: Tech Pack / Image Upload Area */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Primary Upload Area */}
-              <div className="lg:col-span-2 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 md:p-8 flex flex-col items-center justify-center text-center">
+              <div className="lg:col-span-2 bg-white border border-[#e5e9e3] rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center text-center shadow-xs">
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -696,36 +696,36 @@ export default function InstantQuotation({ inDashboard = false }) {
 
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full border-2 border-dashed border-slate-600 hover:border-emerald-500/80 bg-slate-900/50 hover:bg-slate-900/80 rounded-2xl p-8 md:p-12 cursor-pointer transition flex flex-col items-center justify-center group"
+                  className="w-full border-2 border-dashed border-[#e5e9e3] hover:border-[#89ca2e] bg-[#f7f9f5] hover:bg-white rounded-2xl p-8 md:p-12 cursor-pointer transition flex flex-col items-center justify-center group"
                 >
-                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 group-hover:bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4 transition transform group-hover:scale-105">
+                  <div className="w-16 h-16 rounded-2xl bg-[#89ca2e]/15 group-hover:bg-[#89ca2e]/25 text-[#367c35] flex items-center justify-center mb-4 transition transform group-hover:scale-105">
                     <UploadCloud className="w-8 h-8" />
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-1">
+                  <h3 className="text-lg font-bold text-[#10182b] mb-1">
                     Upload Garment Tech Pack / Mockup Image
                   </h3>
-                  <p className="text-sm text-slate-400 max-w-md mb-4">
+                  <p className="text-sm text-[#64748b] max-w-md mb-4">
                     Upload your apparel design, tech pack drawings, fabric specs, and size chart table to generate a draft quotation.
                   </p>
-                  <div className="flex items-center gap-3 text-xs text-slate-400 bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700">
+                  <div className="flex items-center gap-3 text-xs text-[#64748b] bg-white px-4 py-2 rounded-xl border border-[#e5e9e3] shadow-xs">
                     <span>PNG, JPG, WEBP, PDF up to 25MB</span>
                   </div>
                 </div>
 
                 {selectedFile && (
-                  <div className="w-full mt-6 bg-slate-900/80 border border-slate-700 rounded-xl p-4 flex items-center justify-between">
+                  <div className="w-full mt-6 bg-[#f7f9f5] border border-[#e5e9e3] rounded-2xl p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <FileText className="w-5 h-5 text-emerald-400" />
+                      <FileText className="w-5 h-5 text-[#367c35]" />
                       <div className="text-left">
-                        <p className="text-sm font-semibold text-white">{selectedFile.name}</p>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-sm font-semibold text-[#10182b]">{selectedFile.name}</p>
+                        <p className="text-xs text-[#64748b]">
                           {orderType === 'sample' ? 'Sample Order' : 'Bulk Order'} • {orderQuantity} unit(s) • Ready for AI extraction
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => executePipeline({ isSample: false })}
-                      className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition cursor-pointer"
+                      className="px-5 py-2.5 rounded-xl bg-[#89ca2e] hover:bg-[#78b327] text-white font-black text-sm flex items-center gap-2 shadow-xs transition cursor-pointer"
                     >
                       <span>Analyze & Extract Specs</span>
                       <ArrowRight className="w-4 h-4" />
@@ -736,21 +736,21 @@ export default function InstantQuotation({ inDashboard = false }) {
 
               {/* Quick Sample Runner & Overview Card */}
               <div className="space-y-6">
-                <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">
+                <div className="bg-white border border-[#e5e9e3] rounded-3xl p-6 shadow-xs">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#367c35] uppercase tracking-wider mb-2">
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Instant 1-Click Verification</span>
                   </div>
-                  <h3 className="text-base font-bold text-white mb-2">
+                  <h3 className="text-base font-bold text-[#10182b] mb-2">
                     Test with NC A&T Rugby Polo
                   </h3>
-                  <p className="text-xs text-slate-400 leading-relaxed mb-4">
+                  <p className="text-xs text-[#64748b] leading-relaxed mb-4">
                     Test the complete pipeline with our verified tech pack: Double Knit 300 GSM, Chenille center banner, Bulldog sleeve, and Aggie Pride back applique.
                   </p>
 
                   <button
                     onClick={handleLoadSample}
-                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 transition cursor-pointer"
+                    className="w-full py-3 px-4 rounded-xl bg-[#89ca2e] hover:bg-[#78b327] text-white font-bold text-sm shadow-xs flex items-center justify-center gap-2 transition cursor-pointer"
                   >
                     <Cpu className="w-4 h-4" />
                     <span>Load Sample Tech Pack</span>
@@ -758,25 +758,25 @@ export default function InstantQuotation({ inDashboard = false }) {
                 </div>
 
                 {/* Workflow Guidance Card */}
-                <div className="bg-slate-800/40 border border-slate-700/60 rounded-2xl p-6 space-y-3">
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                <div className="bg-white border border-[#e5e9e3] rounded-3xl p-6 space-y-3 shadow-xs">
+                  <h4 className="text-xs font-bold text-[#10182b] uppercase tracking-wider">
                     Fundraiser Quotation Flow
                   </h4>
-                  <ul className="text-xs text-slate-400 space-y-2">
+                  <ul className="text-xs text-[#64748b] space-y-2">
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <CheckCircle className="w-3.5 h-3.5 text-[#367c35] shrink-0 mt-0.5" />
                       <span>Select Order Type (Sample / Bulk) & target volume</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <CheckCircle className="w-3.5 h-3.5 text-[#367c35] shrink-0 mt-0.5" />
                       <span>Input Shipping Destination for accurate courier freight</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <CheckCircle className="w-3.5 h-3.5 text-[#367c35] shrink-0 mt-0.5" />
                       <span>Extract fabric, measurements & embellishments via AI</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <CheckCircle className="w-3.5 h-3.5 text-[#367c35] shrink-0 mt-0.5" />
                       <span>Receive <strong>Draft Quotation</strong> & submit for Manufacturer Review</span>
                     </li>
                   </ul>
@@ -790,13 +790,13 @@ export default function InstantQuotation({ inDashboard = false }) {
         {/* STAGE 2: EXTRACTION IN PROGRESS SPINNER */}
         {/* ==================================================================== */}
         {pipelineStage === 'extracting' && isProcessing && (
-          <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-12 flex flex-col items-center justify-center text-center space-y-4">
+          <div className="bg-white border border-[#e5e9e3] rounded-3xl p-12 flex flex-col items-center justify-center text-center space-y-4 shadow-xs">
             <div className="relative">
-              <div className="w-16 h-16 rounded-full border-4 border-slate-700 border-t-emerald-500 animate-spin" />
-              <Cpu className="w-6 h-6 text-emerald-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+              <div className="w-16 h-16 rounded-full border-4 border-[#e5e9e3] border-t-[#89ca2e] animate-spin" />
+              <Cpu className="w-6 h-6 text-[#367c35] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
             </div>
-            <h3 className="text-lg font-bold text-white">AI Vision Processing</h3>
-            <p className="text-sm text-slate-400 max-w-md animate-pulse">
+            <h3 className="text-lg font-bold text-[#10182b]">AI Vision Processing</h3>
+            <p className="text-sm text-[#64748b] max-w-md animate-pulse">
               {processingStatus}
             </p>
           </div>
@@ -808,37 +808,37 @@ export default function InstantQuotation({ inDashboard = false }) {
         {pipelineStage === 'confirm_dimensions' && techPackInfo && (
           <div className="space-y-6">
             {/* Header Card with Specs Summary */}
-            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-700/60">
+            <div className="bg-white border border-[#e5e9e3] rounded-3xl p-6 md:p-8 shadow-xs">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#e5e9e3]">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold uppercase">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#89ca2e]/15 text-[#367c35] border border-[#89ca2e]/30 font-bold uppercase">
                       {techPackInfo.orderType === 'sample' ? 'Sample Order (1 unit)' : 'Bulk Production'}
                     </span>
-                    <span className="text-xs text-slate-400">• Reference Size: {techPackInfo.selectedSize || 'XL'}</span>
+                    <span className="text-xs text-[#64748b]">• Reference Size: {techPackInfo.selectedSize || 'XL'}</span>
                   </div>
-                  <h2 className="text-xl md:text-2xl font-bold text-white">{techPackInfo.styleName}</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-[#10182b]">{techPackInfo.styleName}</h2>
                 </div>
 
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className="text-xs text-slate-400">Order Quantity</p>
+                    <p className="text-xs text-[#64748b]">Order Quantity</p>
                     <div className="flex items-center gap-2 mt-1">
                       <input
                         type="number"
                         min="1"
                         value={orderQuantity}
                         onChange={(e) => setOrderQuantity(Math.max(1, Number(e.target.value)))}
-                        className="w-20 px-3 py-1 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white font-mono text-center focus:border-emerald-500 outline-none"
+                        className="w-20 px-3 py-1.5 bg-[#f7f9f5] border border-[#e5e9e3] rounded-lg text-sm text-[#10182b] font-mono text-center focus:border-[#89ca2e] outline-none shadow-xs"
                       />
-                      <span className="text-xs text-slate-400 font-medium">units</span>
+                      <span className="text-xs text-[#64748b] font-medium">units</span>
                     </div>
                   </div>
 
                   <button
                     onClick={calculateDualQuotations}
                     disabled={isProcessing}
-                    className="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition flex items-center gap-2"
+                    className="px-6 py-2.5 rounded-xl bg-[#89ca2e] hover:bg-[#78b327] text-white font-bold text-sm shadow-xs transition flex items-center gap-2 cursor-pointer"
                   >
                     {isProcessing ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
@@ -854,78 +854,78 @@ export default function InstantQuotation({ inDashboard = false }) {
 
               {/* Specs Pills */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 text-xs">
-                <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60">
-                  <span className="text-slate-400">Fabric & Weight</span>
-                  <p className="text-white font-semibold mt-1">
+                <div className="bg-[#f7f9f5] p-3.5 rounded-xl border border-[#e5e9e3]">
+                  <span className="text-[#64748b] block text-[11px]">Fabric & Weight</span>
+                  <p className="text-[#10182b] font-bold mt-1">
                     {techPackInfo.fabric?.name} ({techPackInfo.fabric?.gsm} GSM)
                   </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">{techPackInfo.fabric?.composition}</p>
+                  <p className="text-[11px] text-[#64748b] mt-0.5">{techPackInfo.fabric?.composition}</p>
                 </div>
 
-                <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60">
-                  <span className="text-slate-400">Color Palette</span>
+                <div className="bg-[#f7f9f5] p-3.5 rounded-xl border border-[#e5e9e3]">
+                  <span className="text-[#64748b] block text-[11px]">Color Palette</span>
                   <div className="flex items-center gap-2 mt-2">
                     {(techPackInfo.colors || ['#00263d', '#fdb927']).map((c, i) => (
                       <div key={i} className="flex items-center gap-1">
-                        <span className="w-4 h-4 rounded-full border border-slate-700" style={{ backgroundColor: c }} />
-                        <span className="text-[10px] font-mono text-slate-400">{c}</span>
+                        <span className="w-4 h-4 rounded-full border border-[#e5e9e3] shadow-xs" style={{ backgroundColor: c }} />
+                        <span className="text-[10px] font-mono text-[#64748b]">{c}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60">
-                  <span className="text-slate-400">Reference Scale Basis</span>
-                  <p className="text-white font-semibold mt-1">
+                <div className="bg-[#f7f9f5] p-3.5 rounded-xl border border-[#e5e9e3]">
+                  <span className="text-[#64748b] block text-[11px]">Reference Scale Basis</span>
+                  <p className="text-[#10182b] font-bold mt-1">
                     Chest: {techPackInfo.referenceMeasurements?.chest_in || 26.5}" (XL)
                   </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Length: {techPackInfo.referenceMeasurements?.length_in || 29.0}"</p>
+                  <p className="text-[11px] text-[#64748b] mt-0.5">Length: {techPackInfo.referenceMeasurements?.length_in || 29.0}"</p>
                 </div>
 
-                <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60">
-                  <span className="text-slate-400">Trims Detected</span>
-                  <p className="text-white font-semibold mt-1">
+                <div className="bg-[#f7f9f5] p-3.5 rounded-xl border border-[#e5e9e3]">
+                  <span className="text-[#64748b] block text-[11px]">Trims Detected</span>
+                  <p className="text-[#10182b] font-bold mt-1">
                     {(techPackInfo.trims || []).length} Trims & Accessories
                   </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Rubberised buttons, rib collar/cuffs</p>
+                  <p className="text-[11px] text-[#64748b] mt-0.5">Rubberised buttons, rib collar/cuffs</p>
                 </div>
               </div>
 
               {/* Extracted Size Chart Table */}
               {techPackInfo.sizeChart?.rows && (
-                <div className="mt-4 pt-4 border-t border-slate-700/60">
+                <div className="mt-4 pt-4 border-t border-[#e5e9e3]">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                      <Scale className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-xs font-bold text-[#10182b] uppercase tracking-wider flex items-center gap-1.5">
+                      <Scale className="w-3.5 h-3.5 text-[#367c35]" />
                       Extracted Garment Size Chart (Inches)
                     </span>
-                    <span className="text-[11px] text-slate-400 italic">
+                    <span className="text-[11px] text-[#64748b] italic">
                       {techPackInfo.sizeChart.notes || 'Full sleeve rugby polo'}
                     </span>
                   </div>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto rounded-xl border border-[#e5e9e3]">
                     <table className="w-full text-xs text-left border-collapse">
                       <thead>
-                        <tr className="bg-slate-900/80 text-slate-400 border border-slate-700/60">
-                          <th className="py-2 px-3 font-semibold">Measurement</th>
-                          <th className="py-2 px-3 font-semibold">S</th>
-                          <th className="py-2 px-3 font-semibold">M</th>
-                          <th className="py-2 px-3 font-semibold">L</th>
-                          <th className="py-2 px-3 font-bold text-emerald-400 bg-emerald-500/10">XL (Ref)</th>
-                          <th className="py-2 px-3 font-semibold">XXL</th>
-                          <th className="py-2 px-3 font-semibold">3XL</th>
+                        <tr className="bg-[#f7f9f5] text-[#64748b] border-b border-[#e5e9e3]">
+                          <th className="py-2.5 px-3 font-semibold">Measurement</th>
+                          <th className="py-2.5 px-3 font-semibold">S</th>
+                          <th className="py-2.5 px-3 font-semibold">M</th>
+                          <th className="py-2.5 px-3 font-semibold">L</th>
+                          <th className="py-2.5 px-3 font-bold text-[#367c35] bg-[#89ca2e]/10">XL (Ref)</th>
+                          <th className="py-2.5 px-3 font-semibold">XXL</th>
+                          <th className="py-2.5 px-3 font-semibold">3XL</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-[#e5e9e3] text-[#10182b]">
                         {techPackInfo.sizeChart.rows.map((row, idx) => (
-                          <tr key={idx} className="border border-slate-700/40 hover:bg-slate-900/40">
-                            <td className="py-2 px-3 font-medium text-slate-200">{row.measurement}</td>
-                            <td className="py-2 px-3 font-mono text-slate-400">{row.s}"</td>
-                            <td className="py-2 px-3 font-mono text-slate-400">{row.m}"</td>
-                            <td className="py-2 px-3 font-mono text-slate-400">{row.l}"</td>
-                            <td className="py-2 px-3 font-mono font-bold text-emerald-400 bg-emerald-500/5">{row.xl}"</td>
-                            <td className="py-2 px-3 font-mono text-slate-400">{row.xxl}"</td>
-                            <td className="py-2 px-3 font-mono text-slate-400">{row['3xl']}"</td>
+                          <tr key={idx} className="hover:bg-[#f7f9f5]/60 transition-colors">
+                            <td className="py-2.5 px-3 font-medium text-[#10182b]">{row.measurement}</td>
+                            <td className="py-2.5 px-3 font-mono text-[#64748b]">{row.s}"</td>
+                            <td className="py-2.5 px-3 font-mono text-[#64748b]">{row.m}"</td>
+                            <td className="py-2.5 px-3 font-mono text-[#64748b]">{row.l}"</td>
+                            <td className="py-2.5 px-3 font-mono font-bold text-[#367c35] bg-[#89ca2e]/10">{row.xl}"</td>
+                            <td className="py-2.5 px-3 font-mono text-[#64748b]">{row.xxl}"</td>
+                            <td className="py-2.5 px-3 font-mono text-[#64748b]">{row['3xl']}"</td>
                           </tr>
                         ))}
                       </tbody>
@@ -936,16 +936,16 @@ export default function InstantQuotation({ inDashboard = false }) {
             </div>
 
             {/* Embellishments & Proportioned Dimensions List */}
-            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6">
+            <div className="bg-white border border-[#e5e9e3] rounded-3xl p-6 md:p-8 shadow-xs">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-[#10182b] flex items-center gap-2">
                     Identified Embellishments & Proportional Dimensions
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 font-mono">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#f7f9f5] border border-[#e5e9e3] text-[#64748b] font-mono">
                       {decorations.length} logos
                     </span>
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-[#64748b] mt-0.5">
                     Dimensions visually calibrated against the {techPackInfo.referenceMeasurements?.chest_in || 26.5}" chest width. Confirm or tweak below:
                   </p>
                 </div>
@@ -957,61 +957,61 @@ export default function InstantQuotation({ inDashboard = false }) {
                     key={deco.id}
                     className={`p-4 rounded-xl border transition ${
                       deco.needs_confirmation
-                        ? 'bg-amber-500/5 border-amber-500/30'
-                        : 'bg-slate-900/60 border-slate-700/60 hover:border-slate-600'
+                        ? 'bg-amber-50/60 border-amber-300'
+                        : 'bg-[#f7f9f5]/70 border-[#e5e9e3] hover:border-[#89ca2e]'
                     }`}
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-white">{deco.name}</span>
-                          <span className="text-xs px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                          <span className="text-sm font-bold text-[#10182b]">{deco.name}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-md bg-[#89ca2e]/15 text-[#367c35] border border-[#89ca2e]/30 font-medium">
                             {deco.techniqueLabel || deco.technique}
                           </span>
                           {deco.needs_confirmation && (
-                            <span className="text-xs px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium flex items-center gap-1">
-                              <AlertTriangle className="w-3 h-3" />
+                            <span className="text-xs px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300 font-medium flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3 text-amber-700" />
                               Confirm dimensions
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-400">
-                          Placement: <span className="text-slate-300 font-medium">{deco.placementLabel || deco.placement}</span>
+                        <p className="text-xs text-[#64748b]">
+                          Placement: <span className="text-[#10182b] font-medium">{deco.placementLabel || deco.placement}</span>
                         </p>
-                        <p className="text-[11px] text-slate-400 italic">
+                        <p className="text-[11px] text-[#64748b] italic">
                           Basis: {deco.scalingBasis}
                         </p>
                       </div>
 
                       {/* Interactive Dimensions Tweak */}
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 text-xs bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
-                          <span className="text-slate-400">W:</span>
+                        <div className="flex items-center gap-1.5 text-xs bg-white px-3 py-1.5 rounded-lg border border-[#e5e9e3] shadow-xs">
+                          <span className="text-[#64748b]">W:</span>
                           <input
                             type="number"
                             step="0.5"
                             value={deco.width_in}
                             onChange={(e) => handleUpdateDeco(deco.id, 'width_in', e.target.value)}
-                            className="w-14 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 font-mono text-center text-white"
+                            className="w-14 bg-[#f7f9f5] border border-[#e5e9e3] rounded px-1.5 py-0.5 font-mono text-center text-[#10182b]"
                           />
-                          <span className="text-slate-400">in</span>
+                          <span className="text-[#64748b]">in</span>
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-xs bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
-                          <span className="text-slate-400">H:</span>
+                        <div className="flex items-center gap-1.5 text-xs bg-white px-3 py-1.5 rounded-lg border border-[#e5e9e3] shadow-xs">
+                          <span className="text-[#64748b]">H:</span>
                           <input
                             type="number"
                             step="0.5"
                             value={deco.height_in}
                             onChange={(e) => handleUpdateDeco(deco.id, 'height_in', e.target.value)}
-                            className="w-14 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 font-mono text-center text-white"
+                            className="w-14 bg-[#f7f9f5] border border-[#e5e9e3] rounded px-1.5 py-0.5 font-mono text-center text-[#10182b]"
                           />
-                          <span className="text-slate-400">in</span>
+                          <span className="text-[#64748b]">in</span>
                         </div>
 
                         <div className="text-right pl-2">
-                          <span className="text-[11px] text-slate-400 block">Area</span>
-                          <span className="text-xs font-mono font-bold text-emerald-400">{deco.area_sq_in} sq.in</span>
+                          <span className="text-[11px] text-[#64748b] block">Area</span>
+                          <span className="text-xs font-mono font-bold text-[#367c35]">{deco.area_sq_in} sq.in</span>
                         </div>
                       </div>
                     </div>
@@ -1025,24 +1025,22 @@ export default function InstantQuotation({ inDashboard = false }) {
         {/* ==================================================================== */}
         {/* STAGE 4: DUAL QUOTATIONS (DRAFT QUOTATION PRESENTATION) */}
         {/* ==================================================================== */}
-        {/* STAGE 4: DUAL QUOTATIONS (DRAFT QUOTATION PRESENTATION) */}
-        {/* ==================================================================== */}
         {pipelineStage === 'dual_quotation' && quotationA && quotationB && (
           <div className="space-y-6">
             {/* SIGN-IN GATE: If user is not authenticated, require login to unlock full quotation & review submission */}
             {!user ? (
-              <div className="bg-slate-900/95 border-2 border-cyan-500/40 rounded-3xl p-8 sm:p-12 text-center space-y-6 shadow-2xl backdrop-blur-md animate-in fade-in">
-                <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto border border-cyan-500/30">
+              <div className="bg-white border-2 border-[#89ca2e] rounded-3xl p-8 sm:p-12 text-center space-y-6 shadow-xl animate-in fade-in">
+                <div className="w-16 h-16 rounded-2xl bg-[#89ca2e]/10 text-[#367c35] flex items-center justify-center mx-auto border border-[#89ca2e]/30">
                   <Shield className="w-8 h-8" />
                 </div>
                 <div className="max-w-xl mx-auto space-y-2">
-                  <span className="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/40">
+                  <span className="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-[#89ca2e]/15 text-[#367c35] border border-[#89ca2e]/30">
                     Sign In Required
                   </span>
-                  <h2 className="text-2xl sm:text-3xl font-black text-white">
+                  <h2 className="text-2xl sm:text-3xl font-black text-[#10182b]">
                     Sign In to Unlock Quotation & Submit to Manufacturer
                   </h2>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-[#64748b] leading-relaxed">
                     Your tech pack specifications, logo calibrations, and rate calculations are ready. Please sign in or create a fundraiser account to view your itemized cost breakdown, export draft PDF documents, and submit this draft for verified manufacturer review.
                   </p>
                 </div>
@@ -1050,7 +1048,7 @@ export default function InstantQuotation({ inDashboard = false }) {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-md mx-auto pt-2">
                   <button
                     onClick={() => navigate('/login?redirect=/instant-quotation')}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25 transition cursor-pointer"
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#89ca2e] hover:bg-[#78b327] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#89ca2e]/25 transition cursor-pointer"
                   >
                     <span>Sign In to Your Account</span>
                     <ArrowRight className="w-4 h-4" />
@@ -1058,7 +1056,7 @@ export default function InstantQuotation({ inDashboard = false }) {
 
                   <button
                     onClick={() => navigate('/register?role=fundraiser&redirect=/instant-quotation')}
-                    className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-white font-bold text-xs border border-slate-700 transition cursor-pointer"
+                    className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-[#10182b] font-bold text-xs border border-[#e5e9e3] shadow-xs transition cursor-pointer"
                   >
                     Create Fundraiser Account
                   </button>
@@ -1067,142 +1065,142 @@ export default function InstantQuotation({ inDashboard = false }) {
             ) : (
               <>
                 {/* MANDATORY DRAFT QUOTATION BANNER */}
-                <div className="bg-amber-500/10 border-2 border-amber-500/50 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-6 shadow-xs relative overflow-hidden">
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div className="flex items-start gap-4">
-                      <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-400 shrink-0 mt-0.5">
+                      <div className="p-3 rounded-2xl bg-amber-100 text-amber-700 shrink-0 mt-0.5 border border-amber-200">
                         <AlertTriangle className="w-6 h-6" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                          <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-amber-500 text-slate-950 font-mono">
+                          <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-amber-500 text-white font-mono">
                             Draft Quotation
                           </span>
-                          <span className="text-xs text-slate-400 font-mono">
+                          <span className="text-xs text-amber-900 font-mono">
                             • {orderType === 'sample' ? 'Sample Order' : 'Bulk Production'} ({orderQuantity} units)
                           </span>
-                          <span className="text-xs text-slate-400">
-                            • Ship to: <strong className="text-slate-300">{shippingAddress.city || 'Destination'}, {shippingAddress.country || 'Pakistan'}</strong>
+                          <span className="text-xs text-amber-900">
+                            • Ship to: <strong className="text-amber-950 font-bold">{shippingAddress.city || 'Destination'}, {shippingAddress.country || 'Pakistan'}</strong>
                           </span>
                         </div>
-                        <h2 className="text-lg md:text-xl font-bold text-white leading-snug">
+                        <h2 className="text-lg md:text-xl font-bold text-amber-950 leading-snug">
                           This is a draft quotation. To move toward production, send it for manufacturer review.
                         </h2>
-                        <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                        <p className="text-xs text-amber-800/90 mt-1 max-w-2xl leading-relaxed">
                           The figures below are preliminary draft estimates generated from your tech pack specifications. Send this draft to verified manufacturers to receive confirmed technical production quotes and sample timelines.
                         </p>
                       </div>
                     </div>
 
-                <div className="flex items-center gap-3 shrink-0">
-                  <button
-                    onClick={handleSubmitForReview}
-                    disabled={submittingReview || reviewSubmittedSuccess}
-                    className={`px-6 py-3.5 rounded-xl font-bold text-xs flex items-center gap-2.5 transition shadow-lg cursor-pointer ${
-                      reviewSubmittedSuccess
-                        ? 'bg-emerald-500 text-slate-950 shadow-emerald-500/25'
-                        : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 shadow-amber-500/25'
-                    }`}
-                  >
-                    {submittingReview ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Submitting Draft...</span>
-                      </>
-                    ) : reviewSubmittedSuccess ? (
-                      <>
+                    <div className="flex items-center gap-3 shrink-0 flex-wrap">
+                      <button
+                        onClick={handleSubmitForReview}
+                        disabled={submittingReview || reviewSubmittedSuccess}
+                        className={`px-6 py-3.5 rounded-xl font-bold text-xs flex items-center gap-2.5 transition shadow-sm cursor-pointer ${
+                          reviewSubmittedSuccess
+                            ? 'bg-[#89ca2e] text-white shadow-[#89ca2e]/25'
+                            : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-amber-500/25'
+                        }`}
+                      >
+                        {submittingReview ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            <span>Submitting Draft...</span>
+                          </>
+                        ) : reviewSubmittedSuccess ? (
+                          <>
+                            <CheckCircle className="w-4 h-4" />
+                            <span>Submitted for Review ✓</span>
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4" />
+                            <span>Send for Manufacturer Review →</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => setPipelineStage('print_pdf')}
+                        className="px-4 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-[#10182b] font-bold text-xs border border-[#e5e9e3] shadow-xs flex items-center gap-2 transition cursor-pointer"
+                      >
+                        <Printer className="w-4 h-4 text-[#367c35]" />
+                        <span>Draft PDF</span>
+                      </button>
+
+                      <button
+                        onClick={() => setProposalModalOpen(true)}
+                        className="px-4 py-3.5 rounded-xl bg-[#367c35] hover:bg-[#2e682d] text-white font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-xs"
+                      >
                         <CheckCircle className="w-4 h-4" />
-                        <span>Submitted for Review ✓</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        <span>Send for Manufacturer Review →</span>
-                      </>
-                    )}
-                  </button>
+                        <span>View Final Proposal</span>
+                      </button>
 
-                  <button
-                    onClick={() => setPipelineStage('print_pdf')}
-                    className="px-4 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 flex items-center gap-2 transition cursor-pointer"
-                  >
-                    <Printer className="w-4 h-4 text-emerald-400" />
-                    <span>Draft PDF</span>
-                  </button>
+                      <button
+                        onClick={() => setChatModalOpen(true)}
+                        className="px-4 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-[#367c35] border border-[#89ca2e]/40 shadow-xs font-bold text-xs flex items-center gap-2 transition cursor-pointer"
+                      >
+                        <MessageSquare className="w-4 h-4 text-[#367c35]" />
+                        <span>Direct Chat</span>
+                      </button>
+                    </div>
+                  </div>
 
-                  <button
-                    onClick={() => setProposalModalOpen(true)}
-                    className="px-4 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-md shadow-emerald-600/20"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    <span>View Final Proposal</span>
-                  </button>
-
-                  <button
-                    onClick={() => setChatModalOpen(true)}
-                    className="px-4 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 font-bold text-xs flex items-center gap-2 transition cursor-pointer"
-                  >
-                    <MessageSquare className="w-4 h-4 text-cyan-400" />
-                    <span>Direct Chat</span>
-                  </button>
+                  {reviewSubmittedSuccess && (
+                    <div className="mt-4 pt-4 border-t border-amber-200 text-xs text-[#367c35] flex items-center justify-between gap-2 font-medium">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-[#367c35] shrink-0" />
+                        <span>
+                          Your draft quotation has been submitted to Admin! Admin will review specs and assign a single verified manufacturer.
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setChatModalOpen(true)}
+                        className="px-3 py-1.5 rounded-lg bg-[#89ca2e]/10 text-[#367c35] border border-[#89ca2e]/30 text-[11px] font-bold flex items-center gap-1 shrink-0"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" /> Open Factory Chat
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </div>
 
-              {reviewSubmittedSuccess && (
-                <div className="mt-4 pt-4 border-t border-amber-500/30 text-xs text-emerald-300 flex items-center justify-between gap-2 font-medium">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>
-                      Your draft quotation has been submitted to Admin! Admin will review specs and assign a single verified manufacturer.
+                {/* Top Bar with Mode Switcher & AI Confidence */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#e5e9e3] shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#89ca2e]/10 text-[#367c35] border border-[#89ca2e]/30 flex items-center gap-1.5 font-mono">
+                      <span className="w-2 h-2 rounded-full bg-[#89ca2e] animate-pulse" />
+                      STATUS: AUTO (95% Confidence)
+                    </span>
+                    <span className="text-xs text-[#64748b] font-mono">
+                      Order Type: <strong className="text-[#10182b]">{orderQuantity <= 3 ? 'Sample Tier' : 'Bulk Tier'} ({orderQuantity} units)</strong>
                     </span>
                   </div>
-                  <button
-                    onClick={() => setChatModalOpen(true)}
-                    className="px-3 py-1.5 rounded-lg bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-[11px] font-bold flex items-center gap-1 shrink-0"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" /> Open Factory Chat
-                  </button>
+
+                  <div className="flex items-center gap-1 bg-[#f7f9f5] p-1 rounded-xl border border-[#e5e9e3] text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('customer')}
+                      className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                        viewMode === 'customer'
+                          ? 'bg-[#89ca2e] text-white shadow-xs'
+                          : 'text-[#64748b] hover:text-[#10182b]'
+                      }`}
+                    >
+                      Customer View
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('developer')}
+                      className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                        viewMode === 'developer'
+                          ? 'bg-[#10182b] text-white shadow-xs'
+                          : 'text-[#64748b] hover:text-[#10182b]'
+                      }`}
+                    >
+                      Developer / Factory Breakdown
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
-
-            {/* Top Bar with Mode Switcher & AI Confidence */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 font-mono">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  STATUS: AUTO (95% Confidence)
-                </span>
-                <span className="text-xs text-slate-400 font-mono">
-                  Order Type: <strong className="text-white">{orderQuantity <= 3 ? 'Sample Tier' : 'Bulk Tier'} ({orderQuantity} units)</strong>
-                </span>
-              </div>
-
-              <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('customer')}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
-                    viewMode === 'customer'
-                      ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Customer View
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('developer')}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
-                    viewMode === 'developer'
-                      ? 'bg-cyan-500 text-slate-950 shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Developer / Factory Breakdown
-                </button>
-              </div>
-            </div>
 
             {/* ============================================================= */}
             {/* VIEW MODE A: STREAMLINED CUSTOMER QUOTATION PRESENTATION */}
@@ -1210,47 +1208,47 @@ export default function InstantQuotation({ inDashboard = false }) {
             {viewMode === 'customer' ? (
               <div className="space-y-6">
                 {/* 1. Main Order Summary Card */}
-                <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                <div className="bg-white border border-[#e5e9e3] rounded-3xl p-6 sm:p-8 shadow-xs relative overflow-hidden">
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
                     {/* Left: Big Price Display */}
                     <div className="lg:col-span-7 space-y-4">
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-xs font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          <span className="text-xs font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-[#89ca2e]/15 text-[#367c35] border border-[#89ca2e]/30">
                             {orderType === 'sample' ? 'Sample Order' : 'Requested Order Quote'}
                           </span>
-                          <span className="text-xs font-mono text-slate-400">
+                          <span className="text-xs font-mono text-[#64748b]">
                             • {orderQuantity} {orderQuantity === 1 ? 'Unit' : 'Units'}
                           </span>
                         </div>
 
-                        <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                        <h2 className="text-2xl sm:text-3xl font-black text-[#10182b] tracking-tight">
                           {techPackInfo?.styleName || 'Custom Apparel Product'}
                         </h2>
-                        <p className="text-xs text-slate-400 mt-1">
-                          Calculated with deterministic manufacturing rates + direct shipping to <strong className="text-slate-200">{shippingAddress.city || 'Lahore'}</strong>.
+                        <p className="text-xs text-[#64748b] mt-1">
+                          Calculated with deterministic manufacturing rates + direct shipping to <strong className="text-[#10182b]">{shippingAddress.city || 'Lahore'}</strong>.
                         </p>
                       </div>
 
-                      <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 flex flex-col sm:flex-row sm:items-baseline justify-between gap-4">
+                      <div className="p-5 rounded-2xl bg-[#f7f9f5] border border-[#e5e9e3] flex flex-col sm:flex-row sm:items-baseline justify-between gap-4">
                         <div>
-                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                          <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider block">
                             Estimated Unit Price
                           </span>
-                          <div className="text-3xl sm:text-4xl font-black font-mono text-emerald-400 mt-0.5">
+                          <div className="text-3xl sm:text-4xl font-black font-mono text-[#367c35] mt-0.5">
                             ${quotationA?.totals?.landedUnitUsd || quotationA?.requestedOrder?.unitPriceUsd || 32.40}{' '}
-                            <span className="text-sm font-normal text-slate-400 font-sans">/ unit</span>
+                            <span className="text-sm font-normal text-[#64748b] font-sans">/ unit</span>
                           </div>
                         </div>
 
-                        <div className="sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-800">
-                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                        <div className="sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0 border-[#e5e9e3]">
+                          <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider block">
                             Estimated Order Total
                           </span>
-                          <div className="text-2xl font-black font-mono text-white mt-0.5">
+                          <div className="text-2xl font-black font-mono text-[#10182b] mt-0.5">
                             ${quotationA?.totals?.totalLandedUsd || quotationA?.requestedOrder?.totalPriceUsd || (32.40 * orderQuantity).toFixed(2)} USD
                           </div>
-                          <span className="text-[10px] text-slate-500 block font-mono">
+                          <span className="text-[10px] text-[#64748b] block font-mono">
                             for {orderQuantity} units total
                           </span>
                         </div>
@@ -1258,31 +1256,31 @@ export default function InstantQuotation({ inDashboard = false }) {
                     </div>
 
                     {/* Right: What's Included Checklist */}
-                    <div className="lg:col-span-5 p-5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3">
-                      <span className="text-xs font-black text-slate-200 uppercase tracking-wider block flex items-center gap-1.5">
-                        <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    <div className="lg:col-span-5 p-5 rounded-2xl bg-[#f7f9f5] border border-[#e5e9e3] space-y-3">
+                      <span className="text-xs font-black text-[#10182b] uppercase tracking-wider block flex items-center gap-1.5">
+                        <CheckCircle className="w-4 h-4 text-[#367c35]" />
                         What's Included
                       </span>
 
-                      <div className="space-y-2 text-xs text-slate-300">
+                      <div className="space-y-2 text-xs text-[#10182b]">
                         <div className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <Check className="w-4 h-4 text-[#367c35] shrink-0" />
                           <span><strong>Custom Fabric:</strong> {techPackInfo?.fabric?.name || 'Double Knit Pique'} ({techPackInfo?.fabric?.gsm || 300} GSM)</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <Check className="w-4 h-4 text-[#367c35] shrink-0" />
                           <span><strong>Pattern & Sizing:</strong> {techPackInfo?.sizeChart?.rows?.length ? `${techPackInfo.sizeChart.rows.length} Graded Sizes` : 'Custom Pattern Development'}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <Check className="w-4 h-4 text-[#367c35] shrink-0" />
                           <span><strong>Embellishments:</strong> {decorations.length} Detected Direct Placements</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <Check className="w-4 h-4 text-[#367c35] shrink-0" />
                           <span><strong>Construction:</strong> Heavyweight sewing & custom collar/placket</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <Check className="w-4 h-4 text-[#367c35] shrink-0" />
                           <span><strong>Quality & Pack:</strong> 100% Pre-dispatch QC + individual polybag</span>
                         </div>
                       </div>
@@ -1290,181 +1288,181 @@ export default function InstantQuotation({ inDashboard = false }) {
                   </div>
                 </div>
 
-                {/* 2. Compare With Sample Card (Sections 3, 5, 30, 31, 44) */}
+                {/* 2. Compare With Sample Card */}
                 {orderQuantity > 1 ? (
-                  <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                  <div className="p-6 rounded-3xl bg-white border border-[#e5e9e3] shadow-xs space-y-4">
+                    <div className="flex items-center justify-between pb-2 border-b border-[#e5e9e3]">
                       <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
+                        <div className="p-2 rounded-xl bg-[#89ca2e]/10 text-[#367c35]">
                           <TrendingDown className="w-4 h-4" />
                         </div>
                         <div>
-                          <h3 className="text-sm font-black text-white">Compared With Single Sample Economics</h3>
-                          <p className="text-[11px] text-slate-400">
+                          <h3 className="text-sm font-black text-[#10182b]">Compared With Single Sample Economics</h3>
+                          <p className="text-[11px] text-[#64748b]">
                             Independent manufacturing costing comparison between 1 physical sample vs {orderQuantity} units.
                           </p>
                         </div>
                       </div>
 
-                      <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/60 px-3 py-1 rounded-full border border-cyan-500/30">
+                      <span className="text-xs font-mono font-bold text-[#367c35] bg-[#89ca2e]/10 px-3 py-1 rounded-full border border-[#89ca2e]/30">
                         {quotationA?.comparison?.savingsPercentage || 35.2}% Cost Reduction
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                      <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800">
-                        <span className="text-[10px] text-slate-400 uppercase font-bold block mb-1">
+                      <div className="p-4 rounded-2xl bg-[#f7f9f5] border border-[#e5e9e3]">
+                        <span className="text-[10px] text-[#64748b] uppercase font-bold block mb-1">
                           1. Single Sample Price
                         </span>
-                        <span className="text-xl font-black font-mono text-slate-300">
+                        <span className="text-xl font-black font-mono text-[#10182b]">
                           ${quotationA?.sample?.unitPriceUsd || 49.99} USD
                         </span>
-                        <span className="text-[10px] text-slate-500 block mt-0.5">
+                        <span className="text-[10px] text-[#64748b] block mt-0.5">
                           1 Unit physical prototype
                         </span>
                       </div>
 
-                      <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800">
-                        <span className="text-[10px] text-emerald-400 uppercase font-bold block mb-1">
+                      <div className="p-4 rounded-2xl bg-[#f7f9f5] border border-[#e5e9e3]">
+                        <span className="text-[10px] text-[#367c35] uppercase font-bold block mb-1">
                           2. Your {orderQuantity}-Unit Quote
                         </span>
-                        <span className="text-xl font-black font-mono text-emerald-400">
+                        <span className="text-xl font-black font-mono text-[#367c35]">
                           ${quotationA?.requestedOrder?.unitPriceUsd || quotationA?.totals?.landedUnitUsd || 32.40} USD / unit
                         </span>
-                        <span className="text-[10px] text-slate-500 block mt-0.5">
+                        <span className="text-[10px] text-[#64748b] block mt-0.5">
                           ${quotationA?.requestedOrder?.totalPriceUsd || (32.40 * orderQuantity).toFixed(2)} total order
                         </span>
                       </div>
 
-                      <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-950/40 to-teal-950/40 border border-emerald-500/30">
-                        <span className="text-[10px] text-emerald-300 uppercase font-extrabold block mb-1">
+                      <div className="p-4 rounded-2xl bg-[#89ca2e]/10 border border-[#89ca2e]/30">
+                        <span className="text-[10px] text-[#367c35] uppercase font-extrabold block mb-1">
                           3. You Save
                         </span>
-                        <span className="text-2xl font-black font-mono text-emerald-300">
+                        <span className="text-2xl font-black font-mono text-[#367c35]">
                           Save ${quotationA?.comparison?.savingsPerUnit || ((quotationA?.sample?.unitPriceUsd || 49.99) - (quotationA?.requestedOrder?.unitPriceUsd || 32.40)).toFixed(2)} / unit
                         </span>
-                        <span className="text-[10px] text-emerald-400/80 block mt-0.5">
+                        <span className="text-[10px] text-[#367c35]/80 block mt-0.5 font-bold">
                           ${quotationA?.comparison?.totalSavingsUsd || ((quotationA?.sample?.unitPriceUsd || 49.99) * orderQuantity - (quotationA?.requestedOrder?.totalPriceUsd || 32.40 * orderQuantity)).toFixed(2)} total savings
                         </span>
                       </div>
                     </div>
 
-                    <p className="text-[11px] text-slate-400 text-center italic pt-1">
+                    <p className="text-[11px] text-[#64748b] text-center italic pt-1">
                       Bulk pricing reduces your estimated unit cost by ${quotationA?.comparison?.savingsPerUnit || ((quotationA?.sample?.unitPriceUsd || 49.99) - (quotationA?.requestedOrder?.unitPriceUsd || 32.40)).toFixed(2)} compared with the sample price due to manufacturing economies of scale.
                     </p>
                   </div>
                 ) : (
-                  <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4">
+                  <div className="p-5 rounded-3xl bg-white border border-[#e5e9e3] shadow-xs flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-2xl bg-purple-500/20 text-purple-400">
+                      <div className="p-2.5 rounded-2xl bg-[#89ca2e]/10 text-[#367c35]">
                         <Package className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-white">Pre-Production Sample Order (1 Unit)</h4>
-                        <p className="text-xs text-slate-400">
+                        <h4 className="text-sm font-bold text-[#10182b]">Pre-Production Sample Order (1 Unit)</h4>
+                        <p className="text-xs text-[#64748b]">
                           This is your estimated sample price for 1 physical prototype. Normal volume discounts apply when scaling to 4+ units.
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-2xl font-black font-mono text-purple-300">
+                      <span className="text-2xl font-black font-mono text-[#367c35]">
                         ${quotationA?.sample?.unitPriceUsd || quotationA?.totals?.landedUnitUsd || 49.99} USD
                       </span>
                     </div>
                   </div>
                 )}
 
-                {/* 3. Collapsible Customer Price Breakdown (Section 32) */}
-                <div className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden">
+                {/* 3. Collapsible Customer Price Breakdown */}
+                <div className="rounded-3xl bg-white border border-[#e5e9e3] shadow-xs overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setShowBreakdown(!showBreakdown)}
-                    className="w-full p-5 text-left flex items-center justify-between hover:bg-slate-850 transition cursor-pointer"
+                    className="w-full p-5 text-left flex items-center justify-between hover:bg-[#f7f9f5] transition cursor-pointer"
                   >
                     <div className="flex items-center gap-2.5">
-                      <Sliders className="w-4 h-4 text-emerald-400" />
-                      <span className="text-sm font-bold text-white">
+                      <Sliders className="w-4 h-4 text-[#367c35]" />
+                      <span className="text-sm font-bold text-[#10182b]">
                         Itemized Price Breakdown
                       </span>
-                      <span className="text-xs text-slate-400 font-normal">
+                      <span className="text-xs text-[#64748b] font-normal">
                         ({showBreakdown ? 'Click to collapse' : 'Click to expand category estimates'})
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
+                    <div className="flex items-center gap-2 text-xs font-bold text-[#367c35]">
                       <span>{showBreakdown ? 'Hide Breakdown' : 'View Breakdown'}</span>
-                      <span className="text-slate-400">{showBreakdown ? '▲' : '▼'}</span>
+                      <span className="text-[#64748b]">{showBreakdown ? '▲' : '▼'}</span>
                     </div>
                   </button>
 
                   {showBreakdown && (
-                    <div className="p-6 border-t border-slate-800 bg-slate-950/60 space-y-3 text-xs animate-in fade-in">
+                    <div className="p-6 border-t border-[#e5e9e3] bg-[#f7f9f5]/50 space-y-3 text-xs animate-in fade-in">
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                          <span className="text-[10px] text-slate-400 uppercase font-bold block">1. Fabric & Materials</span>
-                          <span className="text-base font-bold font-mono text-white mt-1 block">
+                        <div className="p-3 rounded-xl bg-white border border-[#e5e9e3]">
+                          <span className="text-[10px] text-[#64748b] uppercase font-bold block">1. Fabric & Materials</span>
+                          <span className="text-base font-bold font-mono text-[#10182b] mt-1 block">
                             ${quotationA?.breakdownUsd?.fabric || 7.25} / unit
                           </span>
-                          <span className="text-[10px] text-slate-500">
+                          <span className="text-[10px] text-[#64748b]">
                             {techPackInfo?.fabric?.name || 'Double Knit'} ({techPackInfo?.fabric?.gsm || 300} GSM)
                           </span>
                         </div>
 
-                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                          <span className="text-[10px] text-slate-400 uppercase font-bold block">2. Construction & Sewing</span>
-                          <span className="text-base font-bold font-mono text-white mt-1 block">
+                        <div className="p-3 rounded-xl bg-white border border-[#e5e9e3]">
+                          <span className="text-[10px] text-[#64748b] uppercase font-bold block">2. Construction & Sewing</span>
+                          <span className="text-base font-bold font-mono text-[#10182b] mt-1 block">
                             ${quotationA?.breakdownUsd?.stitching || 5.50} / unit
                           </span>
-                          <span className="text-[10px] text-slate-500">
+                          <span className="text-[10px] text-[#64748b]">
                             Placket & collar tailoring
                           </span>
                         </div>
 
-                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                          <span className="text-[10px] text-slate-400 uppercase font-bold block">3. Pattern Development</span>
-                          <span className="text-base font-bold font-mono text-white mt-1 block">
+                        <div className="p-3 rounded-xl bg-white border border-[#e5e9e3]">
+                          <span className="text-[10px] text-[#64748b] uppercase font-bold block">3. Pattern Development</span>
+                          <span className="text-base font-bold font-mono text-[#10182b] mt-1 block">
                             ${quotationA?.breakdownUsd?.pattern || 1.80} / unit
                           </span>
-                          <span className="text-[10px] text-slate-500">
+                          <span className="text-[10px] text-[#64748b]">
                             Master size grading (fixed setup amortized)
                           </span>
                         </div>
 
-                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                          <span className="text-[10px] text-slate-400 uppercase font-bold block">4. Embellishments & Embroidery</span>
-                          <span className="text-base font-bold font-mono text-white mt-1 block">
+                        <div className="p-3 rounded-xl bg-white border border-[#e5e9e3]">
+                          <span className="text-[10px] text-[#64748b] uppercase font-bold block">4. Embellishments & Embroidery</span>
+                          <span className="text-base font-bold font-mono text-[#10182b] mt-1 block">
                             ${quotationA?.breakdownUsd?.embroidery || 12.00} / unit
                           </span>
-                          <span className="text-[10px] text-slate-500">
+                          <span className="text-[10px] text-[#64748b]">
                             {decorations.length} detected placement(s)
                           </span>
                         </div>
 
-                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                          <span className="text-[10px] text-slate-400 uppercase font-bold block">5. Trims & Polybagging</span>
-                          <span className="text-base font-bold font-mono text-white mt-1 block">
+                        <div className="p-3 rounded-xl bg-white border border-[#e5e9e3]">
+                          <span className="text-[10px] text-[#64748b] uppercase font-bold block">5. Trims & Polybagging</span>
+                          <span className="text-base font-bold font-mono text-[#10182b] mt-1 block">
                             ${quotationA?.breakdownUsd?.trims || 1.20} / unit
                           </span>
-                          <span className="text-[10px] text-slate-500">
+                          <span className="text-[10px] text-[#64748b]">
                             Buttons, woven label, packaging
                           </span>
                         </div>
 
-                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                          <span className="text-[10px] text-slate-400 uppercase font-bold block">6. Courier Logistics</span>
-                          <span className="text-base font-bold font-mono text-white mt-1 block">
+                        <div className="p-3 rounded-xl bg-white border border-[#e5e9e3]">
+                          <span className="text-[10px] text-[#64748b] uppercase font-bold block">6. Courier Logistics</span>
+                          <span className="text-base font-bold font-mono text-[#10182b] mt-1 block">
                             ${quotationA?.breakdownUsd?.shipping || 4.65} / unit
                           </span>
-                          <span className="text-[10px] text-slate-500">
+                          <span className="text-[10px] text-[#64748b]">
                             Direct courier to {shippingAddress.city || 'Destination'}
                           </span>
                         </div>
                       </div>
 
-                      <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-slate-300">
-                        <span>Total Estimated Landed Price:</span>
-                        <span className="text-emerald-400 font-mono text-base">
-                          ${quotationA?.totals?.landedUnitUsd || quotationA?.requestedOrder?.unitPriceUsd || 32.40} USD / unit
-                        </span>
+                      <div className="pt-3 border-t border-[#e5e9e3] flex items-center justify-between text-xs font-bold text-[#10182b]">
+                            <span>Total Estimated Landed Price:</span>
+                            <span className="text-[#367c35] font-mono text-base">
+                              ${quotationA?.totals?.landedUnitUsd || quotationA?.requestedOrder?.unitPriceUsd || 32.40} USD / unit
+                            </span>
                       </div>
                     </div>
                   )}
@@ -1474,18 +1472,18 @@ export default function InstantQuotation({ inDashboard = false }) {
               /* ============================================================= */
               /* VIEW MODE B: DEVELOPER / FACTORY RATE CARD DEBUG VIEW (Sec 33) */
               /* ============================================================= */
-              <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-6 animate-in fade-in font-mono text-xs">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="p-6 rounded-3xl bg-white border border-[#e5e9e3] shadow-xs space-y-6 animate-in fade-in font-mono text-xs">
+                <div className="flex items-center justify-between pb-3 border-b border-[#e5e9e3]">
                   <div>
-                    <h3 className="text-sm font-black text-white flex items-center gap-2">
-                      <Cpu className="w-4 h-4 text-cyan-400" />
+                    <h3 className="text-sm font-black text-[#10182b] flex items-center gap-2">
+                      <Cpu className="w-4 h-4 text-[#0ea5c6]" />
                       Quotation Engine Debugging & Technical Rate Card Audit
                     </h3>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-[#64748b]">
                       Requested Q: {orderQuantity} &bull; Reference Bulk Q: 30 &bull; Benchmark FX: 1 USD = 280 PKR
                     </p>
                   </div>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/30">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-[#e5e9e3]">
                     Engine Version 1.0
                   </span>
                 </div>
@@ -1493,7 +1491,7 @@ export default function InstantQuotation({ inDashboard = false }) {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-slate-900 text-slate-400 border border-slate-800 text-[11px]">
+                      <tr className="bg-[#f7f9f5] text-[#64748b] border border-[#e5e9e3] text-[11px]">
                         <th className="p-2.5 font-bold">Component</th>
                         <th className="p-2.5 font-bold">Type</th>
                         <th className="p-2.5 font-bold">Base Rate / Metric</th>
@@ -1502,48 +1500,48 @@ export default function InstantQuotation({ inDashboard = false }) {
                         <th className="p-2.5 font-bold">Batch Total (PKR)</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/80 text-slate-300">
+                    <tbody className="divide-y divide-[#e5e9e3] text-[#10182b]">
                       {(quotationA?.debug?.requestedDebug || []).map((line, idx) => (
-                        <tr key={idx} className="hover:bg-slate-900/50">
-                          <td className="p-2.5 font-bold text-white">{line.component}</td>
-                          <td className="p-2.5 capitalize text-slate-400">{line.type}</td>
+                        <tr key={idx} className="hover:bg-slate-50">
+                          <td className="p-2.5 font-bold text-[#10182b]">{line.component}</td>
+                          <td className="p-2.5 capitalize text-[#64748b]">{line.type}</td>
                           <td className="p-2.5">
                             {line.ratePerKg ? `PKR ${line.ratePerKg}/kg (${line.consumptionKg}kg)` :
                              line.baseRate ? `PKR ${line.baseRate} base` :
                              line.ratePerSize ? `PKR ${line.ratePerSize}/size (${line.sizeCount} sizes)` :
                              line.rate ? `PKR ${line.rate} tier rate` : 'Standard'}
                           </td>
-                          <td className="p-2.5 text-cyan-400">{line.multiplier || '1.00'}x</td>
+                          <td className="p-2.5 text-[#0ea5c6] font-bold">{line.multiplier || '1.00'}x</td>
                           <td className="p-2.5 font-bold">PKR {formatCurrency(line.unitCostPkr)}</td>
-                          <td className="p-2.5 text-emerald-400 font-bold">PKR {formatCurrency(line.totalPkr)}</td>
+                          <td className="p-2.5 text-[#367c35] font-bold">PKR {formatCurrency(line.totalPkr)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-800 text-center">
-                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block">Factory Cost Total</span>
-                    <strong className="text-sm text-slate-200">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-[#e5e9e3] text-center">
+                  <div className="p-3 rounded-xl bg-[#f7f9f5] border border-[#e5e9e3]">
+                    <span className="text-[10px] text-[#64748b] block">Factory Cost Total</span>
+                    <strong className="text-sm text-[#10182b]">
                       PKR {formatCurrency(quotationA?.costing?.factoryCostPkr || 0)}
                     </strong>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block">Shipping Total</span>
-                    <strong className="text-sm text-slate-200">
+                  <div className="p-3 rounded-xl bg-[#f7f9f5] border border-[#e5e9e3]">
+                    <span className="text-[10px] text-[#64748b] block">Shipping Total</span>
+                    <strong className="text-sm text-[#10182b]">
                       PKR {formatCurrency(quotationA?.costing?.shippingPkr || 0)}
                     </strong>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block">Configured Margin</span>
-                    <strong className="text-sm text-cyan-400">
+                  <div className="p-3 rounded-xl bg-[#f7f9f5] border border-[#e5e9e3]">
+                    <span className="text-[10px] text-[#64748b] block">Configured Margin</span>
+                    <strong className="text-sm text-[#0ea5c6]">
                       {quotationA?.costing?.marginPercent || 30}% Gross Margin
                     </strong>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                    <span className="text-[10px] text-emerald-400 block">Final Landed Price</span>
-                    <strong className="text-sm text-emerald-400">
+                  <div className="p-3 rounded-xl bg-[#89ca2e]/10 border border-[#89ca2e]/30">
+                    <span className="text-[10px] text-[#367c35] block font-bold">Final Landed Price</span>
+                    <strong className="text-sm text-[#367c35]">
                       ${quotationA?.totals?.landedUnitUsd || 32.40} USD
                     </strong>
                   </div>
@@ -1555,26 +1553,26 @@ export default function InstantQuotation({ inDashboard = false }) {
             {/* DRAFT QUOTATION CONTENTS & ATTACHED TECH PACK SPEC SHEET */}
             {/* All 11 Draft Quotation Requirements explicitly presented */}
             {/* ============================================================= */}
-            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-700">
+            <div className="bg-white border border-[#e5e9e3] rounded-2xl p-6 shadow-xs space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#e5e9e3]">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase font-mono">
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 font-bold uppercase font-mono">
                       Status: Draft
                     </span>
-                    <span className="text-xs text-slate-400 font-mono">
+                    <span className="text-xs text-[#64748b] font-mono">
                       • {orderType === 'sample' ? 'Sample Order' : 'Bulk Production'} ({orderQuantity} units)
                     </span>
                   </div>
-                  <h3 className="text-lg font-bold text-white mt-1 flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-emerald-400" />
+                  <h3 className="text-lg font-bold text-[#10182b] mt-1 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-[#367c35]" />
                     Draft Quotation Specification Sheet & Attached Tech Pack
                   </h3>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <span className="inline-flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-700 font-mono">
-                    <Shield className="w-3.5 h-3.5 text-indigo-400" />
+                <div className="flex items-center gap-2 text-xs text-[#64748b]">
+                  <span className="inline-flex items-center gap-1.5 bg-[#f7f9f5] px-3 py-1.5 rounded-xl border border-[#e5e9e3] font-mono">
+                    <Shield className="w-3.5 h-3.5 text-[#367c35]" />
                     Attached & Viewable by Fundraiser, Manufacturer & Admin
                   </span>
                 </div>
@@ -1582,18 +1580,18 @@ export default function InstantQuotation({ inDashboard = false }) {
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Uploaded Tech Pack / Image Card */}
-                <div className="lg:col-span-4 bg-slate-900/80 rounded-2xl p-4 border border-slate-700 flex flex-col justify-between">
+                <div className="lg:col-span-4 bg-[#f7f9f5] rounded-2xl p-4 border border-[#e5e9e3] flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                        <Layers className="w-4 h-4 text-emerald-400" /> Attached Tech Pack / Mockup
+                      <span className="text-xs font-bold text-[#10182b] uppercase tracking-wider flex items-center gap-1.5">
+                        <Layers className="w-4 h-4 text-[#367c35]" /> Attached Tech Pack / Mockup
                       </span>
-                      <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                      <span className="text-[10px] text-[#367c35] font-semibold bg-[#89ca2e]/15 px-2 py-0.5 rounded border border-[#89ca2e]/30">
                         Attached
                       </span>
                     </div>
 
-                    <div className="relative group rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center min-h-[220px]">
+                    <div className="relative group rounded-xl overflow-hidden border border-[#e5e9e3] bg-white flex items-center justify-center min-h-[220px]">
                       {previewUrl ? (
                         <img
                           src={previewUrl}
@@ -1601,8 +1599,8 @@ export default function InstantQuotation({ inDashboard = false }) {
                           className="w-full h-56 object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
-                        <div className="p-6 text-center text-slate-500 text-xs">
-                          <FileText className="w-10 h-10 mx-auto mb-2 text-slate-600" />
+                        <div className="p-6 text-center text-[#64748b] text-xs">
+                          <FileText className="w-10 h-10 mx-auto mb-2 text-slate-400" />
                           <span>Vector Mockup & Tech Pack Drawing Attached</span>
                         </div>
                       )}
@@ -1610,14 +1608,14 @@ export default function InstantQuotation({ inDashboard = false }) {
                       <button
                         type="button"
                         onClick={() => setTechPackModalOpen(true)}
-                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-bold text-xs cursor-pointer backdrop-blur-xs"
+                        className="absolute inset-0 bg-[#10182b]/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-bold text-xs cursor-pointer backdrop-blur-xs"
                       >
                         <Maximize2 className="w-4 h-4" />
                         <span>Inspect Full Tech Pack</span>
                       </button>
                     </div>
 
-                    <p className="text-[11px] text-slate-400 mt-2 truncate">
+                    <p className="text-[11px] text-[#64748b] mt-2 truncate">
                       File: {selectedFile?.name || 'NC_AT_Rugby_Polo_TechPack.jpg'}
                     </p>
                   </div>
@@ -1625,9 +1623,9 @@ export default function InstantQuotation({ inDashboard = false }) {
                   <button
                     type="button"
                     onClick={() => setTechPackModalOpen(true)}
-                    className="mt-3 w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 transition border border-slate-700 cursor-pointer"
+                    className="mt-3 w-full py-2 bg-white hover:bg-slate-50 text-[#10182b] font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 transition border border-[#e5e9e3] shadow-xs cursor-pointer"
                   >
-                    <Eye className="w-3.5 h-3.5 text-emerald-400" />
+                    <Eye className="w-3.5 h-3.5 text-[#367c35]" />
                     <span>View Tech Pack Details</span>
                   </button>
                 </div>
@@ -1636,71 +1634,71 @@ export default function InstantQuotation({ inDashboard = false }) {
                 <div className="lg:col-span-8 space-y-4 text-xs">
                   {/* Product Specs & Fabric Details */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700">
-                      <span className="text-[10px] text-slate-400 uppercase font-bold block">Extracted Product Specs</span>
-                      <p className="text-white font-bold text-sm mt-0.5">{techPackInfo?.styleName || 'Custom Apparel Polo'}</p>
-                      <p className="text-slate-300 mt-1">
-                        Garment Type: <span className="font-semibold text-white capitalize">{techPackInfo?.garmentType || 'Polo'}</span>
+                    <div className="bg-[#f7f9f5] p-3.5 rounded-xl border border-[#e5e9e3]">
+                      <span className="text-[10px] text-[#64748b] uppercase font-bold block">Extracted Product Specs</span>
+                      <p className="text-[#10182b] font-bold text-sm mt-0.5">{techPackInfo?.styleName || 'Custom Apparel Polo'}</p>
+                      <p className="text-[#64748b] mt-1">
+                        Garment Type: <span className="font-semibold text-[#10182b] capitalize">{techPackInfo?.garmentType || 'Polo'}</span>
                       </p>
-                      <p className="text-slate-300 mt-0.5">
-                        Reference Fit: <span className="font-semibold text-white">{techPackInfo?.selectedSize || 'XL'} ({techPackInfo?.referenceMeasurements?.chest_in || 26.5}" chest)</span>
+                      <p className="text-[#64748b] mt-0.5">
+                        Reference Fit: <span className="font-semibold text-[#10182b]">{techPackInfo?.selectedSize || 'XL'} ({techPackInfo?.referenceMeasurements?.chest_in || 26.5}" chest)</span>
                       </p>
                     </div>
 
-                    <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700">
-                      <span className="text-[10px] text-slate-400 uppercase font-bold block">Fabric Details</span>
-                      <p className="text-white font-bold text-sm mt-0.5">{techPackInfo?.fabric?.name || 'Double Knit Heavyweight'}</p>
-                      <p className="text-slate-300 mt-1">
-                        GSM Weight: <span className="font-semibold text-emerald-400">{techPackInfo?.fabric?.gsm || 300} GSM</span>
+                    <div className="bg-[#f7f9f5] p-3.5 rounded-xl border border-[#e5e9e3]">
+                      <span className="text-[10px] text-[#64748b] uppercase font-bold block">Fabric Details</span>
+                      <p className="text-[#10182b] font-bold text-sm mt-0.5">{techPackInfo?.fabric?.name || 'Double Knit Heavyweight'}</p>
+                      <p className="text-[#64748b] mt-1">
+                        GSM Weight: <span className="font-semibold text-[#367c35]">{techPackInfo?.fabric?.gsm || 300} GSM</span>
                       </p>
-                      <p className="text-slate-300 mt-0.5 truncate">
-                        Composition: <span className="font-semibold text-white">{techPackInfo?.fabric?.composition || '80% cotton / 20% polyester'}</span>
+                      <p className="text-[#64748b] mt-0.5 truncate">
+                        Composition: <span className="font-semibold text-[#10182b]">{techPackInfo?.fabric?.composition || '80% cotton / 20% polyester'}</span>
                       </p>
                     </div>
                   </div>
 
                   {/* Quantity, Order Type & Shipping Address */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700">
-                      <span className="text-[10px] text-slate-400 uppercase font-bold block">Quantity & Order Type</span>
+                    <div className="bg-[#f7f9f5] p-3.5 rounded-xl border border-[#e5e9e3]">
+                      <span className="text-[10px] text-[#64748b] uppercase font-bold block">Quantity & Order Type</span>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-base font-extrabold text-white font-mono">{orderQuantity} Units</span>
+                        <span className="text-base font-extrabold text-[#10182b] font-mono">{orderQuantity} Units</span>
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                          orderType === 'sample' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          orderType === 'sample' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-[#89ca2e]/15 text-[#367c35] border border-[#89ca2e]/30'
                         }`}>
                           {orderType === 'sample' ? 'Sample Prototype' : 'Bulk Production'}
                         </span>
                       </div>
-                      <p className="text-slate-400 text-[11px] mt-1">
+                      <p className="text-[#64748b] text-[11px] mt-1">
                         Draft estimate basis: FOB Sialkot + Standard Courier.
                       </p>
                     </div>
 
-                    <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700">
-                      <span className="text-[10px] text-slate-400 uppercase font-bold block">Shipping Destination</span>
-                      <p className="text-white font-bold mt-0.5">
+                    <div className="bg-[#f7f9f5] p-3.5 rounded-xl border border-[#e5e9e3]">
+                      <span className="text-[10px] text-[#64748b] uppercase font-bold block">Shipping Destination</span>
+                      <p className="text-[#10182b] font-bold mt-0.5">
                         {shippingAddress.city || 'Lahore'}, {shippingAddress.country || 'Pakistan'} {shippingAddress.postalCode ? `(${shippingAddress.postalCode})` : ''}
                       </p>
-                      <p className="text-slate-400 text-[11px] mt-0.5 truncate">
+                      <p className="text-[#64748b] text-[11px] mt-0.5 truncate">
                         {shippingAddress.street ? `${shippingAddress.street} • ` : ''}Recipient: {shippingAddress.fullName || user?.name || 'Authorized Fundraiser'}
                       </p>
                     </div>
                   </div>
 
                   {/* Decorations / Logos / Embellishments */}
-                  <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700">
+                  <div className="bg-[#f7f9f5] p-3.5 rounded-xl border border-[#e5e9e3]">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] text-slate-400 uppercase font-bold">Decorations / Logos / Embellishments</span>
-                      <span className="text-[10px] text-emerald-400 font-mono font-semibold">{decorations.length} Detected</span>
+                      <span className="text-[10px] text-[#64748b] uppercase font-bold">Decorations / Logos / Embellishments</span>
+                      <span className="text-[10px] text-[#367c35] font-mono font-semibold">{decorations.length} Detected</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {decorations.map((deco, idx) => (
-                        <div key={idx} className="p-2 bg-slate-950/70 rounded-lg border border-slate-800 flex items-center justify-between">
+                        <div key={idx} className="p-2 bg-white rounded-lg border border-[#e5e9e3] flex items-center justify-between">
                           <div>
-                            <span className="font-bold text-white text-xs block">{deco.name}</span>
-                            <span className="text-[10px] text-slate-400 capitalize">{deco.placement} • {deco.techniqueLabel || deco.technique}</span>
+                            <span className="font-bold text-[#10182b] text-xs block">{deco.name}</span>
+                            <span className="text-[10px] text-[#64748b] capitalize">{deco.placement} • {deco.techniqueLabel || deco.technique}</span>
                           </div>
-                          <span className="font-mono text-emerald-400 text-xs font-semibold">
+                          <span className="font-mono text-[#367c35] text-xs font-semibold">
                             {deco.dimensions?.width_in}" × {deco.dimensions?.height_in}"
                           </span>
                         </div>
@@ -1712,37 +1710,37 @@ export default function InstantQuotation({ inDashboard = false }) {
 
               {/* Detected Size Chart Matrix */}
               {techPackInfo?.sizeChart?.rows && (
-                <div className="pt-2 border-t border-slate-700/60">
+                <div className="pt-2 border-t border-[#e5e9e3]">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                      <Ruler className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-xs font-bold text-[#10182b] uppercase tracking-wider flex items-center gap-1.5">
+                      <Ruler className="w-3.5 h-3.5 text-[#367c35]" />
                       Detected Garment Size Chart (Inches)
                     </span>
-                    <span className="text-[11px] text-slate-400 font-mono">Status: Verified Scale</span>
+                    <span className="text-[11px] text-[#64748b] font-mono">Status: Verified Scale</span>
                   </div>
-                  <div className="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900/80">
+                  <div className="overflow-x-auto rounded-xl border border-[#e5e9e3] bg-white">
                     <table className="w-full text-xs text-left border-collapse">
                       <thead>
-                        <tr className="bg-slate-950 text-slate-400 border-b border-slate-800">
+                        <tr className="bg-[#f7f9f5] text-[#64748b] border-b border-[#e5e9e3]">
                           <th className="py-2.5 px-3 font-semibold">Measurement</th>
                           <th className="py-2.5 px-3 font-semibold">S</th>
                           <th className="py-2.5 px-3 font-semibold">M</th>
                           <th className="py-2.5 px-3 font-semibold">L</th>
-                          <th className="py-2.5 px-3 font-bold text-emerald-400 bg-emerald-500/10">XL (Ref)</th>
+                          <th className="py-2.5 px-3 font-bold text-[#367c35] bg-[#89ca2e]/10">XL (Ref)</th>
                           <th className="py-2.5 px-3 font-semibold">XXL</th>
                           <th className="py-2.5 px-3 font-semibold">3XL</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60">
+                      <tbody className="divide-y divide-[#e5e9e3]">
                         {techPackInfo.sizeChart.rows.map((row, idx) => (
-                          <tr key={idx} className="hover:bg-slate-800/40">
-                            <td className="py-2 px-3 font-medium text-slate-200">{row.measurement}</td>
-                            <td className="py-2 px-3 font-mono text-slate-400">{row.s}"</td>
-                            <td className="py-2 px-3 font-mono text-slate-400">{row.m}"</td>
-                            <td className="py-2 px-3 font-mono text-slate-400">{row.l}"</td>
-                            <td className="py-2 px-3 font-mono font-bold text-emerald-400 bg-emerald-500/5">{row.xl}"</td>
-                            <td className="py-2 px-3 font-mono text-slate-400">{row.xxl}"</td>
-                            <td className="py-2 px-3 font-mono text-slate-400">{row['3xl']}"</td>
+                          <tr key={idx} className="hover:bg-slate-50">
+                            <td className="py-2 px-3 font-medium text-[#10182b]">{row.measurement}</td>
+                            <td className="py-2 px-3 font-mono text-[#64748b]">{row.s}"</td>
+                            <td className="py-2 px-3 font-mono text-[#64748b]">{row.m}"</td>
+                            <td className="py-2 px-3 font-mono text-[#64748b]">{row.l}"</td>
+                            <td className="py-2 px-3 font-mono font-bold text-[#367c35] bg-[#89ca2e]/5">{row.xl}"</td>
+                            <td className="py-2 px-3 font-mono text-[#64748b]">{row.xxl}"</td>
+                            <td className="py-2 px-3 font-mono text-[#64748b]">{row['3xl']}"</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1753,23 +1751,23 @@ export default function InstantQuotation({ inDashboard = false }) {
             </div>
 
             {/* Manufacturer Review Action Card */}
-            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="bg-white border border-[#e5e9e3] rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="space-y-1">
-                <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-emerald-400" />
+                <h4 className="text-sm font-bold text-[#10182b] flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-[#367c35]" />
                   Ready to Move Forward to Production?
                 </h4>
-                <p className="text-xs text-slate-400 max-w-xl">
+                <p className="text-xs text-[#64748b] max-w-xl">
                   Submit this draft quotation for manufacturer review. Factory engineers will verify pattern fit, stitch density, and dispatch final production quotations.
                 </p>
               </div>
               <button
                 onClick={handleSubmitForReview}
                 disabled={submittingReview || reviewSubmittedSuccess}
-                className={`px-6 py-3 rounded-xl font-bold text-xs flex items-center gap-2 transition shadow-lg cursor-pointer shrink-0 ${
+                className={`px-6 py-3 rounded-xl font-bold text-xs flex items-center gap-2 transition shadow-xs cursor-pointer shrink-0 ${
                   reviewSubmittedSuccess
-                    ? 'bg-emerald-500 text-slate-950'
-                    : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
+                    ? 'bg-[#89ca2e] text-white'
+                    : 'bg-[#89ca2e] hover:bg-[#78b327] text-white shadow-[#89ca2e]/20'
                 }`}
               >
                 {reviewSubmittedSuccess ? (
@@ -1787,17 +1785,17 @@ export default function InstantQuotation({ inDashboard = false }) {
             </div>
 
             {/* AI Assistant Chat Box */}
-            <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6">
-              <h3 className="text-base font-bold text-white mb-2 flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-emerald-400" />
+            <div className="bg-white border border-[#e5e9e3] rounded-2xl p-6 shadow-xs">
+              <h3 className="text-base font-bold text-[#10182b] mb-2 flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-[#367c35]" />
                 Quotation AI Assistant & Rate Lookup
               </h3>
-              <p className="text-xs text-slate-400 mb-4">
+              <p className="text-xs text-[#64748b] mb-4">
                 Ask any questions regarding Sialkot rates, Chenille vs Applique pricing, volume discounts, or shipping tariffs.
               </p>
 
               {/* Chat Log */}
-              <div className="max-h-56 overflow-y-auto space-y-3 p-3 bg-slate-900/80 rounded-xl border border-slate-700/60 mb-4">
+              <div className="max-h-56 overflow-y-auto space-y-3 p-3 bg-[#f7f9f5] rounded-xl border border-[#e5e9e3] mb-4">
                 {chatMessages.map((msg) => (
                   <div
                     key={msg.id}
@@ -1806,8 +1804,8 @@ export default function InstantQuotation({ inDashboard = false }) {
                     <div
                       className={`max-w-xl p-3 rounded-xl text-xs leading-relaxed ${
                         msg.sender === 'user'
-                          ? 'bg-emerald-600 text-white rounded-br-none'
-                          : 'bg-slate-800 text-slate-200 border border-slate-700/80 rounded-bl-none'
+                          ? 'bg-[#89ca2e] text-white rounded-br-none shadow-xs'
+                          : 'bg-white text-[#10182b] border border-[#e5e9e3] shadow-xs rounded-bl-none'
                       }`}
                     >
                       {msg.text}
@@ -1816,7 +1814,7 @@ export default function InstantQuotation({ inDashboard = false }) {
                 ))}
                 {chatThinking && (
                   <div className="flex justify-start">
-                    <div className="bg-slate-800 text-slate-400 p-3 rounded-xl text-xs border border-slate-700/80 animate-pulse">
+                    <div className="bg-white text-[#64748b] p-3 rounded-xl text-xs border border-[#e5e9e3] shadow-xs animate-pulse">
                       Analyzing Sialkot factory tariffs...
                     </div>
                   </div>
@@ -1831,12 +1829,12 @@ export default function InstantQuotation({ inDashboard = false }) {
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   placeholder="e.g., What would 100 units cost? Or ask about Chenille machine tariffs..."
-                  className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:border-emerald-500 outline-none"
+                  className="flex-1 bg-white border border-[#e5e9e3] rounded-xl px-4 py-2.5 text-xs text-[#10182b] placeholder-slate-400 focus:border-[#89ca2e] outline-none shadow-xs"
                 />
                 <button
                   type="submit"
                   disabled={chatThinking || !chatInput.trim()}
-                  className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-4 py-2.5 bg-[#89ca2e] hover:bg-[#78b327] disabled:opacity-50 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Send</span>
@@ -1852,12 +1850,12 @@ export default function InstantQuotation({ inDashboard = false }) {
         {/* STAGE 5: OFFICIAL COMMERCIAL QUOTATION PDF PREVIEW */}
         {/* ==================================================================== */}
         {pipelineStage === 'print_pdf' && quotationA && (
-          <div className="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 md:p-10 space-y-8">
+          <div className="bg-[#f7f9f5] border border-[#e5e9e3] rounded-2xl p-6 md:p-10 space-y-8 shadow-xs">
             {/* Top Toolbar */}
-            <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+            <div className="flex items-center justify-between border-b border-[#e5e9e3] pb-4">
               <button
                 onClick={() => setPipelineStage('dual_quotation')}
-                className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 cursor-pointer"
+                className="text-xs text-[#64748b] hover:text-[#10182b] flex items-center gap-1.5 cursor-pointer font-bold"
               >
                 <ArrowRight className="w-3.5 h-3.5 rotate-180" />
                 Back to Draft Quotation
@@ -1866,7 +1864,7 @@ export default function InstantQuotation({ inDashboard = false }) {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => window.print()}
-                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                  className="px-4 py-2 bg-[#89ca2e] hover:bg-[#78b327] text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-xs cursor-pointer"
                 >
                   <Printer className="w-4 h-4" />
                   Print / Save PDF
@@ -1875,7 +1873,7 @@ export default function InstantQuotation({ inDashboard = false }) {
             </div>
 
             {/* Printable Document Paper Card */}
-            <div className="bg-white text-slate-900 rounded-xl p-8 md:p-12 shadow-2xl max-w-4xl mx-auto space-y-8 font-sans">
+            <div className="bg-white text-slate-900 border border-[#e5e9e3] rounded-xl p-8 md:p-12 shadow-sm max-w-4xl mx-auto space-y-8 font-sans">
               {/* Header */}
               <div className="flex justify-between items-start border-b border-slate-200 pb-6">
                 <div>
@@ -1887,7 +1885,7 @@ export default function InstantQuotation({ inDashboard = false }) {
                 </div>
 
                 <div className="text-right">
-                  <span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded block mb-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 block mb-1">
                     Status: Draft Quotation
                   </span>
                   <span className="text-base font-black font-mono text-slate-900">SYR-QT-{Date.now().toString().slice(-6)}</span>
@@ -1896,7 +1894,7 @@ export default function InstantQuotation({ inDashboard = false }) {
               </div>
 
               {/* Important Draft Notice on Document */}
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 flex items-start gap-2">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-900 flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <span>
                   <strong>Draft Quotation:</strong> This is a draft quotation. To move toward production, send it for manufacturer review. Final production rates and stitch density will be confirmed by verified manufacturers.
@@ -1998,11 +1996,11 @@ export default function InstantQuotation({ inDashboard = false }) {
                   </div>
                   <div className="flex justify-between text-slate-900 font-black text-sm border-t-2 border-slate-900 pt-2">
                     <span>TOTAL LANDED UNIT:</span>
-                    <span className="font-mono text-emerald-700">${quotationA.totals.landedUnitUsd} USD</span>
+                    <span className="font-mono text-[#367c35]">${quotationA.totals.landedUnitUsd} USD</span>
                   </div>
                   <div className="flex justify-between text-slate-900 font-black text-sm border-t border-slate-300 pt-1">
                     <span>TOTAL DRAFT ORDER ({orderQuantity} units):</span>
-                    <span className="font-mono text-emerald-700">
+                    <span className="font-mono text-[#367c35]">
                       ${(quotationA.totals.landedUnitUsd * orderQuantity).toFixed(2)} USD
                     </span>
                   </div>
@@ -2021,47 +2019,46 @@ export default function InstantQuotation({ inDashboard = false }) {
         )}
 
         {/* Tech Pack Full Lightbox Modal */}
-        {/* Tech Pack Modal */}
         {techPackModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-              <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+          <div className="fixed inset-0 z-50 bg-[#10182b]/70 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-white border border-[#e5e9e3] rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+              <div className="p-4 border-b border-[#e5e9e3] flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-emerald-400" />
-                  <h3 className="font-bold text-white text-sm">
+                  <FileText className="w-5 h-5 text-[#367c35]" />
+                  <h3 className="font-bold text-[#10182b] text-sm">
                     Attached Tech Pack: {selectedFile?.name || 'NC_AT_Rugby_Polo_TechPack.jpg'}
                   </h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setTechPackModalOpen(false)}
-                  className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition cursor-pointer"
+                  className="p-2 rounded-xl bg-[#f7f9f5] hover:bg-slate-100 text-[#64748b] hover:text-[#10182b] transition cursor-pointer border border-[#e5e9e3]"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto flex-1 flex items-center justify-center bg-slate-950">
+              <div className="p-6 overflow-y-auto flex-1 flex items-center justify-center bg-[#f7f9f5]">
                 {previewUrl ? (
                   <img
                     src={previewUrl}
                     alt="Full Tech Pack Inspection"
-                    className="max-h-[65vh] w-auto object-contain rounded-xl border border-slate-800 shadow-2xl"
+                    className="max-h-[65vh] w-auto object-contain rounded-xl border border-[#e5e9e3] bg-white shadow-md p-2"
                   />
                 ) : (
-                  <div className="text-center text-slate-400 text-xs py-12">
-                    <FileText className="w-12 h-12 mx-auto mb-2 text-slate-600" />
+                  <div className="text-center text-[#64748b] text-xs py-12">
+                    <FileText className="w-12 h-12 mx-auto mb-2 text-slate-400" />
                     <span>Tech pack graphic data attached to this draft quotation.</span>
                   </div>
                 )}
               </div>
 
-              <div className="p-4 border-t border-slate-800 bg-slate-900 flex items-center justify-between text-xs text-slate-400">
+              <div className="p-4 border-t border-[#e5e9e3] bg-white flex items-center justify-between text-xs text-[#64748b]">
                 <span>Access Level: Attached to draft quote & saved for Fundraiser, Manufacturer & Admin review.</span>
                 <button
                   type="button"
                   onClick={() => setTechPackModalOpen(false)}
-                  className="px-4 py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl"
+                  className="px-4 py-2 bg-[#89ca2e] hover:bg-[#78b327] text-white font-bold rounded-xl cursor-pointer"
                 >
                   Done
                 </button>

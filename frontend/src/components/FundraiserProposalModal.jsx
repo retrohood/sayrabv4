@@ -128,32 +128,32 @@ export default function FundraiserProposalModal({ quotation, onClose, onUpdated 
 
   return (
     <>
-      <div className="fixed inset-0 z-60 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col animate-in fade-in zoom-in-95">
+      <div className="fixed inset-0 z-60 bg-[#10182b]/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div className="bg-white border border-[#e5e9e3] rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col animate-in fade-in zoom-in-95">
           {/* Header */}
-          <div className="p-5 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10">
+          <div className="p-5 border-b border-[#e5e9e3] flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-sm z-10">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/25">
+              <div className="p-2.5 rounded-2xl bg-[#89ca2e]/15 text-[#367c35] border border-[#89ca2e]/30">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-base sm:text-lg font-black text-white">
+                  <h2 className="text-base sm:text-lg font-black text-[#10182b]">
                     Manufacturer Finalized Quotation Proposal
                   </h2>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold uppercase">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#89ca2e]/15 text-[#367c35] border border-[#89ca2e]/30 font-bold uppercase">
                     Ready for Approval
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Factory: <strong className="text-white">{quotation.assignedManufacturer?.name || 'Assigned Manufacturing Partner'}</strong>
+                <p className="text-xs text-[#64748b] mt-0.5">
+                  Factory: <strong className="text-[#10182b]">{quotation.assignedManufacturer?.name || 'Assigned Manufacturing Partner'}</strong>
                 </p>
               </div>
             </div>
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+              className="p-2 rounded-xl text-[#64748b] hover:text-[#10182b] hover:bg-[#f7f9f5] transition cursor-pointer border border-[#e5e9e3]"
             >
               <X className="w-5 h-5" />
             </button>
@@ -162,42 +162,42 @@ export default function FundraiserProposalModal({ quotation, onClose, onUpdated 
           {/* Body */}
           <div className="p-6 space-y-6 flex-1 text-xs">
             {actionSuccess && (
-              <div className="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 font-medium">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs flex items-center gap-2 font-medium">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                 <span>{actionSuccess}</span>
               </div>
             )}
 
             {actionError && (
-              <div className="p-4 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2 font-medium">
-                <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-300 text-rose-800 text-xs flex items-center gap-2 font-medium">
+                <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
                 <span>{actionError}</span>
               </div>
             )}
 
             {/* Pricing Summary Banner */}
-            <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-950 to-emerald-950/50 border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-5 rounded-2xl bg-[#f7f9f5] border border-[#e5e9e3] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                <span className="text-[10px] uppercase font-bold text-[#64748b] block mb-1">
                   Final Landed Unit Price
                 </span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black font-mono text-emerald-400">
+                  <span className="text-3xl font-black font-mono text-[#367c35]">
                     ${landedUnitUsd} USD
                   </span>
-                  <span className="text-xs text-slate-400 font-mono">/ finished unit</span>
+                  <span className="text-xs text-[#64748b] font-mono">/ finished unit</span>
                 </div>
-                <span className="text-[11px] text-slate-400 block mt-1">
-                  Order Run: <strong className="text-white">{qty} unit(s)</strong> ({quotation.orderType === 'sample' ? 'Sample Prototype' : 'Bulk Production'})
+                <span className="text-[11px] text-[#64748b] block mt-1">
+                  Order Run: <strong className="text-[#10182b]">{qty} unit(s)</strong> ({quotation.orderType === 'sample' ? 'Sample Prototype' : 'Bulk Production'})
                 </span>
               </div>
 
-              <div className="sm:text-right p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Order Price</span>
-                <span className="text-2xl font-black font-mono text-white">
+              <div className="sm:text-right p-3 rounded-xl bg-white border border-[#e5e9e3] shadow-xs">
+                <span className="text-[10px] uppercase font-bold text-[#64748b] block">Total Order Price</span>
+                <span className="text-2xl font-black font-mono text-[#10182b]">
                   ${totalQuoteUsd} USD
                 </span>
-                <span className="text-[10px] text-emerald-400 font-mono block">
+                <span className="text-[10px] text-[#367c35] font-mono font-bold block">
                   PKR {formatCurrency(prop.finalTotalPkr || quotation.calculation?.totals?.finalTotal || 0)} Total
                 </span>
               </div>
@@ -205,55 +205,55 @@ export default function FundraiserProposalModal({ quotation, onClose, onUpdated 
 
             {/* Delivery Timeline & Terms */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 shrink-0">
+              <div className="p-3.5 rounded-2xl bg-[#f7f9f5] border border-[#e5e9e3] flex items-start gap-3">
+                <div className="p-2 rounded-xl bg-[#89ca2e]/10 text-[#367c35] shrink-0">
                   <Clock className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Delivery Timeline</span>
-                  <p className="font-bold text-slate-200 mt-0.5">
+                  <span className="text-[10px] text-[#64748b] uppercase font-bold block">Delivery Timeline</span>
+                  <p className="font-bold text-[#10182b] mt-0.5">
                     {prop.estimatedLeadDays || 14} Business Days
                   </p>
-                  <span className="text-[11px] text-slate-400">From sample approval / order kickoff</span>
+                  <span className="text-[11px] text-[#64748b]">From sample approval / order kickoff</span>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 shrink-0">
+              <div className="p-3.5 rounded-2xl bg-[#f7f9f5] border border-[#e5e9e3] flex items-start gap-3">
+                <div className="p-2 rounded-xl bg-[#89ca2e]/10 text-[#367c35] shrink-0">
                   <Truck className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Shipping Destination</span>
-                  <p className="font-bold text-slate-200 mt-0.5 truncate">
+                  <span className="text-[10px] text-[#64748b] uppercase font-bold block">Shipping Destination</span>
+                  <p className="font-bold text-[#10182b] mt-0.5 truncate">
                     {quotation.shippingAddress?.city || 'Lahore'}, {quotation.shippingAddress?.country || 'Pakistan'}
                   </p>
-                  <span className="text-[11px] text-slate-400">International express courier included</span>
+                  <span className="text-[11px] text-[#64748b]">International express courier included</span>
                 </div>
               </div>
             </div>
 
             {/* Itemized Price Breakdown (Margin baked in cleanly without internal factory margin line) */}
-            <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                <h4 className="font-bold text-white uppercase tracking-wider text-xs flex items-center gap-2">
-                  <Package className="w-4 h-4 text-cyan-400" />
+            <div className="p-5 rounded-2xl bg-white border border-[#e5e9e3] shadow-xs space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-[#e5e9e3]">
+                <h4 className="font-bold text-[#10182b] uppercase tracking-wider text-xs flex items-center gap-2">
+                  <Package className="w-4 h-4 text-[#367c35]" />
                   Itemized Component Pricing Breakdown
                 </h4>
-                <span className="text-[10px] text-slate-400">Unit Landed Cost Basis</span>
+                <span className="text-[10px] text-[#64748b]">Unit Landed Cost Basis</span>
               </div>
 
-              <div className="divide-y divide-slate-800/80">
+              <div className="divide-y divide-[#e5e9e3]">
                 {itemPricing.map((item, idx) => (
                   <div key={idx} className="py-2.5 flex items-center justify-between text-xs">
                     <div>
-                      <span className="font-semibold text-slate-200 block">{item.name}</span>
-                      <span className="text-[10px] text-slate-500 capitalize">{item.category}</span>
+                      <span className="font-semibold text-[#10182b] block">{item.name}</span>
+                      <span className="text-[10px] text-[#64748b] capitalize">{item.category}</span>
                     </div>
                     <div className="text-right">
-                      <span className="font-mono font-bold text-slate-200 block">
+                      <span className="font-mono font-bold text-[#10182b] block">
                         PKR {formatCurrency(item.unitCostPkr)}
                       </span>
-                      <span className="text-[10px] text-slate-500 font-mono">
+                      <span className="text-[10px] text-[#64748b] font-mono">
                         ${(item.unitCostPkr / 280).toFixed(2)} USD
                       </span>
                     </div>
@@ -264,11 +264,11 @@ export default function FundraiserProposalModal({ quotation, onClose, onUpdated 
 
             {/* Manufacturer Notes */}
             {prop.customNotes && (
-              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider block">
+              <div className="p-4 rounded-2xl bg-[#f7f9f5] border border-[#e5e9e3] space-y-1">
+                <span className="text-[10px] text-[#367c35] font-bold uppercase tracking-wider block">
                   Factory Production & Material Notes
                 </span>
-                <p className="text-slate-300 leading-relaxed italic">
+                <p className="text-[#10182b] leading-relaxed italic">
                   "{prop.customNotes}"
                 </p>
               </div>
@@ -276,11 +276,11 @@ export default function FundraiserProposalModal({ quotation, onClose, onUpdated 
 
             {/* Revision Request Form */}
             {showRevisionForm && (
-              <form onSubmit={handleRequestRevision} className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/30 space-y-3 animate-in fade-in">
-                <h4 className="font-bold text-amber-300 text-xs">
+              <form onSubmit={handleRequestRevision} className="p-4 rounded-2xl bg-amber-50 border border-amber-300 space-y-3 animate-in fade-in">
+                <h4 className="font-bold text-amber-900 text-xs">
                   Request Revision from Manufacturer
                 </h4>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-amber-800/80">
                   Specify any changes regarding fabric GSM, colorway, stitch details, or pricing adjustments needed.
                 </p>
                 <textarea
@@ -288,13 +288,13 @@ export default function FundraiserProposalModal({ quotation, onClose, onUpdated 
                   value={revisionNotes}
                   onChange={(e) => setRevisionNotes(e.target.value)}
                   placeholder="e.g., Can we adjust the collar twill color to off-white and shorten lead time by 3 days?"
-                  className="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                  className="w-full p-3 rounded-xl bg-white border border-[#e5e9e3] text-xs text-[#10182b] placeholder-slate-400 focus:outline-none focus:border-[#89ca2e]"
                 />
                 <div className="flex justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => setShowRevisionForm(false)}
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800"
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#64748b] hover:bg-slate-100"
                   >
                     Cancel
                   </button>
@@ -311,13 +311,13 @@ export default function FundraiserProposalModal({ quotation, onClose, onUpdated 
           </div>
 
           {/* Footer Actions */}
-          <div className="p-5 border-t border-slate-800 bg-slate-950/90 backdrop-blur-sm flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-10">
+          <div className="p-5 border-t border-[#e5e9e3] bg-white backdrop-blur-sm flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-10">
             <button
               type="button"
               onClick={() => setShowChat(true)}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#367c35] border border-[#89ca2e]/40 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition shadow-xs"
             >
-              <MessageSquare className="w-4 h-4 text-cyan-400" />
+              <MessageSquare className="w-4 h-4 text-[#367c35]" />
               <span>Chat with Factory</span>
             </button>
 
@@ -326,7 +326,7 @@ export default function FundraiserProposalModal({ quotation, onClose, onUpdated 
                 <button
                   type="button"
                   onClick={() => setShowRevisionForm(true)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold text-xs cursor-pointer transition"
+                  className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#10182b] border border-[#e5e9e3] font-bold text-xs cursor-pointer transition shadow-xs"
                 >
                   Request Revision
                 </button>
@@ -336,7 +336,7 @@ export default function FundraiserProposalModal({ quotation, onClose, onUpdated 
                 type="button"
                 disabled={accepting}
                 onClick={handleAcceptProposal}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 cursor-pointer transition flex-1 sm:flex-initial"
+                className="px-6 py-2.5 rounded-xl bg-[#89ca2e] hover:bg-[#78b327] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-xs cursor-pointer transition flex-1 sm:flex-initial"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{accepting ? 'Starting Production...' : 'Accept Proposal & Start Production'}</span>

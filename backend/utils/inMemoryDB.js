@@ -1,4 +1,4 @@
-import { USER_ROLES } from '../constants/index.js';
+import { USER_ROLES, CATEGORY_ALIASES } from '../constants/index.js';
 
 export const mockCampaigns = [
   {
@@ -381,7 +381,10 @@ export const inMemoryDB = {
       let result = [...mockCampaigns];
       if (filter.isFeatured) result = result.filter(c => c.isFeatured);
       if (filter.isEmergency !== undefined) result = result.filter(c => Boolean(c.isEmergency) === Boolean(filter.isEmergency));
-      if (filter.category && filter.category !== 'All') result = result.filter(c => c.category === filter.category);
+      if (filter.category && filter.category !== 'All') {
+        const aliases = CATEGORY_ALIASES[filter.category] || [filter.category];
+        result = result.filter(c => c.category && (aliases.includes(c.category) || c.category.toLowerCase() === filter.category.toLowerCase()));
+      }
       if (filter.status && filter.status !== 'all') {
         if (filter.status === 'pending') {
           result = result.filter(c => c.status === 'pending' || c.verificationStatus === 'pending_verification' || c.verificationStatus === 'pending');

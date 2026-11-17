@@ -265,26 +265,6 @@ export default function Home() {
 
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* Instant Quotation Banner */}
-        <div className="bg-gradient-to-r from-[#10182b] via-[#172033] to-[#10182b] rounded-2xl p-6 sm:p-7 text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-5 border border-[#172033]">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#89ca2e]/20 text-[#89ca2e] text-xs font-bold uppercase tracking-wider">
-              <Sparkles size={12} /> Garment Manufacturing Workspace
-            </div>
-            <h3 className="text-xl font-black text-white">Garment Instant Quotation Workspace</h3>
-            <p className="text-slate-300 text-xs sm:text-sm max-w-xl leading-relaxed">
-              Upload your apparel tech pack image. AI extracts specifications, size charts, and logo mockups with
-              dual-engine costing.
-            </p>
-          </div>
-          <Link
-            to="/instant-quotation"
-            className="px-5 py-2.5 bg-[#89ca2e] hover:bg-[#7bb926] text-[#10182b] font-black text-xs sm:text-sm rounded-xl transition-all shadow-sm shrink-0 flex items-center gap-2"
-          >
-            Open Instant Quotation <ArrowRight size={16} />
-          </Link>
-        </div>
-
         {/* D. Search, Filters and Categories */}
         <div ref={campaignsRef}>
           <SearchFilters

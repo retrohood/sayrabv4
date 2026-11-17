@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import Campaign from '../models/Campaign.js';
 import Product from '../models/Product.js';
 import Order from '../models/Order.js';
-import { VERIFICATION_STATUS, LIFECYCLE_STATUS } from '../constants/index.js';
+import { VERIFICATION_STATUS, LIFECYCLE_STATUS, CATEGORY_ALIASES } from '../constants/index.js';
 import { generateSlug } from '../utils/generateToken.js';
 import {
   updateCampaignLifecycle,
@@ -73,7 +73,8 @@ export const getCampaigns = async (req, res) => {
     }
 
     if (category && category !== 'All') {
-      filter.category = category;
+      const aliases = CATEGORY_ALIASES[category] || [category];
+      filter.category = { $in: aliases };
     }
 
     if (search) {
