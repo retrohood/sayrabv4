@@ -15,7 +15,17 @@ import NotificationsView from './views/NotificationsView';
 import ReportsView from './views/ReportsView';
 import ProfileView from './views/ProfileView';
 import QuotationsView from './views/QuotationsView';
-import { Factory, Lock, RefreshCw, LogIn, Menu, X } from 'lucide-react';
+import {
+  Factory,
+  Lock,
+  RefreshCw,
+  LogIn,
+  Menu,
+  X,
+  ShieldCheck,
+  ArrowRight,
+  Sparkles,
+} from 'lucide-react';
 
 export default function ManufacturerPortal() {
   const { user, login } = useAuth();
@@ -42,6 +52,9 @@ export default function ManufacturerPortal() {
 
   // Quick Demo Login State
   const [switching, setSwitching] = useState(false);
+  const [gateEmail, setGateEmail] = useState('');
+  const [gatePassword, setGatePassword] = useState('');
+  const [gateError, setGateError] = useState('');
 
   const fetchManufacturerData = async () => {
     try {
@@ -91,17 +104,36 @@ export default function ManufacturerPortal() {
   };
 
   useEffect(() => {
-    fetchManufacturerData();
-  }, []);
+    if (user && (user.role === 'manufacturer' || user.role === 'admin' || user.email === 'manufacturer@sayrab.com')) {
+      fetchManufacturerData();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   // 1-Click Manufacturer Login Handler
   const handleManufacturerDemoLogin = async () => {
     try {
       setSwitching(true);
+      setGateError('');
       await login('manufacturer@sayrab.com', 'password123');
       await fetchManufacturerData();
     } catch (err) {
-      alert('Manufacturer login failed: ' + (err.message || 'Server offline'));
+      setGateError('Manufacturer demo login failed: ' + (err.message || 'Server offline'));
+    } finally {
+      setSwitching(false);
+    }
+  };
+
+  const handleGateSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setSwitching(true);
+      setGateError('');
+      await login(gateEmail, gatePassword);
+      await fetchManufacturerData();
+    } catch (err) {
+      setGateError(err.message || 'Invalid manufacturer credentials.');
     } finally {
       setSwitching(false);
     }
@@ -110,8 +142,112 @@ export default function ManufacturerPortal() {
   const isManufacturerAuthorized =
     user && (user.role === 'manufacturer' || user.role === 'admin' || user.email === 'manufacturer@sayrab.com');
 
+  // Gatekeeper Screen if user is not authorized or logged in
   if (!isManufacturerAuthorized) {
-    return <Navigate to="/" replace />;
+    return (
+      <div className="min-h-screen bg-[#f7f9f5] flex flex-col justify-center items-center p-4 selection:bg-[#89ca2e] selection:text-[#10182b]">
+        <div className="max-w-md w-full bg-white border border-[#e5e9e3] rounded-3xl p-8 shadow-xl text-center space-y-6">
+          <div className="flex justify-center">
+            <img
+              src="/sayrab.png"
+              alt="Sayrab"
+              className="h-20 w-auto object-contain"
+            />
+          </div>
+
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0ea5c6]/10 border border-[#0ea5c6]/30 text-[#0ea5c6] text-xs font-bold mb-2">
+              <Factory size={13} />
+              <span>Manufacturer Portal</span>
+            </div>
+            <h2 className="text-xl font-black text-[#10182b]">Manufacturing Plant Access</h2>
+            <p className="text-xs text-[#64748b] mt-1">
+              Authorized manufacturing facilities only. Review quotations, oversee production orders, and manage 45% revenue settlements.
+            </p>
+          </div>
+
+          {gateError && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+              {gateError}
+            </div>
+          )}
+
+          <div className="p-4 rounded-2xl bg-[#f7f9f5] border border-[#e5e9e3] text-left space-y-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-[#10182b]">Quick Testing Access</span>
+              <span className="px-2 py-0.5 rounded-full bg-[#89ca2e]/20 text-[#367c35] text-[10px] font-bold">
+                Verified 45% Partner
+              </span>
+            </div>
+            <p className="text-[11px] text-[#64748b]">
+              Use standard demo credentials: <code className="font-mono text-[#10182b] font-bold">manufacturer@sayrab.com</code> / <code className="font-mono text-[#10182b] font-bold">password123</code>
+            </p>
+            <button
+              onClick={handleManufacturerDemoLogin}
+              disabled={switching}
+              className="w-full py-2.5 rounded-xl bg-[#89ca2e] hover:bg-[#7ab828] text-[#10182b] font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+            >
+              {switching ? <RefreshCw className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
+              <span>{switching ? 'Authenticating...' : '1-Click Manufacturer Login'}</span>
+            </button>
+          </div>
+
+          <div className="relative flex py-1 items-center">
+            <div className="flex-grow border-t border-[#e5e9e3]"></div>
+            <span className="flex-shrink mx-3 text-[10px] font-bold uppercase text-[#64748b] tracking-wider">
+              Or Sign In
+            </span>
+            <div className="flex-grow border-t border-[#e5e9e3]"></div>
+          </div>
+
+          <form onSubmit={handleGateSubmit} className="space-y-3 text-left">
+            <div>
+              <label className="text-xs font-semibold text-[#10182b] block mb-1">
+                Official Email
+              </label>
+              <input
+                type="email"
+                required
+                value={gateEmail}
+                onChange={(e) => setGateEmail(e.target.value)}
+                placeholder="manufacturer@sayrab.com"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#f7f9f5] border border-[#e5e9e3] text-xs text-[#10182b] placeholder-[#64748b] focus:border-[#89ca2e] focus:bg-white focus:outline-hidden transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-[#10182b] block mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                value={gatePassword}
+                onChange={(e) => setGatePassword(e.target.value)}
+                placeholder="••••••••••••"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#f7f9f5] border border-[#e5e9e3] text-xs text-[#10182b] placeholder-[#64748b] focus:border-[#89ca2e] focus:bg-white focus:outline-hidden transition-colors"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={switching}
+              className="w-full py-2.5 rounded-xl bg-[#10182b] hover:bg-[#1e2a42] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+            >
+              <Lock className="w-3.5 h-3.5 text-[#0ea5c6]" />
+              <span>Sign In to Facility Portal</span>
+            </button>
+          </form>
+
+          <div className="pt-2">
+            <Link
+              to="/"
+              className="text-xs font-semibold text-[#64748b] hover:text-[#10182b] transition-colors"
+            >
+              &larr; Return to Public Website
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const counts = {
@@ -123,27 +259,27 @@ export default function ManufacturerPortal() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row font-sans antialiased selection:bg-cyan-500 selection:text-white">
+    <div className="min-h-screen bg-[#f5f7fb] text-[#10182b] flex flex-col md:flex-row font-sans antialiased selection:bg-[#89ca2e] selection:text-[#10182b]">
       {/* Mobile Header */}
-      <div className="md:hidden p-4 flex items-center justify-between bg-slate-900 border-b border-slate-800 text-white shadow-xl">
-        <Link to="/manufacturer" className="flex items-center gap-2 hover:opacity-90">
+      <div className="md:hidden p-4 flex items-center justify-between bg-[#10182b] border-b border-[#10182b] text-white shadow-xl">
+        <Link to="/manufacturer" className="flex items-center gap-3 hover:opacity-90">
           <img src="/sayrab.png" alt="Sayrab" className="h-10 w-auto object-contain" />
           <div>
             <span className="font-bold text-white block leading-tight">Sayrab</span>
-            <span className="text-[10px] block font-bold text-cyan-400">
+            <span className="text-[10px] block font-bold text-[#0ea5c6]">
               Manufacturer Portal
             </span>
           </div>
         </Link>
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-1.5 rounded-xl text-cyan-400 border border-slate-700 bg-slate-800 hover:bg-slate-700 cursor-pointer"
+          className="p-1.5 rounded-xl text-[#0ea5c6] border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer"
         >
           {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
-      {/* Sidebar Navigation */}
+      {/* Sidebar Navigation (Dark Navy #10182b) */}
       <ManufacturerSidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -152,8 +288,8 @@ export default function ManufacturerPortal() {
         setIsSidebarOpen={setIsSidebarOpen}
       />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+      {/* Main Content Area (Light Theme #f5f7fb) */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen bg-[#f5f7fb]">
         <ManufacturerHeader
           activeTab={activeTab}
           user={user}
@@ -162,14 +298,14 @@ export default function ManufacturerPortal() {
           setSearch={setSearch}
         />
 
-        <main className="p-6 flex-1">
+        <main className="p-6 flex-1 bg-[#f5f7fb]">
           {loading ? (
-            <div className="flex items-center justify-center py-20 text-slate-400 gap-3 text-sm">
-              <RefreshCw className="w-5 h-5 animate-spin text-cyan-400" />
+            <div className="flex items-center justify-center py-24 text-[#64748b] gap-3 text-sm">
+              <RefreshCw className="w-5 h-5 animate-spin text-[#0ea5c6]" />
               <span>Fetching live MongoDB manufacturer records...</span>
             </div>
           ) : error ? (
-            <div className="p-6 bg-rose-500/20 border border-rose-500/30 rounded-2xl text-rose-300 text-xs flex items-center justify-between">
+            <div className="p-6 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center justify-between shadow-xs">
               <span>{error}</span>
               <button
                 onClick={fetchManufacturerData}

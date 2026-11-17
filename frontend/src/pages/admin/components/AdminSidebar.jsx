@@ -23,6 +23,7 @@ import {
   X,
   Sparkles,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function AdminSidebar({
   activeTab,
@@ -47,19 +48,19 @@ export default function AdminSidebar({
       sub !== null
         ? activeTab === tab && subFilter === sub
         : activeTab === tab && (subFilter === null || subFilter === 'all');
-    return `flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer ${
+    return `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
       isActive
-        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 font-semibold'
-        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/60'
+        ? 'bg-[#89ca2e]/10 text-[#367c35] border-r-4 border-[#89ca2e] shadow-xs'
+        : 'text-[#64748b] hover:text-[#10182b] hover:bg-[#f7f9f5]'
     }`;
   };
 
   const subItemClass = (tab, sub) => {
     const isActive = activeTab === tab && subFilter === sub;
-    return `flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer ${
+    return `flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
       isActive
-        ? 'bg-emerald-50 text-emerald-700 font-semibold border-l-2 border-emerald-600 pl-2.5 dark:bg-emerald-950/40 dark:text-emerald-300'
-        : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/40'
+        ? 'bg-[#89ca2e]/15 text-[#367c35] font-bold border-l-2 border-[#89ca2e] pl-2.5'
+        : 'text-[#64748b] hover:text-[#10182b] hover:bg-[#f7f9f5]'
     }`;
   };
 
@@ -68,231 +69,239 @@ export default function AdminSidebar({
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-r border-slate-200/80 dark:border-slate-800 flex flex-col transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-0 lg:translate-x-0 max-lg:-translate-x-full'
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-[#e5e9e3] flex flex-col justify-between transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        {/* Brand Header */}
-        <div className="h-20 px-6 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-600/25">
-              <ShieldCheck size={22} />
-            </div>
-            <div>
-              <div className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-1.5">
-                Sayrab <span className="text-xs px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 font-semibold uppercase tracking-wider">Admin</span>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Platform Management</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Navigation List */}
-        <div className="flex-1 overflow-y-auto px-4 py-5 space-y-1.5 custom-scrollbar">
-          {/* Dashboard */}
-          <div onClick={() => handleNav('dashboard', 'all')} className={navItemClass('dashboard', 'all')}>
-            <div className="flex items-center gap-3">
-              <LayoutDashboard size={18} />
-              <span>Dashboard</span>
-            </div>
-          </div>
-
-          {/* Organizations Tree */}
-          <div className="space-y-1 pt-1">
-            <div
-              onClick={() => setOrgOpen(!orgOpen)}
-              className="flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/60 dark:text-slate-300 dark:hover:text-white cursor-pointer"
-            >
-              <div
-                className="flex items-center gap-3"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNav('organizations', 'all');
-                }}
+        <div>
+          {/* Brand Header */}
+          <div className="h-20 px-6 border-b border-[#e5e9e3] flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+              <img
+                src="/sayrab.png"
+                alt="Sayrab"
+                className="h-20 w-auto object-contain py-1"
+              />
+            </Link>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#89ca2e]/15 text-[#367c35] font-black uppercase tracking-wider border border-[#89ca2e]/30">
+                Admin
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 rounded-lg text-[#64748b] hover:text-[#10182b] hover:bg-[#f7f9f5] lg:hidden cursor-pointer"
               >
-                <Building2 size={18} className={activeTab === 'organizations' ? 'text-emerald-600' : ''} />
-                <span className={activeTab === 'organizations' ? 'font-semibold text-emerald-600 dark:text-emerald-400' : ''}>Organizations</span>
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Navigation List */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
+            {/* 1. Dashboard */}
+            <div onClick={() => handleNav('dashboard', 'all')} className={navItemClass('dashboard', 'all')}>
+              <div className="flex items-center gap-3">
+                <LayoutDashboard size={17} className={activeTab === 'dashboard' ? 'text-[#367c35]' : 'text-[#64748b]'} />
+                <span>Dashboard</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                {kpis?.pendingVerifications > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">
-                    {kpis.pendingVerifications}
+            </div>
+
+            {/* 2. Organizations Tree */}
+            <div className="space-y-1 pt-1">
+              <div
+                onClick={() => setOrgOpen(!orgOpen)}
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-[#64748b] hover:text-[#10182b] hover:bg-[#f7f9f5] cursor-pointer"
+              >
+                <div
+                  className="flex items-center gap-3"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNav('organizations', 'all');
+                  }}
+                >
+                  <Building2 size={17} className={activeTab === 'organizations' ? 'text-[#367c35]' : 'text-[#64748b]'} />
+                  <span className={activeTab === 'organizations' ? 'text-[#367c35]' : ''}>
+                    Organizations
                   </span>
-                )}
-                {orgOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-              </div>
-            </div>
-
-            {orgOpen && (
-              <div className="pl-6 pr-1 space-y-1 border-l-2 border-slate-100 dark:border-slate-800 ml-4 py-1">
-                <div onClick={() => handleNav('organizations', 'pending')} className={subItemClass('organizations', 'pending')}>
-                  <div className="flex items-center gap-2">
-                    <Clock size={13} className="text-amber-500" />
-                    <span>Pending Verification</span>
-                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
                   {kpis?.pendingVerifications > 0 && (
-                    <span className="text-[10px] font-semibold text-amber-600">{kpis.pendingVerifications}</span>
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                      {kpis.pendingVerifications}
+                    </span>
                   )}
-                </div>
-                <div onClick={() => handleNav('organizations', 'verified')} className={subItemClass('organizations', 'verified')}>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 size={13} className="text-emerald-500" />
-                    <span>Verified</span>
-                  </div>
-                </div>
-                <div onClick={() => handleNav('organizations', 'suspended')} className={subItemClass('organizations', 'suspended')}>
-                  <div className="flex items-center gap-2">
-                    <Ban size={13} className="text-rose-500" />
-                    <span>Suspended</span>
-                  </div>
+                  {orgOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Users */}
-          <div onClick={() => handleNav('users', 'all')} className={navItemClass('users', 'all')}>
-            <div className="flex items-center gap-3">
-              <Users size={18} />
-              <span>Users</span>
+              {orgOpen && (
+                <div className="pl-6 pr-1 space-y-1 border-l-2 border-[#e5e9e3] ml-4 py-1">
+                  <div onClick={() => handleNav('organizations', 'pending')} className={subItemClass('organizations', 'pending')}>
+                    <div className="flex items-center gap-2">
+                      <Clock size={13} className="text-amber-500" />
+                      <span>Pending Verification</span>
+                    </div>
+                    {kpis?.pendingVerifications > 0 && (
+                      <span className="text-[10px] font-bold text-amber-600">{kpis.pendingVerifications}</span>
+                    )}
+                  </div>
+                  <div onClick={() => handleNav('organizations', 'verified')} className={subItemClass('organizations', 'verified')}>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={13} className="text-[#367c35]" />
+                      <span>Verified</span>
+                    </div>
+                  </div>
+                  <div onClick={() => handleNav('organizations', 'suspended')} className={subItemClass('organizations', 'suspended')}>
+                    <div className="flex items-center gap-2">
+                      <Ban size={13} className="text-red-500" />
+                      <span>Suspended</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-            <span className="text-xs text-slate-400 font-normal">{kpis?.totalUsers || ''}</span>
-          </div>
 
-          {/* Campaigns */}
-          <div onClick={() => handleNav('campaigns', 'all')} className={navItemClass('campaigns', 'all')}>
-            <div className="flex items-center gap-3">
-              <Megaphone size={18} />
-              <span>Campaigns</span>
+            {/* 3. Users */}
+            <div onClick={() => handleNav('users', 'all')} className={navItemClass('users', 'all')}>
+              <div className="flex items-center gap-3">
+                <Users size={17} className={activeTab === 'users' ? 'text-[#367c35]' : 'text-[#64748b]'} />
+                <span>Users</span>
+              </div>
+              <span className="text-[10px] text-[#64748b] font-bold">{kpis?.totalUsers || ''}</span>
             </div>
-            {kpis?.activeCampaigns > 0 && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
-                {kpis.activeCampaigns}
-              </span>
-            )}
-          </div>
 
-          {/* Orders */}
-          <div onClick={() => handleNav('orders', 'all')} className={navItemClass('orders', 'all')}>
-            <div className="flex items-center gap-3">
-              <ShoppingBag size={18} />
-              <span>Orders</span>
+            {/* 4. Campaigns */}
+            <div onClick={() => handleNav('campaigns', 'all')} className={navItemClass('campaigns', 'all')}>
+              <div className="flex items-center gap-3">
+                <Megaphone size={17} className={activeTab === 'campaigns' ? 'text-[#367c35]' : 'text-[#64748b]'} />
+                <span>Campaigns</span>
+              </div>
+              {kpis?.activeCampaigns > 0 && (
+                <span className="text-[10px] px-2 py-0.2 rounded-full bg-[#f7f9f5] border border-[#e5e9e3] text-[#367c35] font-bold">
+                  {kpis.activeCampaigns}
+                </span>
+              )}
             </div>
-            <span className="text-xs text-slate-400 font-normal">{kpis?.totalOrders || ''}</span>
-          </div>
 
-          {/* Transactions */}
-          <div onClick={() => handleNav('transactions', 'all')} className={navItemClass('transactions', 'all')}>
-            <div className="flex items-center gap-3">
-              <CreditCard size={18} />
-              <span>Transactions</span>
+            {/* 5. Orders */}
+            <div onClick={() => handleNav('orders', 'all')} className={navItemClass('orders', 'all')}>
+              <div className="flex items-center gap-3">
+                <ShoppingBag size={17} className={activeTab === 'orders' ? 'text-[#367c35]' : 'text-[#64748b]'} />
+                <span>Orders</span>
+              </div>
+              <span className="text-[10px] text-[#64748b] font-bold">{kpis?.totalOrders || ''}</span>
             </div>
-          </div>
 
-          {/* Payouts (Highlighted / Most Important) */}
-          <div onClick={() => handleNav('payouts', 'all')} className={navItemClass('payouts', 'all')}>
-            <div className="flex items-center gap-3">
-              <Coins size={18} className="text-amber-500" />
-              <span className="font-semibold">Payouts (50/45/5)</span>
+            {/* 6. Transactions */}
+            <div onClick={() => handleNav('transactions', 'all')} className={navItemClass('transactions', 'all')}>
+              <div className="flex items-center gap-3">
+                <CreditCard size={17} className={activeTab === 'transactions' ? 'text-[#367c35]' : 'text-[#64748b]'} />
+                <span>Transactions</span>
+              </div>
             </div>
-            {kpis?.pendingPayouts > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white shadow-xs">
-                {kpis.pendingPayouts}
-              </span>
-            )}
-          </div>
 
-          {/* Manufacturers Tree */}
-          <div className="space-y-1 pt-1">
-            <div
-              onClick={() => setManOpen(!manOpen)}
-              className="flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/60 dark:text-slate-300 dark:hover:text-white cursor-pointer"
-            >
+            {/* 7. Payouts (50/45/5) */}
+            <div onClick={() => handleNav('payouts', 'all')} className={navItemClass('payouts', 'all')}>
+              <div className="flex items-center gap-3">
+                <Coins size={17} className="text-amber-500" />
+                <span>Payouts (50/45/5)</span>
+              </div>
+              {kpis?.pendingPayouts > 0 && (
+                <span className="px-2 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-white shadow-xs">
+                  {kpis.pendingPayouts}
+                </span>
+              )}
+            </div>
+
+            {/* 8. Manufacturers Tree */}
+            <div className="space-y-1 pt-1">
               <div
-                className="flex items-center gap-3"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNav('manufacturers', 'partners');
-                }}
+                onClick={() => setManOpen(!manOpen)}
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-[#64748b] hover:text-[#10182b] hover:bg-[#f7f9f5] cursor-pointer"
               >
-                <Factory size={18} className={activeTab === 'manufacturers' ? 'text-emerald-600' : ''} />
-                <span className={activeTab === 'manufacturers' ? 'font-semibold text-emerald-600 dark:text-emerald-400' : ''}>Manufacturers</span>
+                <div
+                  className="flex items-center gap-3"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNav('manufacturers', 'partners');
+                  }}
+                >
+                  <Factory size={17} className={activeTab === 'manufacturers' ? 'text-[#367c35]' : 'text-[#64748b]'} />
+                  <span className={activeTab === 'manufacturers' ? 'text-[#367c35]' : ''}>
+                    Manufacturers
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {manOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                {manOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+
+              {manOpen && (
+                <div className="pl-6 pr-1 space-y-1 border-l-2 border-[#e5e9e3] ml-4 py-1">
+                  <div onClick={() => handleNav('manufacturers', 'techpacks')} className={subItemClass('manufacturers', 'techpacks')}>
+                    <div className="flex items-center gap-2">
+                      <FileCheck2 size={13} className="text-[#367c35]" />
+                      <span>Techpacks</span>
+                    </div>
+                  </div>
+                  <div onClick={() => handleNav('manufacturers', 'production')} className={subItemClass('manufacturers', 'production')}>
+                    <div className="flex items-center gap-2">
+                      <Layers size={13} className="text-amber-500" />
+                      <span>Production</span>
+                    </div>
+                  </div>
+                  <div onClick={() => handleNav('manufacturers', 'shipping')} className={subItemClass('manufacturers', 'shipping')}>
+                    <div className="flex items-center gap-2">
+                      <Truck size={13} className="text-[#367c35]" />
+                      <span>Shipping</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 9. Reports */}
+            <div onClick={() => handleNav('reports', 'all')} className={navItemClass('reports', 'all')}>
+              <div className="flex items-center gap-3">
+                <BarChart3 size={17} className={activeTab === 'reports' ? 'text-[#367c35]' : 'text-[#64748b]'} />
+                <span>Reports</span>
               </div>
             </div>
 
-            {manOpen && (
-              <div className="pl-6 pr-1 space-y-1 border-l-2 border-slate-100 dark:border-slate-800 ml-4 py-1">
-                <div onClick={() => handleNav('manufacturers', 'techpacks')} className={subItemClass('manufacturers', 'techpacks')}>
-                  <div className="flex items-center gap-2">
-                    <FileCheck2 size={13} className="text-indigo-500" />
-                    <span>Techpacks</span>
-                  </div>
-                </div>
-                <div onClick={() => handleNav('manufacturers', 'production')} className={subItemClass('manufacturers', 'production')}>
-                  <div className="flex items-center gap-2">
-                    <Layers size={13} className="text-amber-500" />
-                    <span>Production</span>
-                  </div>
-                </div>
-                <div onClick={() => handleNav('manufacturers', 'shipping')} className={subItemClass('manufacturers', 'shipping')}>
-                  <div className="flex items-center gap-2">
-                    <Truck size={13} className="text-emerald-500" />
-                    <span>Shipping</span>
-                  </div>
-                </div>
+            {/* 10. Notifications */}
+            <div onClick={() => handleNav('notifications', 'all')} className={navItemClass('notifications', 'all')}>
+              <div className="flex items-center gap-3">
+                <Bell size={17} className={activeTab === 'notifications' ? 'text-[#367c35]' : 'text-[#64748b]'} />
+                <span>Notifications</span>
               </div>
-            )}
-          </div>
-
-          {/* Reports */}
-          <div onClick={() => handleNav('reports', 'all')} className={navItemClass('reports', 'all')}>
-            <div className="flex items-center gap-3">
-              <BarChart3 size={18} />
-              <span>Reports</span>
             </div>
-          </div>
 
-          {/* Notifications */}
-          <div onClick={() => handleNav('notifications', 'all')} className={navItemClass('notifications', 'all')}>
-            <div className="flex items-center gap-3">
-              <Bell size={18} />
-              <span>Notifications</span>
-            </div>
-          </div>
-
-          {/* Settings */}
-          <div onClick={() => handleNav('settings', 'all')} className={navItemClass('settings', 'all')}>
-            <div className="flex items-center gap-3">
-              <Settings size={18} />
-              <span>Settings</span>
+            {/* 11. Settings */}
+            <div onClick={() => handleNav('settings', 'all')} className={navItemClass('settings', 'all')}>
+              <div className="flex items-center gap-3">
+                <Settings size={17} className={activeTab === 'settings' ? 'text-[#367c35]' : 'text-[#64748b]'} />
+                <span>Settings</span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Footer info card */}
-        <div className="p-4 border-t border-slate-200/80 dark:border-slate-800">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800/80 dark:to-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40">
-            <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-semibold text-xs mb-1">
+        <div className="p-4 border-t border-[#e5e9e3]">
+          <div className="p-3 rounded-2xl bg-[#89ca2e]/10 border border-[#89ca2e]/25">
+            <div className="flex items-center gap-2 text-[#367c35] font-bold text-xs mb-1">
               <Sparkles size={14} />
               <span>Revenue Split Active</span>
             </div>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-tight">
-              50% Org &bull; 45% Manufacturer &bull; 5% Platform
+            <p className="text-[11px] text-[#64748b] leading-tight">
+              50% Org &bull; 45% Manufacturer &bull; 5% Sayrab Platform
             </p>
           </div>
         </div>

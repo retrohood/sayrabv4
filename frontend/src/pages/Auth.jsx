@@ -9,9 +9,16 @@ import {
   Factory,
   ShieldAlert,
   ArrowRight,
+  ArrowLeft,
   Sparkles,
-  Building2,
   Lock,
+  Mail,
+  User,
+  Phone,
+  CreditCard,
+  MapPin,
+  Building,
+  CheckCircle2,
 } from 'lucide-react';
 
 const ROLES = [
@@ -19,8 +26,9 @@ const ROLES = [
     id: 'donor',
     label: 'Buyer / Donor',
     icon: HeartHandshake,
-    description: 'Support verified causes, shop merchandise, or donate.',
-    color: 'from-blue-600 to-cyan-500',
+    description: 'Support verified causes, shop merchandise, and track donations.',
+    color: 'bg-[#89ca2e] text-white',
+    badgeColor: 'bg-[#89ca2e]/15 text-[#367c35]',
     demoEmail: 'demo@sayrab.local',
     demoPass: 'password123',
   },
@@ -28,8 +36,9 @@ const ROLES = [
     id: 'fundraiser',
     label: 'Fundraiser',
     icon: ShieldCheck,
-    description: 'Launch fundraising campaigns and create charity merch.',
-    color: 'from-cyan-600 to-teal-500',
+    description: 'Launch fundraising campaigns, create custom merch, and receive payouts.',
+    color: 'bg-[#367c35] text-white',
+    badgeColor: 'bg-[#367c35]/15 text-[#367c35]',
     demoEmail: 'ahmed@example.com',
     demoPass: 'password123',
   },
@@ -37,8 +46,9 @@ const ROLES = [
     id: 'manufacturer',
     label: 'Manufacturer',
     icon: Factory,
-    description: 'Produce merchandise, review techpacks, and fulfill orders.',
-    color: 'from-amber-600 to-orange-500',
+    description: 'Produce merchandise, review tech packs, and fulfill quotation orders.',
+    color: 'bg-[#10182b] text-white',
+    badgeColor: 'bg-[#10182b]/10 text-[#10182b]',
     demoEmail: 'manufacturer@sayrab.com',
     demoPass: 'password123',
   },
@@ -46,8 +56,9 @@ const ROLES = [
     id: 'admin',
     label: 'Admin',
     icon: ShieldAlert,
-    description: 'Manage platform operations, payouts, campaigns & users.',
-    color: 'from-purple-600 to-indigo-500',
+    description: 'Manage platform operations, payouts, campaigns, and approvals.',
+    color: 'bg-[#10182b] text-white',
+    badgeColor: 'bg-purple-100 text-purple-700',
     demoEmail: 'admin@sayrab.com',
     demoPass: 'password123',
   },
@@ -73,6 +84,9 @@ export default function Auth() {
 
   const [tab, setTab] = useState(defaultTab);
   const [mode, setMode] = useState('login');
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // Form State
   const [form, setForm] = useState({
     fullName: '',
     companyName: '',
@@ -81,10 +95,18 @@ export default function Auth() {
     confirmPassword: '',
     phone: '',
     cnic: '',
+    // Step 2 Address components for Fundraiser
+    streetAddress: '',
+    aptSuite: '',
+    city: '',
+    stateProvince: '',
+    postalCode: '',
+    // Generic address for manufacturer
     address: '',
     specialties: ['Apparel', 'Accessories'],
     adminSecretKey: '',
   });
+
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [step, setStep] = useState(1);
@@ -149,11 +171,13 @@ export default function Auth() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'phone') {
-      const digits = value.replace(/\D/g, '');
-      setForm({ ...form, phone: digits });
+      // Numerical characters only
+      const digits = value.replace(/\D/g, '').slice(0, 11);
+      setForm((prev) => ({ ...prev, phone: digits }));
       return;
     }
     if (name === 'cnic') {
+      // Auto formatting XXXXX-XXXXXXX-X with max 13 raw digits
       const digits = value.replace(/\D/g, '').slice(0, 13);
       let formatted;
       if (digits.length <= 5) {
@@ -163,18 +187,18 @@ export default function Auth() {
       } else {
         formatted = `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12, 13)}`;
       }
-      setForm({ ...form, cnic: formatted });
+      setForm((prev) => ({ ...prev, cnic: formatted }));
       return;
     }
-    setForm({ ...form, [name]: value });
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const toggleSpecialty = (spec) => {
     const current = form.specialties || [];
     if (current.includes(spec)) {
-      setForm({ ...form, specialties: current.filter((s) => s !== spec) });
+      setForm((prev) => ({ ...prev, specialties: current.filter((s) => s !== spec) }));
     } else {
-      setForm({ ...form, specialties: [...current, spec] });
+      setForm((prev) => ({ ...prev, specialties: [...current, spec] }));
     }
   };
 
@@ -207,34 +231,41 @@ export default function Auth() {
     setError('');
 
     if (mode === 'register') {
+      // Password match check
       if (form.password !== form.confirmPassword) {
-        setError('Passwords do not match');
+        setError('Passwords do not match. Please ensure both password fields match.');
         return;
       }
 
+      // Fundraiser Step 1 Validation
       if (tab === 'fundraiser' && step === 1) {
-        if (!form.fullName || !form.email || !form.password || !form.phone) {
-          setError('Please fill in all required personal details');
+        if (!form.fullName || !form.email || !form.password || !form.phone || !form.cnic) {
+          setError('Please fill in all personal details including Full Name, Email, Phone, and CNIC.');
+          return;
+        }
+        if (form.cnic.length !== 15) {
+          setError('Please enter a valid 13-digit CNIC in the format XXXXX-XXXXXXX-X.');
+          return;
+        }
+        if (form.password.length < 6) {
+          setError('Password must be at least 6 characters.');
           return;
         }
         setStep(2);
         return;
       }
 
+      // Fundraiser Step 2 Validation
       if (tab === 'fundraiser' && step === 2) {
-        if (!form.cnic || !form.address) {
-          setError('Please fill in CNIC and Address');
-          return;
-        }
-        if (form.cnic.length !== 15) {
-          setError('Invalid CNIC format. Expected: XXXXX-XXXXXXX-X');
+        if (!form.streetAddress || !form.city || !form.stateProvince) {
+          setError('Please provide your complete address details (Street Address, City, and State/Province).');
           return;
         }
       }
 
       if (tab === 'manufacturer') {
         if (!form.fullName || !form.companyName || !form.email || !form.password || !form.phone || !form.address) {
-          setError('Please fill in all required company and contact fields');
+          setError('Please fill in all required company and contact fields.');
           return;
         }
       }
@@ -266,13 +297,23 @@ export default function Auth() {
         const redirect = searchParams.get('redirect') || '/dashboard';
         navigate(redirect);
       } else if (tab === 'fundraiser') {
+        const combinedAddress = [
+          form.streetAddress,
+          form.aptSuite,
+          form.city,
+          form.stateProvince,
+          form.postalCode,
+        ]
+          .filter(Boolean)
+          .join(', ');
+
         await registerFundraiser({
           fullName: form.fullName,
           email: form.email,
           password: form.password,
           phone: form.phone,
           cnic: form.cnic,
-          address: form.address,
+          address: combinedAddress,
         });
         const redirect = searchParams.get('redirect') || '/dashboard';
         navigate(redirect);
@@ -314,32 +355,29 @@ export default function Auth() {
   const CurrentIcon = currentRole.icon;
 
   return (
-    <div className="min-h-[90vh] flex items-center justify-center px-4 py-12">
-      <div className="bg-slate-900/95 backdrop-blur-md rounded-3xl shadow-2xl border border-slate-800 p-6 sm:p-8 max-w-lg w-full relative overflow-hidden">
-        {/* Glow backdrop decoration */}
-        <div className="absolute -top-24 -right-24 w-52 h-52 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-52 h-52 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="text-center mb-6 relative z-10">
+    <div className="min-h-[90vh] bg-[#f7f9f5] flex items-center justify-center px-4 py-12">
+      <div className="bg-white rounded-3xl shadow-xl border border-[#e5e9e3] p-6 sm:p-8 max-w-lg w-full relative overflow-hidden">
+        {/* Top Header & Logo */}
+        <div className="text-center mb-6">
           <Link to="/" className="inline-block hover:opacity-90 transition-opacity">
-            <img src="/sayrab.png" alt="Sayrab" className="h-20 w-auto object-contain mx-auto mb-3" />
+            <img src="/sayrab.png" alt="Sayrab" className="h-20 w-auto object-contain mx-auto mb-2" />
           </Link>
-          <h1 className="text-2xl font-black text-white tracking-tight">
+          <h1 className="text-2xl font-black text-[#10182b] tracking-tight">
             {mode === 'login' ? 'Welcome Back to Sayrab' : 'Create an Account'}
           </h1>
-          <p className="text-slate-400 text-xs mt-1">
+          <p className="text-[#64748b] text-xs mt-1">
             {mode === 'login'
-              ? 'Select your role or sign in with your credentials'
+              ? 'Select your role or enter credentials to access your dashboard'
               : currentRole.description}
           </p>
         </div>
 
         {/* 4 Role Selector Tabs */}
-        <div className="mb-6 relative z-10">
-          <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">
+        <div className="mb-6">
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-[#64748b] mb-2">
             Select Account Role
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 rounded-2xl bg-slate-950/80 border border-slate-800">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 rounded-2xl bg-[#f7f9f5] border border-[#e5e9e3]">
             {ROLES.map((role) => {
               const Icon = role.icon;
               const isActive = tab === role.id;
@@ -348,10 +386,10 @@ export default function Auth() {
                   key={role.id}
                   type="button"
                   onClick={() => handleTabChange(role.id)}
-                  className={`py-2.5 px-2 text-[11px] font-bold rounded-xl transition-all cursor-pointer flex flex-col items-center justify-center gap-1 text-center ${
+                  className={`py-2 px-2 text-[11px] font-bold rounded-xl transition-all cursor-pointer flex flex-col items-center justify-center gap-1 text-center ${
                     isActive
-                      ? `bg-gradient-to-r ${role.color} text-white shadow-md shadow-cyan-500/20`
-                      : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+                      ? 'bg-[#89ca2e] text-white shadow-sm'
+                      : 'text-[#64748b] hover:text-[#10182b] hover:bg-white'
                   }`}
                 >
                   <Icon size={16} />
@@ -362,70 +400,84 @@ export default function Auth() {
           </div>
         </div>
 
-        {/* Quick Demo Credentials Autofill Banner in Login Mode */}
+        {/* Quick Demo Autofill in Login Mode */}
         {mode === 'login' && (
-          <div className="mb-5 p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 flex items-center justify-between text-xs relative z-10">
-            <div className="flex items-center gap-2 text-slate-300">
-              <CurrentIcon size={15} className="text-cyan-400 shrink-0" />
+          <div className="mb-5 p-3 rounded-xl bg-[#f7f9f5] border border-[#e5e9e3] flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2 text-[#10182b]">
+              <CurrentIcon size={16} className="text-[#367c35] shrink-0" />
               <div className="leading-tight">
-                <span className="font-bold text-white block">{currentRole.label} Portal</span>
-                <span className="text-[10px] text-slate-400">{currentRole.demoEmail}</span>
+                <span className="font-bold text-[#10182b] block">{currentRole.label} Portal</span>
+                <span className="text-[10px] text-[#64748b]">{currentRole.demoEmail}</span>
               </div>
             </div>
             <button
               type="button"
               onClick={() => handleFillDemo(tab)}
-              className="px-2.5 py-1 text-[10px] font-bold text-cyan-300 bg-cyan-950/70 hover:bg-cyan-900/80 border border-cyan-500/30 rounded-lg transition-all cursor-pointer flex items-center gap-1 shadow-xs"
+              className="px-2.5 py-1 text-[11px] font-bold text-[#367c35] bg-[#89ca2e]/20 hover:bg-[#89ca2e]/30 border border-[#89ca2e]/40 rounded-lg transition-all cursor-pointer flex items-center gap-1 shadow-xs"
             >
-              <Sparkles size={11} /> Fill Demo
+              <Sparkles size={12} /> Fill Demo
             </button>
           </div>
         )}
 
         {/* Fundraiser multi-step progress in Register mode */}
         {mode === 'register' && tab === 'fundraiser' && (
-          <div className="flex items-center justify-between mb-6 relative z-10">
-            <div
-              className={`flex-1 text-center border-b-2 pb-2 transition-colors duration-300 text-xs font-bold ${
-                step === 1 ? 'border-cyan-400 text-cyan-400' : 'border-slate-800 text-slate-500'
-              }`}
-            >
-              1. Personal Details
+          <div className="mb-6">
+            <div className="flex items-center justify-between text-xs font-bold mb-2">
+              <span className={step === 1 ? 'text-[#367c35]' : 'text-[#64748b]'}>
+                1. Personal Details
+              </span>
+              <span className={step === 2 ? 'text-[#367c35]' : 'text-[#64748b]'}>
+                2. Address Information
+              </span>
             </div>
-            <div className="w-8 h-0.5 bg-slate-800 mb-2"></div>
-            <div
-              className={`flex-1 text-center border-b-2 pb-2 transition-colors duration-300 text-xs font-bold ${
-                step === 2 ? 'border-cyan-400 text-cyan-400' : 'border-slate-800 text-slate-500'
-              }`}
-            >
-              2. Verification & Address
+            <div className="w-full bg-[#e5e9e3] h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-[#89ca2e] h-full transition-all duration-300"
+                style={{ width: step === 1 ? '50%' : '100%' }}
+              />
             </div>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'login' ? (
             /* Login Form */
             <>
               <div>
-                <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
-                  Email Address
+                <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
+                  Email Address or Phone
                 </label>
-                <input
-                  name="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={form.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
-                />
+                <div className="relative">
+                  <input
+                    name="email"
+                    type="text"
+                    placeholder="name@example.com or phone"
+                    value={form.email}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all pl-9"
+                  />
+                  <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
-                  Password
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-bold text-[#10182b] uppercase">
+                    Password
+                  </label>
+                  <a
+                    href="#forgot"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      alert('Please contact support@sayrab.com or use the demo credentials to access your account.');
+                    }}
+                    className="text-[11px] font-semibold text-[#367c35] hover:underline"
+                  >
+                    Forgot Password?
+                  </a>
+                </div>
                 <div className="relative">
                   <input
                     name="password"
@@ -434,41 +486,59 @@ export default function Auth() {
                     value={form.password}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all pr-10"
+                    className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all pl-9 pr-10"
                   />
+                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
                   <button
                     type="button"
                     onClick={() => setShowPass(!showPass)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-[#10182b] cursor-pointer"
                   >
                     {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
+
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-[#e5e9e3] text-[#89ca2e] focus:ring-[#89ca2e] cursor-pointer"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-xs text-[#64748b] cursor-pointer">
+                  Remember me on this browser
+                </label>
+              </div>
             </>
           ) : (
             /* Registration Form per Role */
             <>
-              {/* Common Base Fields (Step 1 for Fundraiser, Single step for others) */}
+              {/* Step 1 for Fundraiser OR Single Step for Donor/Manufacturer/Admin */}
               {step === 1 && (
                 <>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
+                    <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
                       {tab === 'manufacturer' ? 'Contact Person Name *' : 'Full Name *'}
                     </label>
-                    <input
-                      name="fullName"
-                      placeholder={tab === 'manufacturer' ? 'e.g. Tariq Mehmood' : 'e.g. John Doe'}
-                      value={form.fullName}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-2.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
-                    />
+                    <div className="relative">
+                      <input
+                        name="fullName"
+                        placeholder={tab === 'manufacturer' ? 'e.g. Tariq Mehmood' : 'e.g. Ahmed Khan'}
+                        value={form.fullName}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all pl-9"
+                      />
+                      <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
+                    </div>
                   </div>
 
                   {tab === 'manufacturer' && (
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
+                      <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
                         Company / Factory Name *
                       </label>
                       <div className="relative">
@@ -478,33 +548,81 @@ export default function Auth() {
                           value={form.companyName}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-2.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                          className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all pl-9"
                         />
+                        <Building size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
                       </div>
                     </div>
                   )}
 
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
+                    <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
                       {tab === 'manufacturer'
                         ? 'Business Email Address *'
                         : tab === 'admin'
                         ? 'Admin Email Address *'
                         : 'Email Address *'}
                     </label>
-                    <input
-                      name="email"
-                      type="email"
-                      placeholder={tab === 'manufacturer' ? 'contact@factory.com' : 'name@example.com'}
-                      value={form.email}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-2.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
-                    />
+                    <div className="relative">
+                      <input
+                        name="email"
+                        type="email"
+                        placeholder={tab === 'manufacturer' ? 'contact@factory.com' : 'name@example.com'}
+                        value={form.email}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all pl-9"
+                      />
+                      <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
+                    <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
+                      {tab === 'donor' || tab === 'admin'
+                        ? 'Phone Number (Optional - Numbers Only)'
+                        : 'Phone Number (Numbers Only) *'}
+                    </label>
+                    <div className="relative">
+                      <input
+                        name="phone"
+                        type="tel"
+                        placeholder="03001234567"
+                        value={form.phone}
+                        onChange={handleChange}
+                        required={tab === 'fundraiser' || tab === 'manufacturer'}
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all pl-9"
+                      />
+                      <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
+                    </div>
+                  </div>
+
+                  {/* CNIC in Step 1 for Fundraiser */}
+                  {tab === 'fundraiser' && (
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
+                        CNIC (National ID - Auto Formatted) *
+                      </label>
+                      <div className="relative">
+                        <input
+                          name="cnic"
+                          placeholder="35201-1234567-1"
+                          value={form.cnic}
+                          onChange={handleChange}
+                          required
+                          maxLength={15}
+                          className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all pl-9"
+                        />
+                        <CreditCard size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
+                      </div>
+                      <p className="text-[10px] text-[#64748b] mt-1">
+                        Format: 13 digits formatted automatically as XXXXX-XXXXXXX-X
+                      </p>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
                       Password *
                     </label>
                     <div className="relative">
@@ -516,12 +634,13 @@ export default function Auth() {
                         onChange={handleChange}
                         required
                         minLength={6}
-                        className="w-full px-4 py-2.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all pr-10"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all pl-9 pr-10"
                       />
+                      <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
                       <button
                         type="button"
                         onClick={() => setShowPass(!showPass)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-[#10182b] cursor-pointer"
                       >
                         {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
@@ -529,49 +648,34 @@ export default function Auth() {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
+                    <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
                       Confirm Password *
                     </label>
                     <div className="relative">
                       <input
                         name="confirmPassword"
                         type={showConfirmPass ? 'text' : 'password'}
-                        placeholder="Re-enter password"
+                        placeholder="Re-enter your password"
                         value={form.confirmPassword}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all pr-10"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all pl-9 pr-10"
                       />
+                      <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPass(!showConfirmPass)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-[#10182b] cursor-pointer"
                       >
                         {showConfirmPass ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
-                      {tab === 'donor' || tab === 'admin'
-                        ? 'Phone Number (Optional)'
-                        : 'Phone Number *'}
-                    </label>
-                    <input
-                      name="phone"
-                      placeholder="03001234567"
-                      value={form.phone}
-                      onChange={handleChange}
-                      required={tab === 'fundraiser' || tab === 'manufacturer'}
-                      className="w-full px-4 py-2.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
-                    />
-                  </div>
-
                   {tab === 'manufacturer' && (
                     <>
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
+                        <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
                           Factory / Business Address *
                         </label>
                         <input
@@ -580,12 +684,12 @@ export default function Auth() {
                           value={form.address}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-2.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                          className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">
+                        <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1.5">
                           Production Specialties
                         </label>
                         <div className="flex flex-wrap gap-1.5">
@@ -598,8 +702,8 @@ export default function Auth() {
                                 onClick={() => toggleSpecialty(spec)}
                                 className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer border ${
                                   isSelected
-                                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                                    : 'bg-slate-800/60 text-slate-400 border-slate-700 hover:text-white'
+                                    ? 'bg-[#89ca2e] text-white border-[#89ca2e]'
+                                    : 'bg-[#f7f9f5] text-[#64748b] border-[#e5e9e3] hover:text-[#10182b]'
                                 }`}
                               >
                                 {isSelected ? '✓ ' : '+ '}
@@ -614,7 +718,7 @@ export default function Auth() {
 
                   {tab === 'admin' && (
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
+                      <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
                         Admin Security Passkey (Optional)
                       </label>
                       <input
@@ -623,58 +727,102 @@ export default function Auth() {
                         placeholder="sayrab-admin-2025"
                         value={form.adminSecretKey}
                         onChange={handleChange}
-                        className="w-full px-4 py-2.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all"
                       />
-                      <p className="text-[10px] text-slate-500 mt-1">
-                        Default demo passcode is <code className="text-cyan-400 font-mono">sayrab-admin-2025</code> or <code className="text-cyan-400 font-mono">admin123</code>.
+                      <p className="text-[10px] text-[#64748b] mt-1">
+                        Default demo passcode is <code className="text-[#367c35] font-mono">sayrab-admin-2025</code> or <code className="text-[#367c35] font-mono">admin123</code>.
                       </p>
                     </div>
                   )}
                 </>
               )}
 
-              {/* Fundraiser Step 2 */}
+              {/* Fundraiser Step 2: Address Information */}
               {step === 2 && tab === 'fundraiser' && (
                 <>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
-                      CNIC (National ID) *
-                    </label>
-                    <input
-                      name="cnic"
-                      placeholder="XXXXX-XXXXXXX-X"
-                      value={form.cnic}
-                      onChange={handleChange}
-                      required
-                      maxLength={15}
-                      className="w-full px-4 py-2.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
-                    />
+                  <div className="p-3 bg-[#f7f9f5] rounded-xl border border-[#e5e9e3] text-xs text-[#64748b] flex items-center gap-2">
+                    <CheckCircle2 size={16} className="text-[#367c35] shrink-0" />
+                    <span>Personal details verified. Now specify your address for official documentation.</span>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">
-                      Residential / Organization Address *
+                    <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
+                      Street Address *
+                    </label>
+                    <div className="relative">
+                      <input
+                        name="streetAddress"
+                        placeholder="e.g. House #14, Street 5, Block B"
+                        value={form.streetAddress}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all pl-9"
+                      />
+                      <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
+                      Apartment / Suite / Floor (Optional)
                     </label>
                     <input
-                      name="address"
-                      placeholder="Street, City, Province"
-                      value={form.address}
+                      name="aptSuite"
+                      placeholder="e.g. Suite 402, 4th Floor"
+                      value={form.aptSuite}
                       onChange={handleChange}
-                      required
-                      className="w-full px-4 py-2.5 bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 rounded-xl text-xs outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all"
                     />
                   </div>
 
-                  <p className="text-[11px] text-slate-400 bg-slate-950/80 p-3 rounded-xl border border-slate-800">
-                    🔒 Identity verification documents may be reviewed prior to high-value payout disbursements.
-                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
+                        City *
+                      </label>
+                      <input
+                        name="city"
+                        placeholder="e.g. Lahore"
+                        value={form.city}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
+                        State / Province *
+                      </label>
+                      <input
+                        name="stateProvince"
+                        placeholder="e.g. Punjab"
+                        value={form.stateProvince}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#10182b] uppercase mb-1">
+                      Postal / ZIP Code
+                    </label>
+                    <input
+                      name="postalCode"
+                      placeholder="e.g. 54000"
+                      value={form.postalCode}
+                      onChange={handleChange}
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#e5e9e3] text-[#10182b] placeholder-[#64748b] rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#89ca2e] focus:border-[#89ca2e] transition-all"
+                    />
+                  </div>
                 </>
               )}
             </>
           )}
 
           {error && (
-            <div className="p-3 bg-red-950/60 border border-red-800 text-red-300 text-xs font-semibold rounded-xl">
+            <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-xl">
               {error}
             </div>
           )}
@@ -684,26 +832,28 @@ export default function Auth() {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="w-1/3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition-all cursor-pointer"
+                className="w-1/3 py-2.5 bg-[#f7f9f5] hover:bg-[#e5e9e3] text-[#10182b] text-xs font-bold rounded-xl border border-[#e5e9e3] transition-all cursor-pointer flex items-center justify-center gap-1"
               >
-                Back
+                <ArrowLeft size={14} /> Back
               </button>
             )}
             <button
               type="submit"
               disabled={loading}
-              className={`py-3 bg-gradient-to-r ${currentRole.color} hover:brightness-110 text-white font-black text-xs rounded-xl shadow-lg shadow-cyan-500/20 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 ${
+              className={`py-3 bg-[#89ca2e] hover:bg-[#78b327] text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 ${
                 mode === 'register' && tab === 'fundraiser' && step === 2 ? 'w-2/3' : 'w-full'
               }`}
             >
               {loading ? (
-                'Please wait...'
+                'Processing...'
               ) : mode === 'login' ? (
                 <>
                   Sign In as {currentRole.label} <ArrowRight size={14} />
                 </>
               ) : tab === 'fundraiser' && step === 1 ? (
-                'Proceed to Step 2 →'
+                <>
+                  Proceed to Step 2 (Address) <ArrowRight size={14} />
+                </>
               ) : (
                 <>
                   Create {currentRole.label} Account <ArrowRight size={14} />
@@ -713,33 +863,34 @@ export default function Auth() {
           </div>
         </form>
 
-        <div className="my-5 flex items-center gap-3 relative z-10">
-          <div className="h-px flex-1 bg-slate-800" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-[#e5e9e3]" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748b]">
             or continue with
           </span>
-          <div className="h-px flex-1 bg-slate-800" />
+          <div className="h-px flex-1 bg-[#e5e9e3]" />
         </div>
 
         <button
           type="button"
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-800 px-4 py-2.5 text-xs font-bold text-slate-200 transition-all cursor-pointer disabled:opacity-50 relative z-10 shadow-sm"
+          className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-[#e5e9e3] bg-white hover:bg-[#f7f9f5] px-4 py-2.5 text-xs font-bold text-[#10182b] transition-all cursor-pointer disabled:opacity-50 shadow-xs"
         >
-          <span className="grid h-5 w-5 place-items-center rounded-full bg-slate-700 text-[11px] font-black text-cyan-400">
+          <span className="grid h-5 w-5 place-items-center rounded-full bg-[#f7f9f5] border border-[#e5e9e3] text-[11px] font-black text-[#367c35]">
             G
           </span>
           Continue with Google
         </button>
 
-        <div className="text-center text-xs text-slate-400 mt-5 relative z-10">
+        <div className="text-center text-xs text-[#64748b] mt-5">
           {mode === 'login' ? (
             <>
               Don&apos;t have an account?{' '}
               <button
+                type="button"
                 onClick={() => handleModeChange('register')}
-                className="text-cyan-400 hover:text-cyan-300 font-bold cursor-pointer underline ml-1"
+                className="text-[#367c35] hover:underline font-bold cursor-pointer ml-1"
               >
                 Sign Up Now
               </button>
@@ -748,8 +899,9 @@ export default function Auth() {
             <>
               Already have an account?{' '}
               <button
+                type="button"
                 onClick={() => handleModeChange('login')}
-                className="text-cyan-400 hover:text-cyan-300 font-bold cursor-pointer underline ml-1"
+                className="text-[#367c35] hover:underline font-bold cursor-pointer ml-1"
               >
                 Log In
               </button>
@@ -757,8 +909,8 @@ export default function Auth() {
           )}
         </div>
 
-        <div className="text-center text-xs mt-3 relative z-10">
-          <Link to="/" className="text-slate-500 hover:text-cyan-400 transition-colors">
+        <div className="text-center text-xs mt-3">
+          <Link to="/" className="text-[#64748b] hover:text-[#10182b] transition-colors">
             ← Back to Home
           </Link>
         </div>
