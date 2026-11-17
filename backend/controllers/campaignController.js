@@ -14,6 +14,8 @@ import { inMemoryDB, mockCampaigns, mockProducts, mockOrders } from '../utils/in
 
 const publicFilter = {
   lifecycleStatus: { $in: [LIFECYCLE_STATUS.ACTIVE, LIFECYCLE_STATUS.GOAL_ACHIEVED] },
+  status: { $nin: ['draft', 'suspended', 'terminated', 'cancelled'] },
+  verificationStatus: { $ne: VERIFICATION_STATUS.REJECTED },
 };
 
 export const getFeaturedCampaigns = async (req, res) => {
@@ -152,6 +154,23 @@ export const getCampaignBySlug = async (req, res) => {
       if (!campaign) {
         return res.status(404).json({ message: 'Campaign not found' });
       }
+
+      const isOwner = req.user && (
+        (campaign.organizer?._id ? campaign.organizer._id.toString() : campaign.organizer?.toString()) === req.user._id.toString() ||
+        (campaign.managerId?._id ? campaign.managerId._id.toString() : campaign.managerId?.toString()) === req.user._id.toString()
+      );
+      const isAdmin = req.user?.role === 'admin';
+
+      const isHiddenFromPublic =
+        ['draft', 'suspended', 'terminated', 'cancelled'].includes(campaign.status) ||
+        campaign.verificationStatus === VERIFICATION_STATUS.REJECTED ||
+        campaign.lifecycleStatus === LIFECYCLE_STATUS.SUSPENDED;
+
+      if (isHiddenFromPublic && !isOwner && !isAdmin) {
+        return res.status(404).json({ message: 'Campaign not found' });
+      }
+
+      campaign.viewCount = (campaign.viewCount || 0) + 1;
       return res.json(campaign);
     }
 
@@ -161,7 +180,7 @@ export const getCampaignBySlug = async (req, res) => {
 
     const campaign = await Campaign.findOne(lookup).populate(
       'organizer',
-      'fullName email phone isVerifiedFundraiser'
+      'fullName email phone isVerifiedFundraiser organizationId'
     );
 
     if (!campaign) {
@@ -170,10 +189,18 @@ export const getCampaignBySlug = async (req, res) => {
 
     await updateCampaignLifecycle(campaign);
 
-    const isOwner = req.user && campaign.organizer._id.toString() === req.user._id.toString();
+    const isOwner = req.user && (
+      (campaign.organizer?._id ? campaign.organizer._id.toString() : campaign.organizer?.toString()) === req.user._id.toString() ||
+      (campaign.managerId?._id ? campaign.managerId._id.toString() : campaign.managerId?.toString()) === req.user._id.toString()
+    );
     const isAdmin = req.user?.role === 'admin';
 
-    if (!isPubliclyVisible(campaign) && !isOwner && !isAdmin) {
+    const isHiddenFromPublic =
+      ['draft', 'suspended', 'terminated', 'cancelled'].includes(campaign.status) ||
+      campaign.verificationStatus === VERIFICATION_STATUS.REJECTED ||
+      campaign.lifecycleStatus === LIFECYCLE_STATUS.SUSPENDED;
+
+    if (isHiddenFromPublic && !isOwner && !isAdmin) {
       return res.status(404).json({ message: 'Campaign not found' });
     }
 
@@ -373,8 +400,10 @@ export const createCampaign = async (req, res) => {
     }
 
     if (!isDatabaseConnected(mongoose)) {
+      const generatedSlug = generateSlug(title);
       const campaign = inMemoryDB.campaigns.create({
         title,
+        slug: generatedSlug,
         category,
         thumbnail: thumbnail || `https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=600`,
         location,
@@ -388,6 +417,7 @@ export const createCampaign = async (req, res) => {
         supportingDocuments: supportingDocuments || [],
         organizer: req.user._id,
         managerId: req.user._id,
+        organization: req.user.organizationId || req.user.organization || undefined,
         description: shortDescription,
         goalAmount: Number(fundingGoal),
         deadline: end.toISOString(),
@@ -395,6 +425,7 @@ export const createCampaign = async (req, res) => {
         isEmergency: Boolean(isEmergency),
         verificationStatus: VERIFICATION_STATUS.PENDING,
         lifecycleStatus: LIFECYCLE_STATUS.ACTIVE,
+        status: 'active',
       });
       return res.status(201).json(campaign);
     }
@@ -415,6 +446,7 @@ export const createCampaign = async (req, res) => {
       supportingDocuments: supportingDocuments || [],
       organizer: req.user._id,
       managerId: req.user._id,
+      organization: req.user.organizationId || req.user.organization || undefined,
       description: shortDescription,
       goalAmount: fundingGoal,
       deadline: end,
@@ -422,6 +454,7 @@ export const createCampaign = async (req, res) => {
       isEmergency: Boolean(isEmergency),
       verificationStatus: VERIFICATION_STATUS.PENDING,
       lifecycleStatus: LIFECYCLE_STATUS.ACTIVE,
+      status: 'active',
     });
 
     res.status(201).json(campaign);

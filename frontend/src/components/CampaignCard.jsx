@@ -21,7 +21,7 @@ export default function CampaignCard({ campaign }) {
 
   return (
     <Link
-      to={`/campaigns/${campaign.slug}`}
+      to={`/campaigns/${campaign.slug || campaign._id}`}
       onClick={handleClick}
       className="group bg-white rounded-2xl shadow-sm hover:shadow-xl border border-[#e5e9e3] hover:border-[#89ca2e] transition-all duration-300 flex flex-col overflow-hidden text-[#172033]"
     >
@@ -45,11 +45,16 @@ export default function CampaignCard({ campaign }) {
           )}
         </div>
 
-        {/* Verification Badge */}
-        {isVerified && (
+        {/* Verification Status Badge */}
+        {isVerified ? (
           <div className="absolute top-2.5 right-2.5 px-2 py-1 bg-[#89ca2e] text-[#10182b] text-[10px] font-black uppercase tracking-wider rounded-lg shadow-sm flex items-center gap-1">
             <ShieldCheck size={13} className="text-[#10182b]" />
             <span>{getVerificationLabel(campaign.verificationStatus)}</span>
+          </div>
+        ) : (
+          <div className="absolute top-2.5 right-2.5 px-2 py-1 bg-amber-500/90 backdrop-blur-xs text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-sm flex items-center gap-1">
+            <Clock size={12} />
+            <span>Verification Pending</span>
           </div>
         )}
 

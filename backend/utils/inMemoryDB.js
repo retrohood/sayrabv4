@@ -382,9 +382,27 @@ export const inMemoryDB = {
       if (filter.isFeatured) result = result.filter(c => c.isFeatured);
       if (filter.isEmergency !== undefined) result = result.filter(c => Boolean(c.isEmergency) === Boolean(filter.isEmergency));
       if (filter.category && filter.category !== 'All') result = result.filter(c => c.category === filter.category);
-      if (filter.$or && filter.$or[0]?.organizer) {
-        const userId = filter.$or[0].organizer;
-        result = result.filter(c => c.organizer === userId || c.managerId === userId);
+      if (filter.status && filter.status !== 'all') {
+        if (filter.status === 'pending') {
+          result = result.filter(c => c.status === 'pending' || c.verificationStatus === 'pending_verification' || c.verificationStatus === 'pending');
+        } else {
+          result = result.filter(c => c.status === filter.status);
+        }
+      }
+      if (filter.verificationStatus) {
+        result = result.filter(c => c.verificationStatus === filter.verificationStatus);
+      }
+      if (Array.isArray(filter.$or)) {
+        result = result.filter(item => {
+          return filter.$or.some(condition => {
+            return Object.entries(condition).every(([k, v]) => {
+              if (k === 'organizer') {
+                return item.organizer === v || item.managerId === v || item.organizer?._id === v;
+              }
+              return item[k] === v;
+            });
+          });
+        });
       }
       // Search filtering
       if (filter.search) {
@@ -431,21 +449,36 @@ export const inMemoryDB = {
       return mockCampaigns.find(c => c.slug === slug || c._id === slug) || null;
     },
     create: (data) => {
+      const baseSlug = (data.title || 'campaign')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+      const uniqueSuffix = Math.random().toString(36).substring(2, 8);
       const newCampaign = {
         _id: 'camp_' + Math.random().toString(36).substr(2, 9),
+        slug: data.slug || `${baseSlug}-${uniqueSuffix}`,
         amountRaised: 0,
         raisedAmount: 0,
         donorCount: 0,
         shareCount: 0,
         viewCount: 0,
-        verificationStatus: 'verified',
-        lifecycleStatus: 'active',
+        verificationStatus: data.verificationStatus || 'pending_verification',
+        lifecycleStatus: data.lifecycleStatus || 'active',
+        status: data.status || 'active',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         ...data,
       };
-      mockCampaigns.push(newCampaign);
+      mockCampaigns.unshift(newCampaign);
       return newCampaign;
+    },
+    updateOne: (filter, update) => {
+      const idx = mockCampaigns.findIndex(c => c._id === filter._id || c.slug === filter.slug);
+      if (idx !== -1) {
+        mockCampaigns[idx] = { ...mockCampaigns[idx], ...update, updatedAt: new Date().toISOString() };
+        return mockCampaigns[idx];
+      }
+      return null;
     }
   },
   products: {

@@ -3,6 +3,7 @@ import WithdrawalRequest from '../models/WithdrawalRequest.js';
 import Campaign from '../models/Campaign.js';
 import { isDatabaseConnected } from '../utils/demoAuth.js';
 import { inMemoryDB } from '../utils/inMemoryDB.js';
+import { LIFECYCLE_STATUS, VERIFICATION_STATUS } from '../constants/index.js';
 
 export const submitWithdrawal = async (req, res) => {
   try {
@@ -12,6 +13,27 @@ export const submitWithdrawal = async (req, res) => {
       const campaign = inMemoryDB.campaigns.findOne({ _id: campaignId });
       if (!campaign) {
         return res.status(404).json({ message: 'Campaign not found' });
+      }
+
+      // 1. Dual Condition: Verification Check
+      const isApproved = ['verified', 'emergency_verified'].includes(campaign.verificationStatus);
+      if (!isApproved) {
+        return res.status(403).json({
+          message: 'Withdrawal restricted: Campaign must be verified by platform administration before funds can be withdrawn.'
+        });
+      }
+
+      // 2. Dual Condition: Completion Check
+      const now = new Date();
+      const isCompleted =
+        [LIFECYCLE_STATUS.GOAL_ACHIEVED, LIFECYCLE_STATUS.EXPIRED, LIFECYCLE_STATUS.COMPLETED].includes(campaign.lifecycleStatus) ||
+        campaign.status === 'completed' ||
+        (campaign.amountRaised >= campaign.fundingGoal && campaign.fundingGoal > 0) ||
+        (campaign.endDate && new Date(campaign.endDate) < now);
+      if (!isCompleted) {
+        return res.status(400).json({
+          message: 'Withdrawal restricted: Campaign is currently active. Funds can only be withdrawn once the campaign reaches its goal or completion deadline.'
+        });
       }
 
       const existing = inMemoryDB.withdrawals.find().find(w => w.campaign === campaignId && w.status !== 'rejected');
@@ -40,6 +62,27 @@ export const submitWithdrawal = async (req, res) => {
 
     if (campaign.organizer.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    // 1. Dual Condition: Verification Check
+    const isApproved = ['verified', 'emergency_verified'].includes(campaign.verificationStatus);
+    if (!isApproved) {
+      return res.status(403).json({
+        message: 'Withdrawal restricted: Campaign must be verified by platform administration before funds can be withdrawn.'
+      });
+    }
+
+    // 2. Dual Condition: Completion Check
+    const now = new Date();
+    const isCompleted =
+      [LIFECYCLE_STATUS.GOAL_ACHIEVED, LIFECYCLE_STATUS.EXPIRED, LIFECYCLE_STATUS.COMPLETED].includes(campaign.lifecycleStatus) ||
+      campaign.status === 'completed' ||
+      (campaign.amountRaised >= campaign.fundingGoal && campaign.fundingGoal > 0) ||
+      (campaign.endDate && new Date(campaign.endDate) < now);
+    if (!isCompleted) {
+      return res.status(400).json({
+        message: 'Withdrawal restricted: Campaign is currently active. Funds can only be withdrawn once the campaign reaches its goal or completion deadline.'
+      });
     }
 
     const existing = await WithdrawalRequest.findOne({ campaign: campaignId, status: { $ne: 'rejected' } });
