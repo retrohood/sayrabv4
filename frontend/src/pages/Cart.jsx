@@ -11,7 +11,16 @@ export default function Cart() {
   const [cart, setCart] = useState(() => readCart(user?._id));
 
   useEffect(() => {
-    setCart(readCart(user?._id));
+    const handleCartSync = () => {
+      setCart(readCart(user?._id));
+    };
+    handleCartSync();
+    window.addEventListener('sayrab:cart-updated', handleCartSync);
+    window.addEventListener('storage', handleCartSync);
+    return () => {
+      window.removeEventListener('sayrab:cart-updated', handleCartSync);
+      window.removeEventListener('storage', handleCartSync);
+    };
   }, [user]);
 
   const updateCart = (next) => {

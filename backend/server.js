@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 import campaignRoutes from './routes/campaignRoutes.js';
 import donationRoutes from './routes/donationRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
@@ -52,6 +53,7 @@ app.get('/api/constants', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/campaigns', campaignRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/orders', orderRoutes);
