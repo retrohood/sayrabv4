@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShieldAlert, ArrowRight, Lock, CheckCircle2, ShoppingBag, ShieldCheck, Truck } from 'lucide-react';
+import { ShieldAlert, ArrowRight, Lock, CheckCircle2, ShoppingBag, ShieldCheck, Truck, MapPin, Check, Plus } from 'lucide-react';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { cartTotal, readCart, writeCart } from '../utils/cart';
@@ -13,11 +13,25 @@ export default function Checkout() {
   const [cart, setCart] = useState(() => readCart(user?._id));
 
   useEffect(() => {
-    setCart(readCart(user?._id));
+    const handleCartSync = () => {
+      setCart(readCart(user?._id));
+    };
+    handleCartSync();
+    window.addEventListener('sayrab:cart-updated', handleCartSync);
+    window.addEventListener('storage', handleCartSync);
+    return () => {
+      window.removeEventListener('sayrab:cart-updated', handleCartSync);
+      window.removeEventListener('storage', handleCartSync);
+    };
   }, [user]);
 
   const [submitting, setSubmitting] = useState(false);
   const [orderError, setOrderError] = useState('');
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState('new');
+  const [saveForFuture, setSaveForFuture] = useState(false);
+
   const [form, setForm] = useState({
     fullName: user?.fullName || '',
     phone: user?.phone || '',
@@ -27,6 +41,63 @@ export default function Checkout() {
     postalCode: '',
     country: 'Pakistan',
   });
+
+  // Load saved delivery addresses and prefill default
+  useEffect(() => {
+    if (!user) return;
+    const fetchSavedAddresses = async () => {
+      setLoadingAddresses(true);
+      try {
+        const res = await api.get('/users/addresses');
+        const list = res.data?.addresses || [];
+        setSavedAddresses(list);
+        if (list.length > 0) {
+          const def = list.find((a) => a.isDefault) || list[0];
+          setSelectedAddressId(def._id);
+          setForm({
+            fullName: def.recipientName || user?.fullName || '',
+            phone: def.phone || user?.phone || '',
+            line1: [def.street, def.apartment].filter(Boolean).join(', ') || '',
+            city: def.city || 'Lahore',
+            state: def.state || 'Punjab',
+            postalCode: def.postalCode || '',
+            country: def.country || 'Pakistan',
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to load saved addresses:', err);
+      } finally {
+        setLoadingAddresses(false);
+      }
+    };
+    fetchSavedAddresses();
+  }, [user]);
+
+  const handleSelectAddress = (addr) => {
+    if (!addr) {
+      setSelectedAddressId('new');
+      setForm({
+        fullName: user?.fullName || '',
+        phone: user?.phone || '',
+        line1: user?.address || '',
+        city: 'Lahore',
+        state: 'Punjab',
+        postalCode: '',
+        country: 'Pakistan',
+      });
+      return;
+    }
+    setSelectedAddressId(addr._id);
+    setForm({
+      fullName: addr.recipientName || '',
+      phone: addr.phone || '',
+      line1: [addr.street, addr.apartment].filter(Boolean).join(', ') || '',
+      city: addr.city || 'Lahore',
+      state: addr.state || 'Punjab',
+      postalCode: addr.postalCode || '',
+      country: addr.country || 'Pakistan',
+    });
+  };
 
   const inferredCampaignId = useMemo(
     () => cart.find((item) => item.campaignId)?.campaignId || '',
@@ -76,6 +147,24 @@ export default function Checkout() {
         shippingAddress: form,
         paymentStatus: 'paid',
       });
+
+      // If user opted to save this delivery address for future orders
+      if (saveForFuture) {
+        try {
+          await api.post('/users/addresses', {
+            recipientName: form.fullName,
+            phone: form.phone,
+            street: form.line1,
+            city: form.city,
+            state: form.state,
+            postalCode: form.postalCode,
+            country: form.country || 'Pakistan',
+            isDefault: savedAddresses.length === 0,
+          });
+        } catch (saveErr) {
+          console.warn('Could not auto-save address from checkout:', saveErr);
+        }
+      }
 
       try {
         await api.post('/payment/create-session', {
@@ -150,67 +239,134 @@ export default function Checkout() {
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-12 gap-8 items-start">
           {/* Left Form: Delivery Address */}
           <div className="lg:col-span-7 bg-white rounded-3xl border border-[#e5e9e3] p-6 sm:p-8 space-y-5 shadow-xs">
-            <div className="flex items-center gap-2 text-[#10182b] border-b border-[#e5e9e3] pb-3">
-              <Truck size={18} className="text-[#367c35]" />
-              <h2 className="text-base font-black">Shipping & Delivery Details</h2>
+            <div className="flex items-center justify-between border-b border-[#e5e9e3] pb-3">
+              <div className="flex items-center gap-2 text-[#10182b]">
+                <Truck size={18} className="text-[#367c35]" />
+                <h2 className="text-base font-black">Shipping & Delivery Details</h2>
+              </div>
+              {savedAddresses.length > 0 && (
+                <span className="text-[11px] text-[#64748b] font-medium">
+                  {savedAddresses.length} saved address{savedAddresses.length > 1 ? 'es' : ''}
+                </span>
+              )}
             </div>
+
+            {/* Saved Addresses Selector */}
+            {savedAddresses.length > 0 && (
+              <div className="space-y-2.5">
+                <label className="block text-xs font-bold text-[#10182b]">
+                  Choose from Saved Addresses
+                </label>
+                <div className="grid sm:grid-cols-2 gap-2.5">
+                  {savedAddresses.map((addr) => {
+                    const isSelected = selectedAddressId === addr._id;
+                    return (
+                      <div
+                        key={addr._id}
+                        onClick={() => handleSelectAddress(addr)}
+                        className={`p-3 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-green-50/40 border-[#89ca2e] ring-1 ring-[#89ca2e] shadow-xs'
+                            : 'bg-[#f7f9f5] border-[#e5e9e3] hover:border-[#89ca2e]/50'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-1.5">
+                          <p className="text-xs font-black text-[#10182b] truncate">
+                            {addr.recipientName}
+                          </p>
+                          {addr.isDefault && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 bg-[#89ca2e]/20 text-[#367c35] rounded-full shrink-0">
+                              Default
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-[#64748b] truncate mt-1">
+                          {addr.street}{addr.apartment ? `, ${addr.apartment}` : ''}
+                        </p>
+                        <p className="text-[11px] text-[#64748b]">
+                          {addr.city}, {addr.state}
+                        </p>
+                        <p className="text-[10px] text-[#367c35] font-bold mt-1 flex items-center gap-1">
+                          {isSelected ? <Check size={12} /> : null}
+                          {isSelected ? 'Selected' : 'Use this address'}
+                        </p>
+                      </div>
+                    );
+                  })}
+
+                  <div
+                    onClick={() => handleSelectAddress(null)}
+                    className={`p-3 rounded-2xl border cursor-pointer transition-all flex flex-col items-center justify-center text-center border-dashed ${
+                      selectedAddressId === 'new'
+                        ? 'bg-green-50/40 border-[#89ca2e] ring-1 ring-[#89ca2e]'
+                        : 'bg-[#f7f9f5] border-[#e5e9e3] hover:border-[#89ca2e]/50'
+                    }`}
+                  >
+                    <Plus size={16} className="text-[#367c35] mb-1" />
+                    <span className="text-xs font-bold text-[#10182b]">Use New Address</span>
+                    <span className="text-[10px] text-[#64748b]">Fill custom address below</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold text-[#10182b]">Recipient Full Name</label>
+                <label className="text-xs font-bold text-[#10182b]">Recipient Full Name *</label>
                 <input
                   type="text"
                   required
                   value={form.fullName}
                   onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                   placeholder="e.g. Sara Ahmed"
-                  className="w-full mt-1 px-3.5 py-2.5 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#10182b]"
+                  className="w-full mt-1 px-3.5 py-2.5 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#10182b] outline-none focus:ring-2 focus:ring-[#89ca2e]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-[#10182b]">Phone Number</label>
+                <label className="text-xs font-bold text-[#10182b]">Phone Number *</label>
                 <input
                   type="tel"
                   required
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   placeholder="03001234567"
-                  className="w-full mt-1 px-3.5 py-2.5 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#10182b]"
+                  className="w-full mt-1 px-3.5 py-2.5 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#10182b] outline-none focus:ring-2 focus:ring-[#89ca2e]"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#10182b]">Street Address</label>
+              <label className="text-xs font-bold text-[#10182b]">Street Address *</label>
               <input
                 type="text"
                 required
                 value={form.line1}
                 onChange={(e) => setForm({ ...form, line1: e.target.value })}
                 placeholder="House / Apartment, Street, Area"
-                className="w-full mt-1 px-3.5 py-2.5 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#10182b]"
+                className="w-full mt-1 px-3.5 py-2.5 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#10182b] outline-none focus:ring-2 focus:ring-[#89ca2e]"
               />
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div>
-                <label className="text-xs font-bold text-[#10182b]">City</label>
+                <label className="text-xs font-bold text-[#10182b]">City *</label>
                 <input
                   type="text"
                   required
                   value={form.city}
                   onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  className="w-full mt-1 px-3.5 py-2 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#10182b]"
+                  className="w-full mt-1 px-3.5 py-2 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#10182b] outline-none focus:ring-2 focus:ring-[#89ca2e]"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-[#10182b]">Province / State</label>
+                <label className="text-xs font-bold text-[#10182b]">Province / State *</label>
                 <input
                   type="text"
+                  required
                   value={form.state}
                   onChange={(e) => setForm({ ...form, state: e.target.value })}
-                  className="w-full mt-1 px-3.5 py-2 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#10182b]"
+                  className="w-full mt-1 px-3.5 py-2 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#10182b] outline-none focus:ring-2 focus:ring-[#89ca2e]"
                 />
               </div>
               <div>
@@ -220,9 +376,23 @@ export default function Checkout() {
                   value={form.postalCode}
                   onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
                   placeholder="54000"
-                  className="w-full mt-1 px-3.5 py-2 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#10182b]"
+                  className="w-full mt-1 px-3.5 py-2 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#10182b] outline-none focus:ring-2 focus:ring-[#89ca2e]"
                 />
               </div>
+            </div>
+
+            {/* Save Address Checkbox */}
+            <div className="pt-2 border-t border-[#e5e9e3] flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="checkoutSaveAddress"
+                checked={saveForFuture}
+                onChange={(e) => setSaveForFuture(e.target.checked)}
+                className="h-4 w-4 rounded border-[#e5e9e3] text-[#89ca2e] focus:ring-[#89ca2e] cursor-pointer"
+              />
+              <label htmlFor="checkoutSaveAddress" className="text-xs text-[#10182b] font-medium cursor-pointer">
+                Save this address to my account for future orders
+              </label>
             </div>
           </div>
 

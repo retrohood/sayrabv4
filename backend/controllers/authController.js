@@ -11,6 +11,7 @@ import {
   isManufacturerDemoLogin,
   DEMO_ADMIN_EMAIL,
   DEMO_MANUFACTURER_EMAIL,
+  demoAddressesStore,
 } from '../utils/demoAuth.js';
 
 const handleAuthError = (res, error) => {
@@ -502,6 +503,249 @@ export const upgradeToFundraiser = async (req, res) => {
     if (phone) req.user.phone = phone;
     await req.user.save();
     res.json(req.user.toPublicJSON());
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getAddresses = async (req, res) => {
+  try {
+    if (!isDatabaseConnected(mongoose)) {
+      return res.json({ addresses: demoAddressesStore });
+    }
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ addresses: user.savedAddresses || [] });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const addAddress = async (req, res) => {
+  try {
+    const {
+      recipientName,
+      phone,
+      street,
+      apartment,
+      city,
+      state,
+      postalCode,
+      country = 'Pakistan',
+      isDefault = false,
+    } = req.body;
+
+    if (!recipientName || !phone || !street || !city || !state) {
+      return res.status(400).json({ message: 'Recipient name, phone, street, city, and state are required.' });
+    }
+
+    if (!isDatabaseConnected(mongoose)) {
+      const shouldBeDefault = isDefault || demoAddressesStore.length === 0;
+      if (shouldBeDefault) {
+        demoAddressesStore.forEach((addr) => {
+          addr.isDefault = false;
+        });
+      }
+      const newAddress = {
+        _id: 'addr_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+        recipientName,
+        phone,
+        street,
+        apartment: apartment || '',
+        city,
+        state,
+        postalCode: postalCode || '',
+        country,
+        isDefault: shouldBeDefault,
+        createdAt: new Date().toISOString(),
+      };
+      demoAddressesStore.push(newAddress);
+      return res.status(201).json({ addresses: demoAddressesStore });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!user.savedAddresses) {
+      user.savedAddresses = [];
+    }
+
+    const shouldBeDefault = isDefault || user.savedAddresses.length === 0;
+    if (shouldBeDefault) {
+      user.savedAddresses.forEach((addr) => {
+        addr.isDefault = false;
+      });
+    }
+
+    user.savedAddresses.push({
+      recipientName,
+      phone,
+      street,
+      apartment: apartment || '',
+      city,
+      state,
+      postalCode: postalCode || '',
+      country,
+      isDefault: shouldBeDefault,
+    });
+
+    await user.save();
+    res.status(201).json({ addresses: user.savedAddresses });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateAddress = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      recipientName,
+      phone,
+      street,
+      apartment,
+      city,
+      state,
+      postalCode,
+      country = 'Pakistan',
+      isDefault,
+    } = req.body;
+
+    if (!isDatabaseConnected(mongoose)) {
+      const index = demoAddressesStore.findIndex((a) => a._id === id);
+      if (index === -1) {
+        return res.status(404).json({ message: 'Address not found or unauthorized' });
+      }
+      if (isDefault) {
+        demoAddressesStore.forEach((a) => {
+          a.isDefault = false;
+        });
+      }
+      demoAddressesStore[index] = {
+        ...demoAddressesStore[index],
+        recipientName: recipientName ?? demoAddressesStore[index].recipientName,
+        phone: phone ?? demoAddressesStore[index].phone,
+        street: street ?? demoAddressesStore[index].street,
+        apartment: apartment !== undefined ? apartment : demoAddressesStore[index].apartment,
+        city: city ?? demoAddressesStore[index].city,
+        state: state ?? demoAddressesStore[index].state,
+        postalCode: postalCode !== undefined ? postalCode : demoAddressesStore[index].postalCode,
+        country: country ?? demoAddressesStore[index].country,
+        isDefault: isDefault !== undefined ? isDefault : demoAddressesStore[index].isDefault,
+        updatedAt: new Date().toISOString(),
+      };
+      return res.json({ addresses: demoAddressesStore });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const address = user.savedAddresses?.id(id);
+    if (!address) {
+      return res.status(404).json({ message: 'Address not found or unauthorized' });
+    }
+
+    if (recipientName) address.recipientName = recipientName;
+    if (phone) address.phone = phone;
+    if (street) address.street = street;
+    if (apartment !== undefined) address.apartment = apartment;
+    if (city) address.city = city;
+    if (state) address.state = state;
+    if (postalCode !== undefined) address.postalCode = postalCode;
+    if (country) address.country = country;
+
+    if (isDefault) {
+      user.savedAddresses.forEach((addr) => {
+        addr.isDefault = false;
+      });
+      address.isDefault = true;
+    }
+
+    await user.save();
+    res.json({ addresses: user.savedAddresses });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteAddress = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isDatabaseConnected(mongoose)) {
+      const index = demoAddressesStore.findIndex((a) => a._id === id);
+      if (index === -1) {
+        return res.status(404).json({ message: 'Address not found or unauthorized' });
+      }
+      const wasDefault = demoAddressesStore[index].isDefault;
+      demoAddressesStore.splice(index, 1);
+      if (wasDefault && demoAddressesStore.length > 0) {
+        demoAddressesStore[0].isDefault = true;
+      }
+      return res.json({ addresses: demoAddressesStore });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const address = user.savedAddresses?.id(id);
+    if (!address) {
+      return res.status(404).json({ message: 'Address not found or unauthorized' });
+    }
+
+    const wasDefault = address.isDefault;
+    user.savedAddresses.pull(id);
+
+    if (wasDefault && user.savedAddresses.length > 0) {
+      user.savedAddresses[0].isDefault = true;
+    }
+
+    await user.save();
+    res.json({ addresses: user.savedAddresses });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const setDefaultAddress = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isDatabaseConnected(mongoose)) {
+      const exists = demoAddressesStore.some((a) => a._id === id);
+      if (!exists) {
+        return res.status(404).json({ message: 'Address not found or unauthorized' });
+      }
+      demoAddressesStore.forEach((addr) => {
+        addr.isDefault = addr._id === id;
+      });
+      return res.json({ addresses: demoAddressesStore });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const address = user.savedAddresses?.id(id);
+    if (!address) {
+      return res.status(404).json({ message: 'Address not found or unauthorized' });
+    }
+
+    user.savedAddresses.forEach((addr) => {
+      addr.isDefault = addr._id.toString() === id;
+    });
+
+    await user.save();
+    res.json({ addresses: user.savedAddresses });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

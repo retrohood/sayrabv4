@@ -17,21 +17,39 @@ import {
   AlertTriangle,
   X,
   Sparkles,
+  RefreshCw,
+  Check,
+  ShieldCheck,
+  ShieldAlert,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../../utils/format';
 
-export default function CampaignsView({ campaigns = [], onUpdateStatus }) {
+export default function CampaignsView({ campaigns = [], onUpdateStatus, onRefresh }) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [terminateModal, setTerminateModal] = useState(null); // campaign
   const [terminateReason, setTerminateReason] = useState('');
+  const [rejectModal, setRejectModal] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const statuses = ['all', 'active', 'pending', 'completed', 'cancelled', 'terminated', 'paused'];
+  const statuses = ['all', 'pending', 'active', 'completed', 'paused', 'terminated'];
 
   const filteredCampaigns = campaigns.filter((c) => {
+    const isPendingVerification =
+      c.status === 'pending' ||
+      c.verificationStatus === 'pending_verification' ||
+      c.verificationStatus === 'pending' ||
+      c.verificationStatus === 'under_review';
+
     const matchesStatus =
-      statusFilter === 'all' ? true : c.status === statusFilter;
+      statusFilter === 'all'
+        ? true
+        : statusFilter === 'pending'
+        ? isPendingVerification
+        : c.status === statusFilter;
+
     const matchesSearch =
       !search ||
       c.title?.toLowerCase().includes(search.toLowerCase()) ||
@@ -41,6 +59,54 @@ export default function CampaignsView({ campaigns = [], onUpdateStatus }) {
 
     return matchesStatus && matchesSearch;
   });
+
+  const handleManualRefresh = async () => {
+    if (!onRefresh) return;
+    try {
+      setIsRefreshing(true);
+      await onRefresh();
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 400);
+    }
+  };
+
+  const handleApproveVerification = async (c) => {
+    try {
+      await onUpdateStatus(c._id, {
+        verificationStatus: 'verified',
+        status: c.status === 'pending' ? 'active' : c.status,
+      });
+      if (selectedCampaign && selectedCampaign._id === c._id) {
+        setSelectedCampaign((prev) => ({ ...prev, verificationStatus: 'verified' }));
+      }
+    } catch (e) {
+      alert(e.message || 'Verification approval failed');
+    }
+  };
+
+  const handleRejectVerification = async () => {
+    if (!rejectReason.trim()) {
+      alert('Please state the rejection reason.');
+      return;
+    }
+    try {
+      await onUpdateStatus(rejectModal._id, {
+        verificationStatus: 'rejected',
+        rejectionReason: rejectReason,
+      });
+      if (selectedCampaign && selectedCampaign._id === rejectModal._id) {
+        setSelectedCampaign((prev) => ({
+          ...prev,
+          verificationStatus: 'rejected',
+          rejectionReason: rejectReason,
+        }));
+      }
+      setRejectModal(null);
+      setRejectReason('');
+    } catch (e) {
+      alert(e.message || 'Verification rejection failed');
+    }
+  };
 
   const handleToggleFeatured = async (c) => {
     try {
@@ -124,6 +190,36 @@ export default function CampaignsView({ campaigns = [], onUpdateStatus }) {
     }
   };
 
+  const getVerificationBadge = (verificationStatus) => {
+    switch (verificationStatus) {
+      case 'verified':
+      case 'emergency_verified':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#89ca2e]/15 text-[#367c35] border border-[#89ca2e]/30">
+            <ShieldCheck size={11} />
+            <span>Verified</span>
+          </span>
+        );
+      case 'rejected':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+            <ShieldAlert size={11} />
+            <span>Rejected</span>
+          </span>
+        );
+      case 'pending_verification':
+      case 'pending':
+      case 'under_review':
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+            <Clock size={11} />
+            <span>Verification Pending</span>
+          </span>
+        );
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Top Filter and Search Bar */}
@@ -148,16 +244,29 @@ export default function CampaignsView({ campaigns = [], onUpdateStatus }) {
           })}
         </div>
 
-        {/* Search */}
-        <div className="relative w-full md:w-72">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b]" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search campaigns, org..."
-            className="w-full pl-9 pr-4 py-2 bg-[#f7f9f5] border border-[#e5e9e3] focus:border-[#89ca2e] focus:bg-white rounded-xl text-xs text-[#10182b] placeholder-[#64748b] focus:outline-hidden transition-colors"
-          />
+        {/* Search & Refresh */}
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          {onRefresh && (
+            <button
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className="p-2 bg-[#f7f9f5] border border-[#e5e9e3] hover:border-[#89ca2e] hover:bg-white text-[#10182b] rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0 disabled:opacity-50"
+              title="Refresh campaigns list"
+            >
+              <RefreshCw size={14} className={isRefreshing ? 'animate-spin text-[#367c35]' : 'text-[#64748b]'} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+          )}
+          <div className="relative w-full md:w-72">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b]" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search campaigns, org..."
+              className="w-full pl-9 pr-4 py-2 bg-[#f7f9f5] border border-[#e5e9e3] focus:border-[#89ca2e] focus:bg-white rounded-xl text-xs text-[#10182b] placeholder-[#64748b] focus:outline-hidden transition-colors"
+            />
+          </div>
         </div>
       </div>
 
@@ -171,7 +280,7 @@ export default function CampaignsView({ campaigns = [], onUpdateStatus }) {
                 <th className="py-3.5 px-4">Owner / Organization</th>
                 <th className="py-3.5 px-4">Goal & Raised</th>
                 <th className="py-3.5 px-4">Merch & Orders</th>
-                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4">Status & Verification</th>
                 <th className="py-3.5 px-4 text-right">Moderation Actions</th>
               </tr>
             </thead>
@@ -235,9 +344,36 @@ export default function CampaignsView({ campaigns = [], onUpdateStatus }) {
                           {c.productsCount || 0} products listed
                         </span>
                       </td>
-                      <td className="py-4 px-4">{getStatusBadge(c.status)}</td>
+                      <td className="py-4 px-4">
+                        <div className="flex flex-col gap-1 items-start">
+                          {getStatusBadge(c.status)}
+                          {getVerificationBadge(c.verificationStatus)}
+                        </div>
+                      </td>
                       <td className="py-4 px-4 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          {/* Quick Verify Button */}
+                          {c.verificationStatus !== 'verified' && (
+                            <button
+                              onClick={() => handleApproveVerification(c)}
+                              className="p-1.5 rounded-lg text-[#367c35] hover:bg-[#89ca2e]/20 transition-colors"
+                              title="Verify / Approve Campaign"
+                            >
+                              <ShieldCheck size={15} />
+                            </button>
+                          )}
+
+                          {/* Quick Reject Verification Button */}
+                          {c.verificationStatus !== 'rejected' && (
+                            <button
+                              onClick={() => setRejectModal(c)}
+                              className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors"
+                              title="Reject Campaign Verification"
+                            >
+                              <ShieldAlert size={15} />
+                            </button>
+                          )}
+
                           {/* Feature Star */}
                           <button
                             onClick={() => handleToggleFeatured(c)}
@@ -356,6 +492,52 @@ export default function CampaignsView({ campaigns = [], onUpdateStatus }) {
         </div>
       )}
 
+      {/* Reject Verification Modal */}
+      {rejectModal && (
+        <div className="fixed inset-0 z-60 bg-[#10182b]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-[#e5e9e3] rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-2 text-rose-700 font-bold mb-2">
+              <ShieldAlert size={20} />
+              <span>Reject Campaign Verification</span>
+            </div>
+            <p className="text-xs text-[#64748b] mb-4">
+              Campaign: <strong className="text-[#10182b]">{rejectModal.title}</strong>. Rejecting verification will keep fund withdrawals restricted. The organizer will be notified.
+            </p>
+
+            <div className="space-y-1.5 mb-5">
+              <label className="text-xs font-semibold text-[#10182b]">
+                Rejection Reason (Required)
+              </label>
+              <textarea
+                rows={3}
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Incomplete documentation, missing NGO tax registration, unverifiable beneficiary, etc."
+                className="w-full p-2.5 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#10182b] placeholder-[#64748b] focus:border-rose-500 focus:outline-hidden"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                onClick={() => {
+                  setRejectModal(null);
+                  setRejectReason('');
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-[#64748b] hover:text-[#10182b] hover:bg-[#f7f9f5] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRejectVerification}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-xs transition-colors"
+              >
+                Confirm Rejection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Campaign Inspection & Analytics Modal */}
       {selectedCampaign && (
         <div className="fixed inset-0 z-50 bg-[#10182b]/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -365,7 +547,11 @@ export default function CampaignsView({ campaigns = [], onUpdateStatus }) {
                 <h3 className="text-base font-bold text-[#10182b]">
                   {selectedCampaign.title}
                 </h3>
-                <p className="text-xs text-[#64748b]">{selectedCampaign.category}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs text-[#64748b]">{selectedCampaign.category}</span>
+                  {getStatusBadge(selectedCampaign.status)}
+                  {getVerificationBadge(selectedCampaign.verificationStatus)}
+                </div>
               </div>
               <button
                 onClick={() => setSelectedCampaign(null)}
@@ -403,6 +589,40 @@ export default function CampaignsView({ campaigns = [], onUpdateStatus }) {
                 </div>
               </div>
 
+              {selectedCampaign.verificationStatus !== 'verified' && (
+                <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between gap-3">
+                  <div>
+                    <span className="font-bold text-amber-900 block text-xs">Verification Action Required</span>
+                    <p className="text-[11px] text-amber-800">
+                      Unverified campaigns can accept donations, but withdrawal of funds is strictly restricted until approved.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => handleApproveVerification(selectedCampaign)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#367c35] text-white hover:bg-[#367c35]/90 transition-colors flex items-center gap-1 shadow-xs"
+                    >
+                      <ShieldCheck size={13} />
+                      <span>Approve</span>
+                    </button>
+                    <button
+                      onClick={() => setRejectModal(selectedCampaign)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-600 text-white hover:bg-rose-500 transition-colors flex items-center gap-1 shadow-xs"
+                    >
+                      <ShieldAlert size={13} />
+                      <span>Reject</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {selectedCampaign.rejectionReason && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800">
+                  <span className="font-bold block">Verification Rejection Reason:</span>
+                  <p>{selectedCampaign.rejectionReason}</p>
+                </div>
+              )}
+
               {selectedCampaign.terminationReason && (
                 <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800">
                   <span className="font-bold block">Termination Reason:</span>
@@ -412,16 +632,14 @@ export default function CampaignsView({ campaigns = [], onUpdateStatus }) {
             </div>
 
             <div className="mt-5 pt-3 border-t border-[#e5e9e3] flex items-center justify-between">
-              {selectedCampaign.slug && (
-                <Link
-                  to={`/campaigns/${selectedCampaign.slug}`}
-                  target="_blank"
-                  className="text-[#367c35] hover:underline font-semibold flex items-center gap-1 text-xs"
-                >
-                  <span>Open Public Campaign Page</span>
-                  <ExternalLink size={13} />
-                </Link>
-              )}
+              <Link
+                to={`/campaigns/${selectedCampaign.slug || selectedCampaign._id}`}
+                target="_blank"
+                className="text-[#367c35] hover:underline font-semibold flex items-center gap-1 text-xs"
+              >
+                <span>Open Public Campaign Page</span>
+                <ExternalLink size={13} />
+              </Link>
               <button
                 onClick={() => setSelectedCampaign(null)}
                 className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#f7f9f5] border border-[#e5e9e3] text-[#10182b] hover:bg-[#e5e9e3] transition-colors"

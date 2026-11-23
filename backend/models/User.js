@@ -2,6 +2,21 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { USER_ROLES } from '../constants/index.js';
 
+const savedAddressSchema = new mongoose.Schema(
+  {
+    recipientName: { type: String, required: true, trim: true },
+    phone: { type: String, required: true, trim: true },
+    street: { type: String, required: true, trim: true },
+    apartment: { type: String, trim: true, default: '' },
+    city: { type: String, required: true, trim: true },
+    state: { type: String, required: true, trim: true },
+    postalCode: { type: String, trim: true, default: '' },
+    country: { type: String, required: true, trim: true, default: 'Pakistan' },
+    isDefault: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
+
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, trim: true },
@@ -36,6 +51,7 @@ const userSchema = new mongoose.Schema(
     companyName: { type: String, trim: true },
     cnic: { type: String, trim: true },
     address: { type: String, trim: true },
+    savedAddresses: { type: [savedAddressSchema], default: [] },
     profilePicture: { type: String, default: '' },
     notificationPreferences: {
       donationUpdates: { type: Boolean, default: true },
@@ -98,6 +114,7 @@ userSchema.methods.toPublicJSON = function () {
     companyName: this.companyName,
     cnic: this.cnic,
     address: this.address,
+    savedAddresses: this.savedAddresses || [],
     profilePicture: this.profilePicture,
     notificationPreferences: this.notificationPreferences || {
       donationUpdates: true,

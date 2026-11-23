@@ -17,18 +17,23 @@ import {
 import api from '../../../api/client';
 
 const CATEGORIES = [
-  { id: 'Medical', label: 'Medical & Healthcare', requiredDoc: 'Hospital estimate, prescription or diagnostic report' },
-  { id: 'Education', label: 'Education & Tuition', requiredDoc: 'School/University fee voucher or student ID' },
-  { id: 'Emergency', label: 'Emergency Relief & Disaster', requiredDoc: 'Local authority verification or crisis report' },
-  { id: 'Orphan Care', label: 'Orphan & Family Support', requiredDoc: 'Guardian CNIC and family registration cert' },
-  { id: 'Water & Sanitation', label: 'Clean Water & Sanitation', requiredDoc: 'Project cost breakdown & site plan' },
-  { id: 'Community', label: 'Community Development', requiredDoc: 'Community board letter & project proposal' },
+  { id: 'Medical Assistance', label: 'Medical Assistance', requiredDoc: 'Hospital estimate, prescription or diagnostic report' },
+  { id: 'Education / Student Fees', label: 'Education / Student Fees', requiredDoc: 'School/University fee voucher or student ID' },
+  { id: 'Disaster Relief', label: 'Disaster Relief', requiredDoc: 'Local authority verification or crisis report' },
+  { id: 'Emergency Assistance', label: 'Emergency Assistance', requiredDoc: 'Emergency hospital report or incident certificate' },
+  { id: 'Food Distribution', label: 'Food Distribution', requiredDoc: 'Ration package breakdown & beneficiary list' },
+  { id: 'Community Welfare', label: 'Community Welfare', requiredDoc: 'Community board letter & project proposal' },
+  { id: 'Orphan Care', label: 'Orphan Care', requiredDoc: 'Guardian CNIC and family registration cert' },
+  { id: 'Clean Water & Sanitation', label: 'Clean Water & Sanitation', requiredDoc: 'Project cost breakdown & site plan' },
+  { id: 'Small Business Support', label: 'Small Business Support', requiredDoc: 'Business setup cost estimate & feasibility' },
+  { id: 'Animal Welfare', label: 'Animal Welfare', requiredDoc: 'Veterinary care estimate or shelter proposal' },
+  { id: 'Other', label: 'Other Humanitarian Cause', requiredDoc: 'Detailed project breakdown and supporting documentation' },
 ];
 
 export default function FundraiserFundraisingView({ setActiveTab, onCampaignCreated }) {
   const [formData, setFormData] = useState({
     title: '',
-    category: 'Medical',
+    category: 'Medical Assistance',
     location: 'Lahore, Pakistan',
     fundingGoal: 100000,
     durationDays: 30,

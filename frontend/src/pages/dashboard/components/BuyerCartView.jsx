@@ -7,6 +7,8 @@ import {
   Truck,
   ArrowRight,
   ShieldCheck,
+  MapPin,
+  Check,
 } from 'lucide-react';
 import { formatCurrency } from '../../../utils/format';
 import { cartTotal } from '../../../utils/cart';
@@ -25,6 +27,11 @@ export default function BuyerCartView({
   setSelectedTrackingOrder,
   setCheckoutSuccess,
   setActiveTab,
+  savedAddresses = [],
+  selectedAddressId = 'new',
+  handleSelectAddress = () => {},
+  saveAddressForFuture = false,
+  setSaveAddressForFuture = () => {},
 }) {
   return (
     <div className="space-y-6">
@@ -202,9 +209,68 @@ export default function BuyerCartView({
 
               {/* Shipping Form */}
               <form onSubmit={handleBuyerCheckout} className="space-y-3 pt-3 border-t border-[#e5e9e3]">
-                <h4 className="text-xs font-bold uppercase text-[#10182b] tracking-wider">
-                  Delivery Address
-                </h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase text-[#10182b] tracking-wider">
+                    Delivery Address
+                  </h4>
+                  {savedAddresses.length > 0 && (
+                    <span className="text-[10px] text-[#64748b]">
+                      {savedAddresses.length} saved
+                    </span>
+                  )}
+                </div>
+
+                {/* Saved Address Selector */}
+                {savedAddresses.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] font-bold text-[#64748b]">Select Saved Address:</p>
+                    <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-0.5">
+                      {savedAddresses.map((addr) => {
+                        const isSelected = selectedAddressId === addr._id;
+                        return (
+                          <div
+                            key={addr._id}
+                            onClick={() => handleSelectAddress(addr)}
+                            className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all flex items-center justify-between gap-2 ${
+                              isSelected
+                                ? 'bg-green-50/50 border-[#89ca2e] ring-1 ring-[#89ca2e]'
+                                : 'bg-[#f7f9f5] border-[#e5e9e3] hover:border-[#89ca2e]/50'
+                            }`}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-black text-[#10182b] truncate">
+                                  {addr.recipientName}
+                                </span>
+                                {addr.isDefault && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.2 bg-[#89ca2e]/20 text-[#367c35] rounded-full shrink-0">
+                                    Default
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-[#64748b] truncate">
+                                {addr.street}, {addr.city}
+                              </p>
+                            </div>
+                            {isSelected && <Check size={14} className="text-[#367c35] shrink-0" />}
+                          </div>
+                        );
+                      })}
+                      <button
+                        type="button"
+                        onClick={() => handleSelectAddress(null)}
+                        className={`p-2 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer border-dashed flex items-center justify-center gap-1.5 ${
+                          selectedAddressId === 'new'
+                            ? 'bg-green-50/50 border-[#89ca2e] text-[#367c35]'
+                            : 'bg-[#f7f9f5] border-[#e5e9e3] text-[#64748b] hover:text-[#10182b]'
+                        }`}
+                      >
+                        <Plus size={13} />
+                        <span>Use Custom Address</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <input
@@ -261,6 +327,20 @@ export default function BuyerCartView({
                     required
                     className="w-full px-3 py-2 bg-[#f7f9f5] border border-[#e5e9e3] rounded-xl text-xs text-[#10182b] outline-none focus:ring-2 focus:ring-[#89ca2e]"
                   />
+                </div>
+
+                {/* Save to account checkbox */}
+                <div className="pt-1 flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="buyerCartSaveAddress"
+                    checked={saveAddressForFuture}
+                    onChange={(e) => setSaveAddressForFuture(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-[#e5e9e3] text-[#89ca2e] focus:ring-[#89ca2e] cursor-pointer"
+                  />
+                  <label htmlFor="buyerCartSaveAddress" className="text-[11px] text-[#64748b] font-medium cursor-pointer">
+                    Save address for future checkouts
+                  </label>
                 </div>
 
                 <button

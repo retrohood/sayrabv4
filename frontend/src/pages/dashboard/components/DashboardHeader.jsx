@@ -10,7 +10,9 @@ import {
   ShieldCheck,
   HeartHandshake,
   ExternalLink,
+  ShoppingCart,
 } from 'lucide-react';
+import { useCartCount } from '../../../utils/cart';
 
 export default function DashboardHeader({
   user,
@@ -19,9 +21,11 @@ export default function DashboardHeader({
   setIsSidebarOpen,
   unreadCount = 0,
   onOpenNotifications,
+  onOpenCart,
 }) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const isFundraiser = user?.role === 'fundraiser' || user?.role === 'manager';
+  const cartCount = useCartCount(user?._id);
 
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-[#e5e9e3] shadow-xs">
@@ -90,6 +94,24 @@ export default function DashboardHeader({
             )}
           </button>
 
+          {/* Shopping Cart Button (Buyer / Donor) */}
+          {!isFundraiser && (
+            <button
+              type="button"
+              onClick={onOpenCart}
+              className="relative p-2.5 rounded-xl text-[#64748b] hover:text-[#10182b] hover:bg-[#f7f9f5] border border-[#e5e9e3] transition-colors cursor-pointer group"
+              aria-label="View shopping cart"
+              title="Shopping Cart"
+            >
+              <ShoppingCart size={18} className="group-hover:scale-105 transition-transform" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#367c35] text-white text-[10px] font-black h-4.5 min-w-4.5 px-1 rounded-full flex items-center justify-center border-2 border-white shadow-xs">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </button>
+          )}
+
           {/* User Profile Dropdown */}
           <div className="relative">
             <button
@@ -126,6 +148,27 @@ export default function DashboardHeader({
                   <ExternalLink size={14} className="text-[#64748b]" />
                   <span>Visit Homepage</span>
                 </Link>
+
+                {!isFundraiser && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsProfileMenuOpen(false);
+                      if (onOpenCart) onOpenCart();
+                    }}
+                    className="w-full flex items-center justify-between px-4 py-2 text-xs text-[#10182b] hover:bg-[#f7f9f5] transition-colors text-left cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2">
+                      <ShoppingCart size={14} className="text-[#367c35]" />
+                      <span>My Shopping Cart</span>
+                    </span>
+                    {cartCount > 0 && (
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#367c35] text-white font-black">
+                        {cartCount}
+                      </span>
+                    )}
+                  </button>
+                )}
 
                 <button
                   type="button"

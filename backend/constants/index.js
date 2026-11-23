@@ -1,14 +1,30 @@
 export const CAMPAIGN_CATEGORIES = [
   'Medical Assistance',
   'Education / Student Fees',
-  'Small Business Support',
   'Disaster Relief',
+  'Emergency Assistance',
   'Food Distribution',
   'Community Welfare',
+  'Orphan Care',
+  'Clean Water & Sanitation',
+  'Small Business Support',
   'Animal Welfare',
-  'Emergency Assistance',
   'Other',
 ];
+
+export const CATEGORY_ALIASES = {
+  'Medical Assistance': ['Medical Assistance', 'Medical', 'Medical & Healthcare'],
+  'Education / Student Fees': ['Education / Student Fees', 'Education', 'Education & Tuition'],
+  'Disaster Relief': ['Disaster Relief', 'Emergency Relief & Disaster'],
+  'Emergency Assistance': ['Emergency Assistance', 'Emergency', 'Emergency Relief'],
+  'Food Distribution': ['Food Distribution', 'Food & Nutrition'],
+  'Community Welfare': ['Community Welfare', 'Community', 'Community Development', 'Social Welfare'],
+  'Orphan Care': ['Orphan Care', 'Orphan & Family Support'],
+  'Clean Water & Sanitation': ['Clean Water & Sanitation', 'Water & Sanitation'],
+  'Small Business Support': ['Small Business Support', 'Livelihood'],
+  'Animal Welfare': ['Animal Welfare'],
+  'Other': ['Other', 'General'],
+};
 
 export const VERIFICATION_STATUS = {
   PENDING: 'pending_verification',

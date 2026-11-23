@@ -67,6 +67,24 @@ export const createDonation = async (req, res) => {
         return res.status(404).json({ message: 'Campaign not found' });
       }
 
+      // Check fundraising eligibility
+      const isInactive =
+        ['draft', 'suspended', 'terminated', 'cancelled'].includes(campaign.status) ||
+        campaign.verificationStatus === 'rejected' ||
+        campaign.lifecycleStatus === 'suspended';
+      if (isInactive) {
+        return res.status(400).json({ message: 'This campaign is currently inactive and cannot accept donations.' });
+      }
+
+      const isConcluded =
+        campaign.lifecycleStatus === 'goal_achieved' ||
+        (campaign.amountRaised >= campaign.fundingGoal && campaign.fundingGoal > 0) ||
+        campaign.lifecycleStatus === 'expired' ||
+        (campaign.endDate && new Date(campaign.endDate) < new Date());
+      if (isConcluded) {
+        return res.status(400).json({ message: 'This campaign has concluded and is no longer accepting donations.' });
+      }
+
       const donation = inMemoryDB.donations.create({
         campaign: campaignId,
         donor: req.user?._id || 'guest-user',
@@ -95,6 +113,24 @@ export const createDonation = async (req, res) => {
     const campaign = await Campaign.findById(campaignId);
     if (!campaign) {
       return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    // Check fundraising eligibility
+    const isInactive =
+      ['draft', 'suspended', 'terminated', 'cancelled'].includes(campaign.status) ||
+      campaign.verificationStatus === 'rejected' ||
+      campaign.lifecycleStatus === 'suspended';
+    if (isInactive) {
+      return res.status(400).json({ message: 'This campaign is currently inactive and cannot accept donations.' });
+    }
+
+    const isConcluded =
+      campaign.lifecycleStatus === 'goal_achieved' ||
+      (campaign.amountRaised >= campaign.fundingGoal && campaign.fundingGoal > 0) ||
+      campaign.lifecycleStatus === 'expired' ||
+      (campaign.endDate && new Date(campaign.endDate) < new Date());
+    if (isConcluded) {
+      return res.status(400).json({ message: 'This campaign has concluded and is no longer accepting donations.' });
     }
 
     let referredBy = null;

@@ -39,6 +39,38 @@ export default function FundraiserPayoutsView({
   const currentCampaign = campaigns.find((c) => c._id === selectedCampaignId) || campaigns[0];
   const maxAvailable = currentCampaign ? Number(currentCampaign.raisedAmount || currentCampaign.amountRaised || 0) : 0;
 
+  // Dual condition for withdrawal eligibility:
+  // 1. Campaign must be verified by admin
+  const isCampaignVerified = Boolean(
+    currentCampaign &&
+    (currentCampaign.verificationStatus === 'verified' ||
+      currentCampaign.verificationStatus === 'emergency_verified' ||
+      currentCampaign.isVerified === true)
+  );
+
+  // 2. Campaign must be completed (goal reached or deadline passed)
+  const isGoalReached =
+    currentCampaign &&
+    Number(currentCampaign.fundingGoal || currentCampaign.goalAmount || 0) > 0 &&
+    Number(currentCampaign.amountRaised || currentCampaign.raisedAmount || 0) >=
+      Number(currentCampaign.fundingGoal || currentCampaign.goalAmount || 0);
+
+  const isDeadlinePassed = Boolean(
+    currentCampaign?.endDate && new Date(currentCampaign.endDate) < new Date()
+  );
+
+  const isCampaignCompleted = Boolean(
+    currentCampaign &&
+    (currentCampaign.status === 'completed' ||
+      ['goal_achieved', 'expired', 'completed'].includes(currentCampaign.lifecycleStatus) ||
+      isGoalReached ||
+      isDeadlinePassed)
+  );
+
+  const isWithdrawalEligible = Boolean(
+    currentCampaign && isCampaignVerified && isCampaignCompleted && maxAvailable > 0
+  );
+
   useEffect(() => {
     if (preselectedCampaign?._id) {
       setSelectedCampaignId(preselectedCampaign._id);
@@ -64,6 +96,16 @@ export default function FundraiserPayoutsView({
 
     if (!selectedCampaignId) {
       setError('Please select a campaign with eligible raised funds to withdraw.');
+      return;
+    }
+
+    if (!isCampaignVerified) {
+      setError('Campaign Verification Pending: Funds cannot be withdrawn until campaign is verified by Admin.');
+      return;
+    }
+
+    if (!isCampaignCompleted) {
+      setError('Campaign In Progress: Funds can only be withdrawn once the campaign reaches its goal or completion deadline.');
       return;
     }
 
@@ -213,6 +255,43 @@ export default function FundraiserPayoutsView({
               </select>
             </div>
 
+            {/* Campaign Verification & Eligibility Notice */}
+            {currentCampaign && (
+              <div className="rounded-2xl text-xs">
+                {!isCampaignVerified ? (
+                  <div className="flex items-start gap-2.5 text-amber-800 bg-amber-50/80 border border-amber-200/80 p-3 rounded-xl">
+                    <Clock size={16} className="shrink-0 mt-0.5 text-amber-600" />
+                    <div>
+                      <span className="font-bold block text-xs">Campaign Verification Pending</span>
+                      <p className="text-[11px] text-amber-700 leading-relaxed mt-0.5">
+                        This campaign is currently accepting donations from the public, but fund withdrawal is restricted until platform administration completes verification.
+                      </p>
+                    </div>
+                  </div>
+                ) : !isCampaignCompleted ? (
+                  <div className="flex items-start gap-2.5 text-blue-900 bg-blue-50/80 border border-blue-200/80 p-3 rounded-xl">
+                    <AlertCircle size={16} className="shrink-0 mt-0.5 text-blue-600" />
+                    <div>
+                      <span className="font-bold block text-xs">Campaign Fundraising In Progress</span>
+                      <p className="text-[11px] text-blue-700 leading-relaxed mt-0.5">
+                        Your campaign is verified and actively accepting donations. Raised funds are unlocked for disbursement once your funding goal is reached or the campaign duration concludes.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-2.5 text-[#367c35] bg-[#89ca2e]/10 border border-[#89ca2e]/30 p-3 rounded-xl">
+                    <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-[#367c35]" />
+                    <div>
+                      <span className="font-bold block text-xs">Campaign Eligible for Payout</span>
+                      <p className="text-[11px] text-[#367c35] leading-relaxed mt-0.5">
+                        Verification is complete and target/duration conditions are met. You can request disbursement of all available raised funds below.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Method Tabs */}
             <div>
               <label className="block text-xs font-bold text-[#10182b] uppercase mb-1.5">
@@ -345,10 +424,20 @@ export default function FundraiserPayoutsView({
 
             <button
               type="submit"
-              disabled={isSubmitting || maxAvailable <= 0}
-              className="w-full py-3 bg-[#89ca2e] hover:bg-[#78b327] text-white font-black text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+              disabled={isSubmitting || !isWithdrawalEligible}
+              className="w-full py-3 bg-[#89ca2e] hover:bg-[#78b327] text-white font-black text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>{isSubmitting ? 'Submitting...' : 'Submit Withdrawal Request'}</span>
+              <span>
+                {isSubmitting
+                  ? 'Submitting...'
+                  : !isCampaignVerified
+                  ? 'Verification Pending (Withdrawal Locked)'
+                  : !isCampaignCompleted
+                  ? 'Campaign Ongoing (Withdrawal Locked)'
+                  : maxAvailable <= 0
+                  ? 'No Raised Funds Available'
+                  : 'Submit Withdrawal Request'}
+              </span>
               <ArrowRight size={14} />
             </button>
           </form>

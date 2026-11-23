@@ -6,6 +6,22 @@ export const DEMO_PASSWORD = 'password123';
 
 export const isDatabaseConnected = (mongoose) => mongoose.connection.readyState === 1;
 
+export let demoAddressesStore = [
+  {
+    _id: 'addr_demo_default',
+    recipientName: 'Demo Donor',
+    phone: '03001234567',
+    street: '123 Main Boulevard, Gulberg III',
+    apartment: 'Suite 204',
+    city: 'Lahore',
+    state: 'Punjab',
+    postalCode: '54000',
+    country: 'Pakistan',
+    isDefault: true,
+    createdAt: new Date().toISOString(),
+  },
+];
+
 export const createDemoUser = ({
   fullName = 'Demo User',
   email = DEMO_EMAIL,
@@ -23,6 +39,7 @@ export const createDemoUser = ({
     role,
     cnic,
     address,
+    savedAddresses: demoAddressesStore,
     profilePicture: '',
     notificationPreferences: {
       donationUpdates: true,
@@ -45,6 +62,7 @@ export const createDemoUser = ({
     role: user.role,
     cnic: user.cnic,
     address: user.address,
+    savedAddresses: demoAddressesStore,
     profilePicture: user.profilePicture,
     notificationPreferences: user.notificationPreferences,
     isVerifiedFundraiser: user.isVerifiedFundraiser,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/format';
@@ -33,12 +33,18 @@ import UserSettingsView from './dashboard/components/UserSettingsView';
 export default function Dashboard() {
   const { user, setUser, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Navigation State & Role Isolation
   const isFundraiser =
     user?.role === 'fundraiser' || user?.role === 'manager' || user?.role === 'admin';
 
-  const [activeTab, setActiveTab] = useState(isFundraiser ? 'overview' : 'donor_overview');
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam) return tabParam;
+    return isFundraiser ? 'overview' : 'donor_overview';
+  });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Common Data States
@@ -69,12 +75,16 @@ export default function Dashboard() {
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
   const [checkoutSuccess, setCheckoutSuccess] = useState(null);
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState('new');
+  const [saveAddressForFuture, setSaveAddressForFuture] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState({
     fullName: user?.fullName || '',
     phone: user?.phone || '',
     line1: user?.address || '',
     city: 'Lahore',
     state: 'Punjab',
+    postalCode: '',
     country: 'Pakistan',
   });
 
@@ -93,7 +103,15 @@ export default function Dashboard() {
     }
   }, [user, navigate]);
 
-  // Keep role-appropriate tab selected
+  // Keep role-appropriate tab selected & respond to URL tab parameter
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [location.search]);
+
   useEffect(() => {
     if (isFundraiser && (activeTab.startsWith('donor_') || activeTab === 'buyer_cart' || activeTab === 'buyer_tracking')) {
       setActiveTab('overview');
@@ -102,9 +120,18 @@ export default function Dashboard() {
     }
   }, [isFundraiser, activeTab]);
 
-  // Sync cart from storage
+  // Sync cart from storage in real time
   useEffect(() => {
-    setBuyerCart(readCart(user?._id));
+    const handleCartSync = () => {
+      setBuyerCart(readCart(user?._id));
+    };
+    handleCartSync();
+    window.addEventListener('sayrab:cart-updated', handleCartSync);
+    window.addEventListener('storage', handleCartSync);
+    return () => {
+      window.removeEventListener('sayrab:cart-updated', handleCartSync);
+      window.removeEventListener('storage', handleCartSync);
+    };
   }, [user]);
 
   const updateBuyerCart = (next) => {
@@ -120,6 +147,57 @@ export default function Dashboard() {
         )
         .filter((item) => item.qty > 0)
     );
+  };
+
+  // Fetch saved delivery addresses for donor/buyer and prefill default
+  useEffect(() => {
+    if (!user || isFundraiser) return;
+    api.get('/users/addresses')
+      .then((res) => {
+        const list = res.data?.addresses || [];
+        setSavedAddresses(list);
+        if (list.length > 0) {
+          const def = list.find((a) => a.isDefault) || list[0];
+          setSelectedAddressId(def._id);
+          setCheckoutForm((prev) => ({
+            ...prev,
+            fullName: def.recipientName || prev.fullName,
+            phone: def.phone || prev.phone,
+            line1: [def.street, def.apartment].filter(Boolean).join(', ') || prev.line1,
+            city: def.city || prev.city,
+            state: def.state || prev.state,
+            postalCode: def.postalCode || '',
+            country: def.country || 'Pakistan',
+          }));
+        }
+      })
+      .catch(() => {});
+  }, [user, isFundraiser]);
+
+  const handleSelectAddress = (addr) => {
+    if (!addr) {
+      setSelectedAddressId('new');
+      setCheckoutForm({
+        fullName: user?.fullName || '',
+        phone: user?.phone || '',
+        line1: user?.address || '',
+        city: 'Lahore',
+        state: 'Punjab',
+        postalCode: '',
+        country: 'Pakistan',
+      });
+      return;
+    }
+    setSelectedAddressId(addr._id);
+    setCheckoutForm({
+      fullName: addr.recipientName || '',
+      phone: addr.phone || '',
+      line1: [addr.street, addr.apartment].filter(Boolean).join(', ') || '',
+      city: addr.city || 'Lahore',
+      state: addr.state || 'Punjab',
+      postalCode: addr.postalCode || '',
+      country: addr.country || 'Pakistan',
+    });
   };
 
   const handleRemoveCartItem = (id) => {
@@ -146,6 +224,27 @@ export default function Dashboard() {
         shippingAddress: checkoutForm,
         paymentStatus: 'paid',
       });
+
+      // Save delivery address to donor's address book if requested
+      if (saveAddressForFuture) {
+        try {
+          const addrRes = await api.post('/users/addresses', {
+            recipientName: checkoutForm.fullName,
+            phone: checkoutForm.phone,
+            street: checkoutForm.line1,
+            city: checkoutForm.city,
+            state: checkoutForm.state,
+            postalCode: checkoutForm.postalCode || '',
+            country: checkoutForm.country || 'Pakistan',
+            isDefault: savedAddresses.length === 0,
+          });
+          if (addrRes.data?.addresses) {
+            setSavedAddresses(addrRes.data.addresses);
+          }
+        } catch (saveErr) {
+          console.warn('Could not auto-save address:', saveErr);
+        }
+      }
 
       await api.post('/payment/create-session', {
         orderId: orderRes.data._id,
@@ -295,6 +394,7 @@ export default function Dashboard() {
         setIsSidebarOpen={setIsSidebarOpen}
         unreadCount={2}
         onOpenNotifications={() => setActiveTab(isFundraiser ? 'overview' : 'donor_notifications')}
+        onOpenCart={() => setActiveTab('buyer_cart')}
       />
 
       {/* Main Body with Sidebar & Content */}
@@ -446,6 +546,11 @@ export default function Dashboard() {
               setSelectedTrackingOrder={setSelectedTrackingOrder}
               setCheckoutSuccess={setCheckoutSuccess}
               setActiveTab={setActiveTab}
+              savedAddresses={savedAddresses}
+              selectedAddressId={selectedAddressId}
+              handleSelectAddress={handleSelectAddress}
+              saveAddressForFuture={saveAddressForFuture}
+              setSaveAddressForFuture={setSaveAddressForFuture}
             />
           )}
 

@@ -284,9 +284,13 @@ export default function CampaignDetail() {
               Emergency Relief
             </span>
           )}
-          {isVerified && (
-            <span className="px-2.5 py-1 bg-[#367c35] text-white text-xs font-bold rounded-lg flex items-center gap-1">
+          {isVerified ? (
+            <span className="px-2.5 py-1 bg-[#367c35] text-white text-xs font-bold rounded-lg flex items-center gap-1 shadow-xs">
               <ShieldCheck size={14} /> {getVerificationLabel(campaign.verificationStatus)}
+            </span>
+          ) : (
+            <span className="px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold rounded-lg flex items-center gap-1 shadow-xs">
+              <Clock size={14} className="text-amber-700" /> Verification Pending
             </span>
           )}
         </div>
@@ -527,13 +531,30 @@ export default function CampaignDetail() {
               </div>
             </div>
 
-            {/* Primary Action Button */}
-            <button
-              onClick={handleDonateClick}
-              className="w-full py-3.5 bg-[#89ca2e] hover:bg-[#7bb926] text-[#10182b] text-base font-black rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Heart size={18} className="fill-[#10182b]" /> Donate Now
-            </button>
+            {/* Transparency Notice for Pending Verification */}
+            {!isVerified && (
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 text-xs flex items-start gap-2.5 shadow-2xs">
+                <Info size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  <strong className="block font-bold">Verification Pending:</strong>
+                  <span>Donations are currently being accepted. Fund withdrawal is restricted until campaign verification is completed by platform administration.</span>
+                </div>
+              </div>
+            )}
+
+            {/* Primary Action Button or Concluded Notice */}
+            {campaign.amountRaised >= (campaign.fundingGoal || 1) || (campaign.endDate && new Date(campaign.endDate) < new Date()) ? (
+              <div className="w-full py-3.5 bg-[#f7f9f5] border border-[#e5e9e3] text-[#64748b] text-xs font-bold rounded-2xl text-center">
+                Fundraising Concluded ({campaign.amountRaised >= (campaign.fundingGoal || 1) ? 'Target Goal Reached' : 'Campaign Ended'})
+              </div>
+            ) : (
+              <button
+                onClick={handleDonateClick}
+                className="w-full py-3.5 bg-[#89ca2e] hover:bg-[#7bb926] text-[#10182b] text-base font-black rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Heart size={18} className="fill-[#10182b]" /> Donate Now
+              </button>
+            )}
 
             <button
               onClick={handleShare}

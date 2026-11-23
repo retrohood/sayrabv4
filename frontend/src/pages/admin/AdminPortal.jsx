@@ -318,6 +318,7 @@ export default function AdminPortal() {
                 <CampaignsView
                   campaigns={campaigns}
                   onUpdateStatus={handleUpdateCampaignStatus}
+                  onRefresh={fetchAdminData}
                 />
               )}
 

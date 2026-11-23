@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, ShoppingBag, Sparkles, User, LogOut, Shield, ChevronDown } from 'lucide-react';
+import { Menu, X, ShoppingBag, ShoppingCart, Sparkles, User, LogOut, Shield, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { isFundraiserUser } from '../utils/format';
+import { useCartCount } from '../utils/cart';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -10,11 +11,20 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const isFundraiser = isFundraiserUser(user);
+  const cartCount = useCartCount(user?._id);
 
   const handleLogout = () => {
     logout();
     setUserDropdownOpen(false);
     navigate('/');
+  };
+
+  const handleCartClick = () => {
+    if (user && !isFundraiser && user.role !== 'manufacturer') {
+      navigate('/dashboard?tab=buyer_cart');
+    } else {
+      navigate('/cart');
+    }
   };
 
   const navLinks = [
@@ -65,6 +75,22 @@ export default function Navbar() {
 
           {/* Right Action / Auth Button */}
           <div className="hidden lg:flex items-center gap-3">
+            {/* Cart Button with Live Badge */}
+            <button
+              type="button"
+              onClick={handleCartClick}
+              className="relative p-2.5 bg-[#10182b] text-white hover:bg-[#172033] rounded-xl transition-all shadow-sm flex items-center justify-center cursor-pointer group"
+              aria-label="Shopping Cart"
+              title="Shopping Cart"
+            >
+              <ShoppingCart size={19} className="group-hover:scale-110 transition-transform text-white" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-[#367c35] text-white text-[10px] font-black h-5 min-w-5 px-1 rounded-full flex items-center justify-center border-2 border-[#89ca2e] shadow-sm animate-in zoom-in">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </button>
+
             {user ? (
               <div className="relative">
                 <button
@@ -118,6 +144,26 @@ export default function Navbar() {
                       {isFundraiser ? 'Fundraiser Dashboard' : 'Donor Dashboard'}
                     </Link>
 
+                    {!isFundraiser && user.role !== 'manufacturer' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserDropdownOpen(false);
+                          handleCartClick();
+                        }}
+                        className="w-full text-left flex items-center justify-between px-4 py-2 text-xs font-bold text-[#10182b] hover:bg-[#f7f9f5] transition-colors"
+                      >
+                        <span className="flex items-center gap-2">
+                          <ShoppingCart size={14} className="text-[#367c35]" /> My Shopping Cart
+                        </span>
+                        {cartCount > 0 && (
+                          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#367c35] text-white font-black">
+                            {cartCount}
+                          </span>
+                        )}
+                      </button>
+                    )}
+
                     <div className="border-t border-[#e5e9e3] mt-1 pt-1">
                       <button
                         onClick={handleLogout}
@@ -139,17 +185,33 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="lg:hidden p-2 text-[#10182b] hover:bg-[#7bb926]/50 rounded-xl transition-colors"
-            onClick={() => setOpen(!open)}
-            aria-label="Toggle menu"
-          >
-            {open ? <X size={26} /> : <Menu size={26} />}
-          </button>
+          {/* Mobile Right Controls: Cart & Hamburger */}
+          <div className="flex lg:hidden items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCartClick}
+              className="relative p-2 bg-[#10182b] text-white rounded-xl shadow-xs flex items-center justify-center cursor-pointer"
+              aria-label="Shopping Cart"
+            >
+              <ShoppingCart size={20} />
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-[#367c35] text-white text-[10px] font-black h-4.5 min-w-4.5 px-1 rounded-full flex items-center justify-center border-2 border-[#89ca2e]">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              className="p-2 text-[#10182b] hover:bg-[#7bb926]/50 rounded-xl transition-colors cursor-pointer"
+              onClick={() => setOpen(!open)}
+              aria-label="Toggle menu"
+            >
+              {open ? <X size={26} /> : <Menu size={26} />}
+            </button>
+          </div>
         </div>
 
-        {/* Mobile Dropdown Menu (Contains all 6 items) */}
+        {/* Mobile Dropdown Menu (Contains all items) */}
         {open && (
           <div className="lg:hidden pb-5 pt-2 border-t border-[#7bb926] space-y-1.5 animate-fade-in">
             {navLinks.map((link) => (
@@ -168,6 +230,24 @@ export default function Navbar() {
                 {link.label}
               </NavLink>
             ))}
+
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                handleCartClick();
+              }}
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold text-[#10182b] hover:bg-[#7bb926]/50 text-left cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <ShoppingCart size={16} /> My Shopping Cart
+              </span>
+              {cartCount > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-xs font-black bg-[#10182b] text-white">
+                  {cartCount} items
+                </span>
+              )}
+            </button>
 
             <div className="pt-3 border-t border-[#7bb926] space-y-2">
               {user ? (

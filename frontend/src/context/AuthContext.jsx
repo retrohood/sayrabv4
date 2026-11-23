@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useState, useEffect } from 'react';
 import api from '../api/client';
+import { mergeGuestCart } from '../utils/cart';
 
 const defaultAuthContext = {
   user: null,
@@ -20,16 +21,27 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const handleUserAuthenticated = (userData) => {
+    setUser(userData);
+    if (userData?._id && userData?.role !== 'fundraiser' && userData?.role !== 'manager' && userData?.role !== 'manufacturer') {
+      try {
+        mergeGuestCart(userData._id);
+      } catch (e) {
+        console.warn('Cart merge notice:', e);
+      }
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('sayrab_token');
     if (token) {
       api
         .get('/auth/me')
         .then((res) => {
-          setUser(res.data);
           if (res.data?._id) {
             localStorage.setItem('sayrab_current_user_id', res.data._id);
           }
+          handleUserAuthenticated(res.data);
         })
         .catch(() => {
           localStorage.removeItem('sayrab_token');
@@ -47,7 +59,7 @@ export const AuthProvider = ({ children }) => {
     if (res.data.user?._id) {
       localStorage.setItem('sayrab_current_user_id', res.data.user._id);
     }
-    setUser(res.data.user);
+    handleUserAuthenticated(res.data.user);
     return res.data;
   };
 
@@ -57,7 +69,7 @@ export const AuthProvider = ({ children }) => {
     if (res.data.user?._id) {
       localStorage.setItem('sayrab_current_user_id', res.data.user._id);
     }
-    setUser(res.data.user);
+    handleUserAuthenticated(res.data.user);
     return res.data;
   };
 
@@ -67,7 +79,7 @@ export const AuthProvider = ({ children }) => {
     if (res.data.user?._id) {
       localStorage.setItem('sayrab_current_user_id', res.data.user._id);
     }
-    setUser(res.data.user);
+    handleUserAuthenticated(res.data.user);
     return res.data;
   };
 
@@ -77,7 +89,7 @@ export const AuthProvider = ({ children }) => {
     if (res.data.user?._id) {
       localStorage.setItem('sayrab_current_user_id', res.data.user._id);
     }
-    setUser(res.data.user);
+    handleUserAuthenticated(res.data.user);
     return res.data;
   };
 
@@ -87,7 +99,7 @@ export const AuthProvider = ({ children }) => {
     if (res.data.user?._id) {
       localStorage.setItem('sayrab_current_user_id', res.data.user._id);
     }
-    setUser(res.data.user);
+    handleUserAuthenticated(res.data.user);
     return res.data;
   };
 
@@ -97,7 +109,7 @@ export const AuthProvider = ({ children }) => {
     if (res.data?._id) {
       localStorage.setItem('sayrab_current_user_id', res.data._id);
     }
-    setUser(res.data);
+    handleUserAuthenticated(res.data);
     return res.data;
   }, []);
 

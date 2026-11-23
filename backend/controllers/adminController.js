@@ -18,6 +18,8 @@ import {
   ORDER_STATUSES,
   PRODUCTION_STATUSES,
 } from '../constants/index.js';
+import { isDatabaseConnected } from '../utils/demoAuth.js';
+import { inMemoryDB } from '../utils/inMemoryDB.js';
 
 // ==========================================
 // 1. PLATFORM KPIS & OVERVIEW (100% REAL DB DATA)
@@ -398,13 +400,42 @@ export const deleteUser = async (req, res) => {
 };
 
 // ==========================================
-// 4. CAMPAIGN MANAGEMENT (REAL DB)
+// 4. CAMPAIGN MANAGEMENT (REAL DB + DEMO FALLBACK)
 // ==========================================
 export const listAllCampaigns = async (req, res) => {
   try {
     const { status, search } = req.query;
+
+    if (!isDatabaseConnected(mongoose)) {
+      const query = {};
+      if (status && status !== 'all') {
+        if (status === 'pending') {
+          query.$or = [
+            { status: 'pending' },
+            { verificationStatus: 'pending_verification' },
+            { verificationStatus: 'pending' },
+            { verificationStatus: 'under_review' },
+          ];
+        } else {
+          query.status = status;
+        }
+      }
+      if (search) query.search = search;
+      const campaigns = inMemoryDB.campaigns.find(query);
+      return res.json(campaigns);
+    }
+
     const query = {};
-    if (status && status !== 'all') query.status = status;
+    if (status && status !== 'all') {
+      if (status === 'pending') {
+        query.$or = [
+          { status: 'pending' },
+          { verificationStatus: { $in: ['pending_verification', 'pending', 'under_review'] } },
+        ];
+      } else {
+        query.status = status;
+      }
+    }
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
@@ -426,12 +457,28 @@ export const listAllCampaigns = async (req, res) => {
 export const updateCampaignStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, isFeatured, isHidden, terminationReason } = req.body;
+    const { status, verificationStatus, rejectionReason, isFeatured, isHidden, terminationReason } = req.body;
+
+    if (!isDatabaseConnected(mongoose)) {
+      const updateData = {};
+      if (status) updateData.status = status;
+      if (verificationStatus) updateData.verificationStatus = verificationStatus;
+      if (rejectionReason !== undefined) updateData.rejectionReason = rejectionReason;
+      if (isFeatured !== undefined) updateData.isFeatured = isFeatured;
+      if (isHidden !== undefined) updateData.isHidden = isHidden;
+      if (terminationReason !== undefined) updateData.terminationReason = terminationReason;
+
+      const updated = inMemoryDB.campaigns.updateOne({ _id: id }, updateData);
+      if (!updated) return res.status(404).json({ message: 'Campaign not found' });
+      return res.json(updated);
+    }
 
     const camp = await Campaign.findById(id);
     if (!camp) return res.status(404).json({ message: 'Campaign not found' });
 
     if (status) camp.status = status;
+    if (verificationStatus) camp.verificationStatus = verificationStatus;
+    if (rejectionReason !== undefined) camp.rejectionReason = rejectionReason;
     if (isFeatured !== undefined) camp.isFeatured = isFeatured;
     if (isHidden !== undefined) camp.isHidden = isHidden;
     if (terminationReason !== undefined) camp.terminationReason = terminationReason;
