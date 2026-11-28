@@ -1,10 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShieldAlert, ArrowRight, Lock, CheckCircle2, ShoppingBag, ShieldCheck, Truck, MapPin, Check, Plus } from 'lucide-react';
+import {
+  ShieldAlert,
+  ArrowRight,
+  Lock,
+  CheckCircle2,
+  ShoppingBag,
+  ShieldCheck,
+  Truck,
+  MapPin,
+  Check,
+  Plus,
+  ChevronRight,
+  Sparkles,
+} from 'lucide-react';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { cartTotal, readCart, writeCart } from '../utils/cart';
 import { formatCurrency, isFundraiserUser } from '../utils/format';
+import { getAccurateProductImage } from '../utils/productImages';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -149,7 +163,7 @@ export default function Checkout() {
       });
 
       // If user opted to save this delivery address for future orders
-      if (saveForFuture) {
+      if (saveForFuture && selectedAddressId === 'new') {
         try {
           await api.post('/users/addresses', {
             recipientName: form.fullName,
@@ -216,9 +230,21 @@ export default function Checkout() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 text-[#172033]">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 text-[#172033]">
+      {/* Breadcrumb Navigation */}
+      <nav className="flex items-center gap-2 text-xs text-[#64748b]">
+        <Link to="/" className="hover:text-[#10182b]">Home</Link>
+        <ChevronRight size={13} />
+        <Link to="/store" className="hover:text-[#10182b]">Merchandise Store</Link>
+        <ChevronRight size={13} />
+        <Link to="/cart" className="hover:text-[#10182b]">Shopping Cart</Link>
+        <ChevronRight size={13} />
+        <span className="font-bold text-[#10182b]">Checkout</span>
+      </nav>
+
+      {/* Header */}
       <div className="border-b border-[#e5e9e3] pb-4">
-        <h1 className="text-3xl font-black text-[#10182b] tracking-tight">Checkout</h1>
+        <h1 className="text-3xl sm:text-4xl font-black text-[#10182b] tracking-tight">Checkout</h1>
         <p className="text-xs text-[#64748b] mt-1">Provide delivery address and complete your purchase securely.</p>
       </div>
 
@@ -264,7 +290,7 @@ export default function Checkout() {
                       <div
                         key={addr._id}
                         onClick={() => handleSelectAddress(addr)}
-                        className={`p-3 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
+                        className={`p-3.5 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
                           isSelected
                             ? 'bg-green-50/40 border-[#89ca2e] ring-1 ring-[#89ca2e] shadow-xs'
                             : 'bg-[#f7f9f5] border-[#e5e9e3] hover:border-[#89ca2e]/50'
@@ -286,7 +312,7 @@ export default function Checkout() {
                         <p className="text-[11px] text-[#64748b]">
                           {addr.city}, {addr.state}
                         </p>
-                        <p className="text-[10px] text-[#367c35] font-bold mt-1 flex items-center gap-1">
+                        <p className="text-[10px] text-[#367c35] font-bold mt-1.5 flex items-center gap-1">
                           {isSelected ? <Check size={12} /> : null}
                           {isSelected ? 'Selected' : 'Use this address'}
                         </p>
@@ -296,7 +322,7 @@ export default function Checkout() {
 
                   <div
                     onClick={() => handleSelectAddress(null)}
-                    className={`p-3 rounded-2xl border cursor-pointer transition-all flex flex-col items-center justify-center text-center border-dashed ${
+                    className={`p-3.5 rounded-2xl border cursor-pointer transition-all flex flex-col items-center justify-center text-center border-dashed ${
                       selectedAddressId === 'new'
                         ? 'bg-green-50/40 border-[#89ca2e] ring-1 ring-[#89ca2e]'
                         : 'bg-[#f7f9f5] border-[#e5e9e3] hover:border-[#89ca2e]/50'
@@ -382,38 +408,52 @@ export default function Checkout() {
             </div>
 
             {/* Save Address Checkbox */}
-            <div className="pt-2 border-t border-[#e5e9e3] flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="checkoutSaveAddress"
-                checked={saveForFuture}
-                onChange={(e) => setSaveForFuture(e.target.checked)}
-                className="h-4 w-4 rounded border-[#e5e9e3] text-[#89ca2e] focus:ring-[#89ca2e] cursor-pointer"
-              />
-              <label htmlFor="checkoutSaveAddress" className="text-xs text-[#10182b] font-medium cursor-pointer">
-                Save this address to my account for future orders
-              </label>
-            </div>
+            {selectedAddressId === 'new' && (
+              <div className="pt-2 border-t border-[#e5e9e3] flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="checkoutSaveAddress"
+                  checked={saveForFuture}
+                  onChange={(e) => setSaveForFuture(e.target.checked)}
+                  className="h-4 w-4 rounded border-[#e5e9e3] text-[#89ca2e] focus:ring-[#89ca2e] cursor-pointer"
+                />
+                <label htmlFor="checkoutSaveAddress" className="text-xs text-[#10182b] font-medium cursor-pointer">
+                  Save this address to my account for future orders
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Right Summary */}
           <div className="lg:col-span-5 bg-white rounded-3xl border border-[#e5e9e3] p-6 sm:p-7 space-y-5 shadow-sm">
-            <h2 className="text-base font-black text-[#10182b] border-b border-[#e5e9e3] pb-3">Order Items ({cart.length})</h2>
+            <h2 className="text-base font-black text-[#10182b] border-b border-[#e5e9e3] pb-3">
+              Order Items ({cart.length})
+            </h2>
 
             <div className="divide-y divide-[#e5e9e3] max-h-60 overflow-y-auto pr-1">
-              {cart.map((item) => (
-                <div key={item._id} className="py-2.5 flex items-center justify-between text-xs">
-                  <div className="min-w-0 pr-2">
-                    <p className="font-extrabold text-[#10182b] truncate">{item.name}</p>
-                    <p className="text-[#64748b] text-[11px]">
-                      Qty: {item.qty || 1} {item.selectedSize ? `• ${item.selectedSize}` : ''}
-                    </p>
+              {cart.map((item) => {
+                const itemImg = getAccurateProductImage(item);
+                return (
+                  <div key={item._id} className="py-2.5 flex items-center justify-between text-xs gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                      <img
+                        src={itemImg}
+                        alt={item.name}
+                        className="w-10 h-10 object-cover rounded-lg border border-[#e5e9e3] shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="font-extrabold text-[#10182b] truncate">{item.name}</p>
+                        <p className="text-[#64748b] text-[11px]">
+                          Qty: {item.qty || 1} {item.selectedSize ? `• ${item.selectedSize}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="font-black text-[#10182b] shrink-0">
+                      {formatCurrency((item.price || 0) * (item.qty || 1))}
+                    </span>
                   </div>
-                  <span className="font-black text-[#10182b] shrink-0">
-                    {formatCurrency((item.price || 0) * (item.qty || 1))}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="pt-3 border-t border-[#e5e9e3] space-y-2 text-xs">
@@ -422,19 +462,19 @@ export default function Checkout() {
                 <span className="font-bold text-[#367c35]">Standard Free</span>
               </div>
               <div className="flex justify-between text-[#64748b]">
-                <span>50% Campaign Allocation:</span>
+                <span>50% Direct Cause Allocation:</span>
                 <span className="font-bold text-[#367c35]">{formatCurrency(total * 0.5)}</span>
               </div>
               <div className="flex justify-between items-baseline pt-2 border-t border-[#e5e9e3] text-sm">
                 <span className="font-black text-[#10182b]">Total Amount:</span>
-                <span className="text-xl font-black text-[#10182b]">{formatCurrency(total)}</span>
+                <span className="text-2xl font-black text-[#10182b]">{formatCurrency(total)}</span>
               </div>
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3.5 bg-[#89ca2e] hover:bg-[#7bb926] text-[#10182b] rounded-2xl font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full py-3.5 bg-[#89ca2e] hover:bg-[#7bb926] text-[#10182b] rounded-2xl font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-98"
             >
               {submitting ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#10182b]" />
