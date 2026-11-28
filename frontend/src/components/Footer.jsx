@@ -90,27 +90,51 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact & Legal */}
+          {/* Contact & Support */}
           <div className="space-y-3">
             <h3 className="font-extrabold text-white text-xs uppercase tracking-wider text-[#89ca2e]">
               Contact & Support
             </h3>
             <ul className="space-y-2.5 text-xs text-slate-300">
-              <li className="flex items-center gap-2">
-                <Mail size={15} className="text-[#89ca2e] shrink-0" />
-                <span>support@sayrab.com</span>
+              <li className="flex items-start gap-2.5">
+                <MapPin size={16} className="text-[#89ca2e] shrink-0 mt-0.5" />
+                <a
+                  href="https://maps.google.com/?q=FAST-NU+FAST+Square+Faisalabad"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors leading-relaxed"
+                >
+                  FAST-NU, FAST Square, 9 Km from Faisalabad Motorway Interchange towards Chiniot
+                </a>
               </li>
-              <li className="flex items-center gap-2">
+              <li className="flex items-center gap-2.5">
                 <Phone size={15} className="text-[#89ca2e] shrink-0" />
-                <span>+92 300 1234567</span>
+                <a
+                  href="tel:+923246492014"
+                  className="hover:text-white transition-colors font-medium"
+                >
+                  +923246492014
+                </a>
               </li>
-              <li className="flex items-center gap-2">
-                <MapPin size={15} className="text-[#89ca2e] shrink-0" />
-                <span>Lahore, Pakistan</span>
+              <li className="flex items-center gap-2.5">
+                <Mail size={15} className="text-[#89ca2e] shrink-0" />
+                <a
+                  href="mailto:mohid@sayrab.com"
+                  className="hover:text-white transition-colors"
+                >
+                  mohid@sayrab.com
+                </a>
               </li>
-              <li className="flex items-center gap-2">
+              <li className="flex items-center gap-2.5">
                 <Globe size={15} className="text-[#89ca2e] shrink-0" />
-                <span>www.sayrab.com</span>
+                <a
+                  href="https://www.sayrab.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  www.sayrab.com
+                </a>
               </li>
             </ul>
             <div className="pt-2 flex items-center gap-3 text-xs text-[#64748b]">
