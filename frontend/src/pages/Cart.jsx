@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Minus, Plus, Trash2, ShieldAlert, ArrowRight, ShoppingBag, CheckCircle2 } from 'lucide-react';
+import { Minus, Plus, Trash2, ShieldAlert, ArrowRight, ShoppingBag, CheckCircle2, ChevronRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { cartTotal, readCart, writeCart } from '../utils/cart';
 import { formatCurrency, isFundraiserUser } from '../utils/format';
+import { getAccurateProductImage } from '../utils/productImages';
 
 export default function Cart() {
   const { user } = useAuth();
@@ -43,14 +44,25 @@ export default function Cart() {
   const total = cartTotal(cart);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 text-[#172033]">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 text-[#172033]">
+      {/* Breadcrumb Navigation */}
+      <nav className="flex items-center gap-2 text-xs text-[#64748b]">
+        <Link to="/" className="hover:text-[#10182b]">Home</Link>
+        <ChevronRight size={13} />
+        <Link to="/store" className="hover:text-[#10182b]">Merchandise Store</Link>
+        <ChevronRight size={13} />
+        <span className="font-bold text-[#10182b]">Shopping Cart</span>
+      </nav>
+
       {/* Title Bar */}
-      <div className="border-b border-[#e5e9e3] pb-4 flex items-center justify-between">
+      <div className="border-b border-[#e5e9e3] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-black text-[#10182b] tracking-tight">Shopping Cart</h1>
-          <p className="text-xs text-[#64748b] mt-1">Review your selected merchandise items and support active causes.</p>
+          <h1 className="text-3xl sm:text-4xl font-black text-[#10182b] tracking-tight">Shopping Cart</h1>
+          <p className="text-xs text-[#64748b] mt-1">
+            Review your selected purpose items. 50% of the item total directly funds active campaigns.
+          </p>
         </div>
-        <Link to="/store" className="text-xs font-bold text-[#367c35] hover:underline flex items-center gap-1">
+        <Link to="/store" className="text-xs font-bold text-[#367c35] hover:underline flex items-center gap-1 self-start sm:self-auto">
           Continue Shopping <ArrowRight size={14} />
         </Link>
       </div>
@@ -74,7 +86,7 @@ export default function Cart() {
             <ShoppingBag size={32} />
           </div>
           <div className="space-y-1">
-            <h2 className="text-xl font-black text-[#10182b]">Your Cart is Empty</h2>
+            <h2 className="text-xl font-black text-[#10182b]">Your Cart is Currently Empty</h2>
             <p className="text-xs text-[#64748b]">Explore our merchandise store to discover purposeful products.</p>
           </div>
           <Link
@@ -88,28 +100,36 @@ export default function Cart() {
         <div className="grid lg:grid-cols-12 gap-8 items-start">
           {/* Cart Items Table/List */}
           <div className="lg:col-span-8 bg-white rounded-3xl border border-[#e5e9e3] p-6 sm:p-8 space-y-4 shadow-xs">
+            <div className="flex items-center justify-between border-b border-[#e5e9e3] pb-3">
+              <h2 className="text-base font-black text-[#10182b]">Items in Cart ({cart.reduce((s, i) => s + (i.qty || 1), 0)})</h2>
+              <span className="text-xs text-[#64748b] font-medium">Verified Ethical Make</span>
+            </div>
+
             <div className="divide-y divide-[#e5e9e3]">
               {cart.map((item) => {
                 const subtotal = (item.price || 0) * (item.qty || 1);
+                const itemImg = getAccurateProductImage(item);
                 return (
                   <div key={item._id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4 min-w-0">
                       <img
-                        src={item.image || item.images?.[0] || '/placeholder-merch.jpg'}
+                        src={itemImg}
                         alt={item.name}
-                        className="w-16 h-16 object-contain bg-[#f7f9f5] rounded-2xl border border-[#e5e9e3] p-1 shrink-0"
+                        className="w-18 h-18 object-cover bg-[#f7f9f5] rounded-2xl border border-[#e5e9e3] p-0.5 shrink-0"
                       />
                       <div className="min-w-0">
-                        <h3 className="font-extrabold text-sm text-[#10182b] line-clamp-1">{item.name}</h3>
+                        <Link to={`/product/${item._id}`} className="hover:text-[#367c35] transition-colors">
+                          <h3 className="font-extrabold text-sm text-[#10182b] line-clamp-1">{item.name}</h3>
+                        </Link>
                         <p className="text-xs text-[#367c35] font-black mt-0.5">{formatCurrency(item.price)} each</p>
-                        <div className="flex flex-wrap gap-2 text-[10px] text-[#64748b] mt-1">
+                        <div className="flex flex-wrap gap-2 text-[10px] text-[#64748b] mt-1.5">
                           {item.selectedSize && (
-                            <span className="bg-[#f7f9f5] px-2 py-0.5 rounded border border-[#e5e9e3]">
+                            <span className="bg-[#f7f9f5] px-2 py-0.5 rounded-md border border-[#e5e9e3] font-bold">
                               Size: {item.selectedSize}
                             </span>
                           )}
                           {item.selectedColor && (
-                            <span className="bg-[#f7f9f5] px-2 py-0.5 rounded border border-[#e5e9e3]">
+                            <span className="bg-[#f7f9f5] px-2 py-0.5 rounded-md border border-[#e5e9e3] font-bold">
                               Color: {item.selectedColor}
                             </span>
                           )}
@@ -135,8 +155,11 @@ export default function Cart() {
                         </button>
                       </div>
 
-                      <div className="text-right min-w-[80px]">
+                      <div className="text-right min-w-[90px]">
                         <p className="text-sm font-black text-[#10182b]">{formatCurrency(subtotal)}</p>
+                        <p className="text-[10px] text-[#367c35] font-bold">
+                          +{formatCurrency(subtotal * 0.5)} to cause
+                        </p>
                       </div>
 
                       <button
@@ -153,7 +176,7 @@ export default function Cart() {
             </div>
           </div>
 
-          {/* Cart Summary */}
+          {/* Cart Summary Card */}
           <div className="lg:col-span-4 bg-white rounded-3xl border border-[#e5e9e3] p-6 sm:p-7 space-y-6 shadow-sm">
             <h2 className="text-lg font-black text-[#10182b] border-b border-[#e5e9e3] pb-3">Order Summary</h2>
 
@@ -167,7 +190,7 @@ export default function Cart() {
                 <span className="font-bold text-[#367c35]">Free / Included</span>
               </div>
               <div className="flex justify-between text-[#64748b]">
-                <span>Cause Contribution (50%):</span>
+                <span>Cause Impact Share (50%):</span>
                 <span className="font-bold text-[#367c35]">{formatCurrency(total * 0.5)}</span>
               </div>
             </div>
@@ -179,18 +202,20 @@ export default function Cart() {
 
             <Link
               to="/checkout"
-              className={`w-full py-3.5 bg-[#89ca2e] hover:bg-[#7bb926] text-[#10182b] font-black text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 ${
+              className={`w-full py-3.5 bg-[#89ca2e] hover:bg-[#7bb926] text-[#10182b] font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 ${
                 isFundraiser ? 'pointer-events-none opacity-40' : ''
               }`}
             >
               Proceed to Checkout <ArrowRight size={16} />
             </Link>
 
-            <div className="p-3 bg-[#f7f9f5] rounded-xl border border-[#e5e9e3] text-[11px] text-[#64748b] space-y-1">
-              <p className="font-bold text-[#10182b] flex items-center gap-1">
-                <CheckCircle2 size={14} className="text-[#367c35]" /> Transparent Split Guaranteed
+            <div className="p-3.5 bg-[#f7f9f5] rounded-2xl border border-[#e5e9e3] text-[11px] text-[#64748b] space-y-1.5">
+              <p className="font-bold text-[#10182b] flex items-center gap-1.5">
+                <Sparkles size={14} className="text-[#367c35]" /> Transparent Social Split Guaranteed
               </p>
-              <p>50% to Organization • 45% to Manufacturer • 5% to Sayrab Platform</p>
+              <p className="leading-relaxed">
+                50% directly allocated to beneficiary campaigns • 45% to ethical manufacturing partner • 5% to Sayrab platform.
+              </p>
             </div>
           </div>
         </div>
